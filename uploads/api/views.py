@@ -169,3 +169,42 @@ class UploadDeleteView(APIView):
         except ValidationError as exc:
             return Response(_error(exc), status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UploadVariantView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, asset_id, kind):
+        from uploads.models import UploadVariant
+
+        asset = _asset(asset_id)
+        if asset is None or not can_access_upload(
+            asset=asset, user=getattr(request, "user", None)
+        ):
+            return Response(
+                {"detail": "Upload not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        try:
+            variant = UploadVariant.objects.get(asset=asset, kind=kind)
+        except UploadVariant.DoesNotExist:
+            return Response(
+                {"detail": "Variant not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        backend = get_storage_backend(variant.storage_alias)
+        redirect_url = backend.access_url(variant, request=request)
+        if redirect_url:
+            return HttpResponseRedirect(redirect_url)
+        try:
+            stream = backend.open(variant)
+        except FileNotFoundError:
+            return Response(
+                {"detail": "Stored object not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        response = FileResponse(stream, content_type=variant.mime_type)
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Cache-Control"] = (
+            "public, max-age=86400"
+            if asset.visibility == UploadAsset.Visibility.PUBLIC
+            else "private, no-store"
+        )
+        return response

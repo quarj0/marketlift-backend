@@ -1,0 +1,812 @@
+type AccountOverviewType {
+  savedCount: Int!
+  unreadMessages: Int!
+  reviewsCount: Int!
+  recentlyViewedCount: Int!
+}
+
+input AccountProfileInput {
+  fullName: String = null
+  email: String = null
+  phone: String = null
+  bio: String = null
+  state: String = null
+  stateCode: String = null
+  city: String = null
+  district: String = null
+  avatarUploadId: ID = null
+}
+
+input AccountSettingsInput {
+  language: String = null
+  emailMessages: Boolean = null
+  emailListingUpdates: Boolean = null
+  emailRecommendations: Boolean = null
+  pushMessages: Boolean = null
+  pushListingUpdates: Boolean = null
+  marketingEmails: Boolean = null
+  showPhoneToSellers: Boolean = null
+  showOnlineStatus: Boolean = null
+}
+
+type AccountSettingsType {
+  language: String!
+  currency: String!
+  emailMessages: Boolean!
+  emailListingUpdates: Boolean!
+  emailRecommendations: Boolean!
+  pushMessages: Boolean!
+  pushListingUpdates: Boolean!
+  marketingEmails: Boolean!
+  showPhoneToSellers: Boolean!
+  showOnlineStatus: Boolean!
+}
+
+type AccountUserType {
+  id: ID!
+  name: String!
+  email: String!
+  phone: String
+  avatarUrl: String
+  bio: String
+  location: LocationType!
+  emailVerified: Boolean!
+  phoneVerified: Boolean!
+  memberSince: DateTime!
+  active: Boolean!
+  staff: Boolean!
+  sellerProfile: SellerCapabilityType
+}
+
+type AdminAnalyticsType {
+  userGrowth: [TimeSeriesPointType!]!
+  sellerGrowth: [TimeSeriesPointType!]!
+  listingGrowth: [TimeSeriesPointType!]!
+  revenue: [TimeSeriesPointType!]!
+  categoryDistribution: [MetricType!]!
+  planDistribution: [MetricType!]!
+  verificationOutcomes: [MetricType!]!
+  reportOutcomes: [MetricType!]!
+  billingActivity: [MetricType!]!
+  health: MarketplaceHealthType!
+}
+
+type AdminDashboardType {
+  counts: DashboardCountsType!
+  revenue: RevenueSummaryType!
+}
+
+type AdminSellerType {
+  id: ID!
+  userId: ID!
+  name: String!
+  email: String!
+  sellerType: String!
+  verified: Boolean!
+  suspended: Boolean!
+  activatedAt: DateTime!
+  suspendedAt: DateTime
+  suspensionReason: String
+  listingCount: Int!
+}
+
+type AdminUserType {
+  id: ID!
+  name: String!
+  email: String!
+  phone: String
+  active: Boolean!
+  staff: Boolean!
+  suspended: Boolean!
+  joinedAt: DateTime!
+  location: LocationType!
+  sellerId: ID
+}
+
+type AuditEventType {
+  id: ID!
+  actorName: String!
+  actorEmail: String
+  action: String!
+  targetType: String!
+  targetId: String!
+  targetLabel: String!
+  metadata: JSON!
+  ipAddress: String
+  createdAt: DateTime!
+}
+
+input CardPaymentInput {
+  token: String!
+  paymentMethodId: String!
+  paymentType: String! = "credit_card"
+  installments: Int! = 1
+}
+
+type CategoryConditionType {
+  enabled: Boolean!
+  required: Boolean!
+}
+
+type CategoryFieldDefinitionType {
+  id: String!
+  label: String!
+  type: String!
+  required: Boolean!
+  filterable: Boolean!
+  placeholder: String
+  helpText: String
+  unit: String
+  min: Float
+  max: Float
+  step: Float
+  options: [CategoryFieldOptionType!]!
+}
+
+type CategoryFieldOptionType {
+  value: String!
+  label: String!
+}
+
+type CategoryPricingType {
+  mode: String!
+  label: String!
+  placeholder: String
+}
+
+type CategorySummaryType {
+  id: String!
+  name: String!
+  icon: String!
+  active: Boolean!
+}
+
+type CategoryType {
+  id: String!
+  name: String!
+  icon: String!
+  active: Boolean!
+  schemaVersion: Int!
+  description: String!
+  pricing: CategoryPricingType!
+  condition: CategoryConditionType!
+  fields: [CategoryFieldDefinitionType!]!
+  subcategories: [CategorySummaryType!]!
+}
+
+type ConversationListingType {
+  id: ID
+  slug: String
+  title: String!
+  price: Float
+  primaryImage: String
+  status: String
+}
+
+type ConversationType {
+  id: ID!
+  participant: ConversationUserType!
+  listing: ConversationListingType!
+  lastMessage: String!
+  lastMessageAt: DateTime
+  unread: Int!
+  archived: Boolean!
+  blocked: Boolean!
+}
+
+type ConversationUserType {
+  id: ID!
+  name: String!
+  avatarUrl: String
+  verifiedSeller: Boolean!
+  isSeller: Boolean!
+}
+
+input CreateReviewInput {
+  sellerId: ID!
+  rating: Int!
+  comment: String!
+  listingId: ID = null
+}
+
+input CreateSupportTicketInput {
+  subject: String!
+  category: String!
+  message: String!
+  uploadId: ID = null
+}
+
+type DashboardCountsType {
+  totalUsers: Int!
+  totalSellers: Int!
+  activeSellers: Int!
+  verifiedSellers: Int!
+  totalListings: Int!
+  publishedListings: Int!
+  listingsUnderReview: Int!
+  rejectedListings: Int!
+  reportedListings: Int!
+  openReports: Int!
+  pendingVerifications: Int!
+  failedPayments: Int!
+  recordedPayments: Int!
+  openSupportTickets: Int!
+  paidSubscriptions: Int!
+}
+
+"""Date (isoformat)"""
+scalar Date
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+type DeleteCategoryPayload {
+  slug: String!
+  affectedListings: Int!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
+type ListingConnectionType {
+  items: [ListingType!]!
+  pageInfo: ListingPageInfoType!
+  totalCount: Int!
+}
+
+input ListingFilterInput {
+  q: String = null
+  category: String = null
+  state: String = null
+  city: String = null
+  district: String = null
+  minPrice: Float = null
+  maxPrice: Float = null
+  condition: String = null
+  sellerType: String = null
+  verifiedOnly: Boolean! = false
+  dateListed: String = null
+  attributeFilters: JSON = null
+  sort: String! = "relevant"
+}
+
+input ListingInput {
+  categoryId: String!
+  title: String!
+  description: String!
+  state: String!
+  stateCode: String!
+  city: String!
+  price: Float = null
+  condition: String! = ""
+  district: String! = ""
+  negotiable: Boolean! = false
+  attributes: JSON = null
+  imageUrls: [String!] = null
+  imageUploadIds: [ID!] = null
+}
+
+type ListingPageInfoType {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type ListingPromotionType {
+  id: ID!
+  listingId: ID!
+  productId: String!
+  source: String!
+  startsAt: DateTime!
+  endsAt: DateTime!
+  active: Boolean!
+}
+
+type ListingType {
+  id: ID!
+  slug: String!
+  title: String!
+  description: String!
+  price: Float
+  category: String!
+  categoryName: String!
+  categorySchemaVersion: Int!
+  condition: String
+  location: LocationType!
+  images: [String!]!
+  seller: SellerType!
+  createdAt: DateTime!
+  expiresAt: DateTime
+  status: String!
+  views: Int!
+  negotiable: Boolean!
+  attributes: JSON!
+  featured: Boolean!
+  urgent: Boolean!
+  favorites: Int!
+}
+
+type LocationType {
+  state: String!
+  stateCode: String!
+  city: String!
+  district: String
+}
+
+type MarketplaceHealthType {
+  paymentSuccessPercent: Float!
+  openReportRatePercent: Float!
+  activeListingPercent: Float!
+  activeSellerPercent: Float!
+}
+
+type MessageAttachmentType {
+  type: String!
+  url: String!
+  name: String!
+  mimeType: String!
+  size: Int!
+}
+
+type MessageType {
+  id: ID!
+  conversationId: ID!
+  senderId: ID!
+  sender: String!
+  text: String!
+  createdAt: DateTime!
+  read: Boolean!
+  attachment: MessageAttachmentType
+}
+
+type MetricType {
+  label: String!
+  value: Float!
+}
+
+type ModerationCaseType {
+  id: ID!
+  status: String!
+  source: String!
+  reviewReason: String!
+  decisionReason: String
+  openedAt: DateTime!
+  decidedAt: DateTime
+  decidedBy: String
+  listing: ListingType!
+}
+
+type Mutation {
+  updateMyProfile(input: AccountProfileInput!): AccountUserType!
+  updateMyAccountSettings(input: AccountSettingsInput!): AccountSettingsType!
+  changeMyPassword(currentPassword: String!, newPassword: String!): Boolean!
+  deactivateMyAccount(reason: String! = ""): Boolean!
+  suspendAccount(userId: ID!, reason: String!): AdminUserType!
+  reactivateAccount(userId: ID!, reason: String!): AdminUserType!
+  activateSelling(sellerType: String! = "individual", displayName: String! = ""): SellerType!
+  updateMySellerSettings(input: SellerSettingsInput!): SellerSettingsType!
+  suspendSeller(sellerId: ID!, reason: String!): AdminSellerType!
+  restoreSeller(sellerId: ID!, reason: String!): AdminSellerType!
+  setCategoryActive(categoryId: String!, active: Boolean!): CategoryType!
+  deleteCategory(categoryId: String!): DeleteCategoryPayload!
+  createListing(input: ListingInput!): ListingType!
+  updateListing(listingId: ID!, input: ListingInput!): ListingType!
+  publishListing(listingId: ID!): ListingType!
+  pauseListing(listingId: ID!): ListingType!
+  markListingSold(listingId: ID!): ListingType!
+  saveListing(listingId: ID!): Boolean!
+  unsaveListing(listingId: ID!): Boolean!
+  recordListingView(listingId: ID!): Boolean!
+  cancelMySubscription(atPeriodEnd: Boolean! = true): SellerSubscriptionType!
+  createSellerPlan(name: String!, monthlyPrice: Float!, listingLimit: Int!, promotionCredits: Int!, code: String! = "", yearlyPrice: Float! = 0, visibilityWeight: Float! = 1, recommended: Boolean! = false, features: [String!] = null, active: Boolean! = true): SellerPlanType!
+  updateSellerPlan(id: String!, name: String!, monthlyPrice: Float!, yearlyPrice: Float!, listingLimit: Int!, promotionCredits: Int!, visibilityWeight: Float!, recommended: Boolean!, features: [String!]!, active: Boolean! = true): SellerPlanType!
+  activatePromotionWithPlanCredit(listingId: ID!, promotionId: String!): ListingPromotionType!
+  createSubscriptionPayment(planId: String!, billingCycle: String!, method: String!, idempotencyKey: String!, payer: PaymentPayerInput = null, card: CardPaymentInput = null): PaymentType!
+  createPromotionPayment(listingId: ID!, promotionId: String!, method: String!, idempotencyKey: String!, payer: PaymentPayerInput = null, card: CardPaymentInput = null): PaymentType!
+  refreshPayment(id: ID!): PaymentType!
+  submitSellerVerification(input: VerificationSubmissionInput!): VerificationType!
+  moveVerificationToReview(id: ID!, note: String! = ""): VerificationType!
+  approveVerification(id: ID!, note: String! = ""): VerificationType!
+  rejectVerification(id: ID!, note: String!): VerificationType!
+  moveListingToReview(listingId: ID!, reason: String!): ModerationCaseType!
+  approveListing(listingId: ID!, reason: String! = ""): ModerationCaseType!
+  rejectListing(listingId: ID!, reason: String!): ModerationCaseType!
+  removeListing(listingId: ID!, reason: String!): ListingType!
+  createReport(input: ReportInput!): ReportType!
+  moveReportToReview(reportId: ID!, note: String! = ""): ReportType!
+  resolveReport(reportId: ID!, reason: String!): ReportType!
+  dismissReport(reportId: ID!, reason: String!): ReportType!
+  saveReportNote(reportId: ID!, note: String!): ReportType!
+  markNotificationRead(notificationId: ID!): Boolean!
+  markAllNotificationsRead: Int!
+  startConversation(listingId: ID!): ConversationType!
+  sendMessage(input: SendMessageInput!): MessageType!
+  markConversationRead(conversationId: ID!): Boolean!
+  archiveConversation(conversationId: ID!, archived: Boolean! = true): ConversationType!
+  blockConversationUser(conversationId: ID!): ConversationType!
+  unblockConversationUser(conversationId: ID!): ConversationType!
+  createReview(input: CreateReviewInput!): ReviewType!
+  replyToReview(reviewId: ID!, reply: String!): ReviewType!
+  deleteMyReview(reviewId: ID!): Boolean!
+  saveSearch(input: SavedSearchInput!): SavedSearchType!
+  updateSavedSearchAlerts(id: ID!, enabled: Boolean!): SavedSearchType!
+  deleteSavedSearch(id: ID!): Boolean!
+  createSupportTicket(input: CreateSupportTicketInput!): SupportTicketType!
+  replySupportTicket(ticketId: ID!, message: String!, uploadId: ID = null): SupportMessageType!
+  adminReplySupportTicket(ticketId: ID!, message: String!, internal: Boolean! = false, status: String = null): SupportTicketType!
+  updatePlatformConfiguration(input: PlatformConfigurationInput!): PlatformConfigurationType!
+  invalidateAllSessions(reason: String!): Int!
+}
+
+type NotificationType {
+  id: ID!
+  type: String!
+  title: String!
+  body: String!
+  createdAt: DateTime!
+  read: Boolean!
+  href: String
+  data: JSON!
+}
+
+input PaymentPayerInput {
+  email: String = null
+  firstName: String = null
+  lastName: String = null
+  identificationType: String = null
+  identificationNumber: String = null
+  zipCode: String = null
+  streetName: String = null
+  streetNumber: String = null
+  neighborhood: String = null
+  city: String = null
+  state: String = null
+}
+
+type PaymentSummaryType {
+  paidTotal: Float!
+  refundedTotal: Float!
+  paidCount: Int!
+  failedCount: Int!
+  pendingCount: Int!
+  successRate: Float!
+}
+
+type PaymentType {
+  id: ID!
+  reference: String!
+  sellerId: ID!
+  sellerName: String!
+  purpose: String!
+  method: String!
+  status: String!
+  amount: Float!
+  currency: String!
+  provider: String!
+  providerOrderId: String
+  providerStatus: String
+  providerStatusDetail: String
+  checkoutData: JSON!
+  planId: String
+  billingCycle: String
+  listingId: ID
+  promotionId: String
+  createdAt: DateTime!
+  paidAt: DateTime
+  failedAt: DateTime
+  refundedAt: DateTime
+}
+
+input PlatformConfigurationInput {
+  marketplaceName: String = null
+  supportEmail: String = null
+  allowNewRegistrations: Boolean = null
+  allowSellerActivation: Boolean = null
+  maintenanceMode: Boolean = null
+  automatedListingFlagging: Boolean = null
+  sellerVerificationRequired: Boolean = null
+  defaultListingDurationDays: Int = null
+  maxListingImages: Int = null
+  highRiskThreshold: Int = null
+  adminEmailOperationalAlerts: Boolean = null
+  adminVerificationQueueAlerts: Boolean = null
+  adminPaymentFailureAlerts: Boolean = null
+  featureFlags: JSON = null
+}
+
+type PlatformConfigurationType {
+  marketplaceName: String!
+  supportEmail: String!
+  allowNewRegistrations: Boolean!
+  allowSellerActivation: Boolean!
+  maintenanceMode: Boolean!
+  automatedListingFlagging: Boolean!
+  sellerVerificationRequired: Boolean!
+  defaultListingDurationDays: Int!
+  maxListingImages: Int!
+  highRiskThreshold: Int!
+  adminEmailOperationalAlerts: Boolean!
+  adminVerificationQueueAlerts: Boolean!
+  adminPaymentFailureAlerts: Boolean!
+  featureFlags: JSON!
+}
+
+type PromotionOptionType {
+  id: String!
+  name: String!
+  description: String!
+  durationDays: Int!
+  price: Float!
+}
+
+type Query {
+  health: String!
+  me: AccountUserType!
+  myAccountSettings: AccountSettingsType!
+  myAccountOverview: AccountOverviewType!
+  adminUsers(q: String = null, limit: Int! = 100): [AdminUserType!]!
+  seller(id: ID!): SellerType
+  mySellerSettings: SellerSettingsType!
+  adminSellers(search: String = null, suspended: Boolean = null, limit: Int! = 50, offset: Int! = 0): [AdminSellerType!]!
+  categories(activeOnly: Boolean! = true): [CategoryType!]!
+  category(id: String!): CategoryType
+  listings(filters: ListingFilterInput = null, limit: Int! = 50, offset: Int! = 0): [ListingType!]!
+  listingSearch(filters: ListingFilterInput = null, first: Int! = 24, after: String = null): ListingConnectionType!
+  listing(id: String!): ListingType
+  featuredListings(limit: Int! = 8): [ListingType!]!
+  myListings: [ListingType!]!
+  mySavedListings: [ListingType!]!
+  myRecentlyViewedListings(limit: Int! = 20): [ListingType!]!
+  sellerPlans: [SellerPlanType!]!
+  mySellerPlan: SellerPlanType
+  mySubscription: SellerSubscriptionType
+  adminSellerPlans: [SellerPlanType!]!
+  adminSubscriptions(search: String = null, status: String = null, limit: Int! = 50, offset: Int! = 0): [SellerSubscriptionType!]!
+  promotionOptions: [PromotionOptionType!]!
+  myListingPromotions(listingId: ID = null): [ListingPromotionType!]!
+  myPayments(limit: Int! = 50, offset: Int! = 0): [PaymentType!]!
+  payment(id: ID!): PaymentType
+  adminPayments(search: String = null, status: String = null, purpose: String = null, method: String = null, limit: Int! = 50, offset: Int! = 0): [PaymentType!]!
+  paymentSummary: PaymentSummaryType!
+  mySellerVerification: VerificationType
+  verifications(search: String = null, status: String = null, riskLevel: String = null, limit: Int! = 50, offset: Int! = 0): [VerificationType!]!
+  verification(id: ID!): VerificationType
+  verificationQueueSummary: VerificationQueueSummaryType!
+  moderationQueue(includeFinal: Boolean! = false, limit: Int! = 50, offset: Int! = 0): [ModerationCaseType!]!
+  myReports(limit: Int! = 50): [ReportType!]!
+  reports(status: String = null, priority: String = null, targetType: String = null, limit: Int! = 50, offset: Int! = 0): [ReportType!]!
+  report(id: String!): ReportType
+  notifications(unreadOnly: Boolean! = false, limit: Int! = 50, offset: Int! = 0): [NotificationType!]!
+  unreadNotificationCount: Int!
+  auditEvents(action: String = null, targetType: String = null, limit: Int! = 100, offset: Int! = 0): [AuditEventType!]!
+  myConversations(includeArchived: Boolean! = false): [ConversationType!]!
+  conversation(id: ID!): ConversationType!
+  messages(conversationId: ID!, before: DateTime = null, limit: Int! = 50): [MessageType!]!
+  unreadMessageCount: Int!
+  sellerReviews(sellerId: ID!, limit: Int! = 20, offset: Int! = 0): [ReviewType!]!
+  sellerReputation(sellerId: ID!): SellerReputationType
+  myReviews: [ReviewType!]!
+  mySellerReviews: [ReviewType!]!
+  mySavedSearches: [SavedSearchType!]!
+  mySupportTickets: [SupportTicketType!]!
+  supportTickets(status: String = null, limit: Int! = 100): [SupportTicketType!]!
+  platformConfiguration: PlatformConfigurationType!
+  adminDashboard: AdminDashboardType!
+  adminAnalytics(days: Int! = 30): AdminAnalyticsType!
+}
+
+input ReportInput {
+  targetType: String!
+  targetId: ID!
+  reason: String!
+  statement: String!
+  priority: String! = "medium"
+}
+
+type ReportType {
+  id: ID!
+  reference: String!
+  targetType: String!
+  targetId: String!
+  targetLabel: String!
+  reason: String!
+  statement: String!
+  priority: String!
+  status: String!
+  reporterName: String
+  assignedTo: String
+  internalNote: String
+  decisionReason: String
+  createdAt: DateTime!
+  decidedAt: DateTime
+}
+
+type RevenueSummaryType {
+  today: Float!
+  thisMonth: Float!
+  total: Float!
+  subscriptionTotal: Float!
+  promotionTotal: Float!
+}
+
+type ReviewType {
+  id: ID!
+  sellerId: ID!
+  sellerName: String!
+  sellerAvatar: String
+  reviewerId: ID!
+  reviewerName: String!
+  listingId: ID
+  listingTitle: String
+  rating: Int!
+  comment: String!
+  date: DateTime!
+  sellerReply: String
+}
+
+input SavedSearchInput {
+  name: String! = ""
+  criteria: JSON = null
+  alertsEnabled: Boolean! = true
+}
+
+type SavedSearchType {
+  id: ID!
+  name: String!
+  criteria: JSON!
+  alertsEnabled: Boolean!
+  active: Boolean!
+  createdAt: DateTime!
+  lastCheckedAt: DateTime
+  lastNotifiedAt: DateTime
+}
+
+type SellerCapabilityType {
+  sellerId: ID!
+  activatedAt: DateTime!
+  verified: Boolean!
+  suspended: Boolean!
+}
+
+type SellerPlanType {
+  id: String!
+  name: String!
+  monthlyPrice: Float!
+  yearlyPrice: Float!
+  listingLimit: Int!
+  promotionCredits: Int!
+  features: [String!]!
+  visibilityWeight: Float!
+  recommended: Boolean!
+  active: Boolean!
+  sortOrder: Int!
+}
+
+type SellerReputationType {
+  average: Float!
+  total: Int!
+  positivePercent: Float!
+  oneStar: Int!
+  twoStar: Int!
+  threeStar: Int!
+  fourStar: Int!
+  fiveStar: Int!
+}
+
+input SellerSettingsInput {
+  newInquiry: Boolean = null
+  listingStatus: Boolean = null
+  performance: Boolean = null
+  autoRenew: Boolean = null
+  showPhone: Boolean = null
+  vacation: Boolean = null
+}
+
+type SellerSettingsType {
+  newInquiry: Boolean!
+  listingStatus: Boolean!
+  performance: Boolean!
+  autoRenew: Boolean!
+  showPhone: Boolean!
+  vacation: Boolean!
+}
+
+type SellerSubscriptionType {
+  id: ID!
+  sellerId: ID!
+  sellerName: String!
+  plan: SellerPlanType!
+  billingCycle: String!
+  status: String!
+  currentPeriodStart: DateTime
+  currentPeriodEnd: DateTime
+  cancelAtPeriodEnd: Boolean!
+  promotionCreditsRemaining: Int!
+}
+
+type SellerType {
+  id: ID!
+  name: String!
+  verified: Boolean!
+  sellerType: String!
+  isSuspended: Boolean!
+  rating: Float!
+  reviews: Int!
+  positiveReviewPercent: Float!
+  location: LocationType!
+}
+
+input SendMessageInput {
+  conversationId: ID!
+  text: String = null
+  uploadId: ID = null
+}
+
+type SupportMessageType {
+  id: ID!
+  senderName: String
+  body: String!
+  internal: Boolean!
+  attachmentUrl: String
+  createdAt: DateTime!
+}
+
+type SupportTicketType {
+  id: ID!
+  reference: String!
+  userId: ID!
+  userName: String!
+  subject: String!
+  category: String!
+  priority: String!
+  status: String!
+  assignedTo: String
+  updatedAt: DateTime!
+  createdAt: DateTime!
+  messages: [SupportMessageType!]!
+}
+
+type TimeSeriesPointType {
+  date: Date!
+  value: Float!
+}
+
+type VerificationQueueSummaryType {
+  pending: Int!
+  review: Int!
+  verifiedToday: Int!
+  rejectedToday: Int!
+}
+
+input VerificationSubmissionInput {
+  cpf: String!
+  legalName: String!
+  birthDate: Date!
+  documentType: String = null
+  documentFrontUrl: String = null
+  documentBackUrl: String = null
+  selfieUrl: String = null
+}
+
+type VerificationType {
+  id: ID!
+  sellerId: ID!
+  sellerName: String!
+  cpfMasked: String!
+  legalName: String!
+  birthDate: Date!
+  documentType: String
+  documentFrontUrl: String
+  documentBackUrl: String
+  selfieUrl: String
+  status: String!
+  riskLevel: String!
+  riskFlags: [String!]!
+  automatedChecks: JSON!
+  providerResult: String
+  submittedAt: DateTime!
+  reviewStartedAt: DateTime
+  decidedAt: DateTime
+  decisionNote: String
+}

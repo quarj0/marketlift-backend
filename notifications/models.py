@@ -14,6 +14,9 @@ class Notification(UUIDTimeStampedModel):
     href = models.CharField(max_length=500, blank=True)
     data = models.JSONField(default=dict, blank=True)
     read_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    email_sent_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    delivery_attempts = models.PositiveSmallIntegerField(default=0)
+    last_delivery_error = models.TextField(blank=True)
 
     class Meta:
         ordering = ("-created_at",)

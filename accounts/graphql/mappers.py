@@ -1,36 +1,62 @@
-from .types import AccountType, AdminUserType, SellerCapabilityType
+from marketlift.graphql.types import LocationType
+from .types import (
+    AccountSettingsType,
+    AccountUserType,
+    AdminUserType,
+    SellerCapabilityType,
+)
 
 
-def account_to_type(user) -> AccountType:
+def user_to_type(user):
     seller = getattr(user, "seller_profile", None)
-    seller_type = None
-    if seller is not None:
-        seller_type = SellerCapabilityType(
-            seller_id=str(seller.id),
-            activated_at=seller.activated_at,
-            verified=seller.verified,
-            suspended=seller.is_suspended,
-        )
-    return AccountType(
+    return AccountUserType(
         id=str(user.id),
         name=user.full_name or user.email,
         email=user.email,
         phone=user.phone,
         avatar_url=user.avatar_url or None,
         bio=user.bio or None,
-        state=user.state,
-        state_code=user.state_code,
-        city=user.city,
-        district=user.district or None,
-        email_verified=user.email_verified_at is not None,
-        phone_verified=user.phone_verified_at is not None,
+        location=LocationType(
+            state=user.state,
+            state_code=user.state_code,
+            city=user.city,
+            district=user.district or None,
+        ),
+        email_verified=bool(user.email_verified_at),
+        phone_verified=bool(user.phone_verified_at),
+        member_since=user.date_joined,
         active=user.is_active,
         staff=user.is_staff,
-        seller_profile=seller_type,
+        seller_profile=(
+            SellerCapabilityType(
+                seller_id=str(seller.id),
+                activated_at=seller.activated_at,
+                verified=seller.verified,
+                suspended=seller.is_suspended,
+            )
+            if seller
+            else None
+        ),
     )
 
 
-def admin_user_to_type(user) -> AdminUserType:
+def settings_to_type(x):
+    return AccountSettingsType(
+        language=x.language,
+        currency=x.currency,
+        email_messages=x.email_messages,
+        email_listing_updates=x.email_listing_updates,
+        email_recommendations=x.email_recommendations,
+        push_messages=x.push_messages,
+        push_listing_updates=x.push_listing_updates,
+        marketing_emails=x.marketing_emails,
+        show_phone_to_sellers=x.show_phone_to_sellers,
+        show_online_status=x.show_online_status,
+    )
+
+
+def admin_user_to_type(user):
+    seller = getattr(user, "seller_profile", None)
     return AdminUserType(
         id=str(user.id),
         name=user.full_name or user.email,
@@ -38,8 +64,13 @@ def admin_user_to_type(user) -> AdminUserType:
         phone=user.phone,
         active=user.is_active,
         staff=user.is_staff,
-        seller_enabled=hasattr(user, "seller_profile"),
-        created_at=user.date_joined,
-        suspended_at=user.suspended_at,
-        suspension_reason=user.suspension_reason or None,
+        suspended=bool(user.suspended_at),
+        joined_at=user.date_joined,
+        location=LocationType(
+            state=user.state,
+            state_code=user.state_code,
+            city=user.city,
+            district=user.district or None,
+        ),
+        seller_id=str(seller.id) if seller else None,
     )

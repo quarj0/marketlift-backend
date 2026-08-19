@@ -20,6 +20,7 @@ class ListingType:
     images: list[str]
     seller: SellerType
     created_at: datetime
+    expires_at: datetime | None
     status: str
     views: int
     negotiable: bool
@@ -27,3 +28,16 @@ class ListingType:
     featured: bool
     urgent: bool
     favorites: int
+
+
+@strawberry.type
+class ListingPageInfoType:
+    has_next_page: bool
+    end_cursor: str | None
+
+
+@strawberry.type
+class ListingConnectionType:
+    items: list[ListingType]
+    page_info: ListingPageInfoType
+    total_count: int

@@ -1,29 +1,44 @@
-from datetime import timedelta
-from decimal import Decimal
+import base64
 from uuid import UUID
-
 import strawberry
-from django.db.models import Exists, OuterRef, Q
-from django.utils import timezone
-
-from listings.models import Listing
+from listings.models import Listing, RecentlyViewedListing
+from listings.search import apply_listing_filters, apply_listing_sort
 from marketlift.graphql.auth import require_seller, require_user
 from promotions.models import ListingPromotion, PromotionProduct
+from django.utils import timezone
 from .inputs import ListingFilterInput
 from .mappers import listing_queryset, listing_to_type
-from .types import ListingType
+from .types import ListingConnectionType, ListingPageInfoType, ListingType
 
 
-def _decimal(value):
-    return None if value is None else Decimal(str(value))
-
-
-def _looks_like_uuid(value: str):
+def _looks_like_uuid(value):
     try:
         UUID(value)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
         return False
+
+
+def _encode_cursor(offset):
+    return base64.urlsafe_b64encode(f"offset:{offset}".encode()).decode().rstrip("=")
+
+
+def _decode_cursor(value):
+    if not value:
+        return 0
+    try:
+        raw = base64.urlsafe_b64decode(value + "=" * (-len(value) % 4)).decode()
+        prefix, n = raw.split(":", 1)
+        return max(0, int(n)) if prefix == "offset" else 0
+    except Exception:
+        return 0
+
+
+def _filtered(filters):
+    filters = filters or ListingFilterInput()
+    qs = listing_queryset(Listing.objects.public())
+    qs = apply_listing_filters(qs, filters)
+    return apply_listing_sort(qs, filters.sort)
 
 
 @strawberry.type
@@ -35,55 +50,32 @@ class ListingQuery:
         limit: int = 50,
         offset: int = 0,
     ) -> list[ListingType]:
-        filters = filters or ListingFilterInput()
-        qs = listing_queryset(Listing.objects.public())
-        if filters.q:
-            qs = qs.filter(
-                Q(title__icontains=filters.q) | Q(description__icontains=filters.q)
-            )
-        if filters.category:
-            qs = qs.filter(category__slug=filters.category)
-        if filters.state:
-            qs = qs.filter(state_code__iexact=filters.state)
-        if filters.city:
-            qs = qs.filter(city__iexact=filters.city)
-        if filters.district:
-            qs = qs.filter(district__icontains=filters.district)
-        if filters.condition:
-            qs = qs.filter(condition=filters.condition)
-        if filters.seller_type:
-            qs = qs.filter(seller__seller_type=filters.seller_type)
-        if filters.verified_only:
-            qs = qs.filter(seller__verified_at__isnull=False)
-        if filters.min_price is not None:
-            qs = qs.filter(price__gte=_decimal(filters.min_price))
-        if filters.max_price is not None:
-            qs = qs.filter(price__lte=_decimal(filters.max_price))
-        if filters.date_listed:
-            days = {"today": 1, "week": 7, "month": 30}.get(filters.date_listed)
-            if days:
-                qs = qs.filter(created_at__gte=timezone.now() - timedelta(days=days))
-        if filters.sort == "price_asc":
-            qs = qs.order_by("price", "-created_at")
-        elif filters.sort == "price_desc":
-            qs = qs.order_by("-price", "-created_at")
-        elif filters.sort == "newest":
-            qs = qs.order_by("-created_at")
-        else:
-            now = timezone.now()
-            featured = ListingPromotion.objects.filter(
-                listing_id=OuterRef("pk"),
-                product__code=PromotionProduct.Code.FEATURED,
-                cancelled_at__isnull=True,
-                starts_at__lte=now,
-                ends_at__gt=now,
-            )
-            qs = qs.annotate(is_featured=Exists(featured)).order_by(
-                "-is_featured", "-views", "-created_at"
-            )
+        qs = _filtered(filters)
         start = max(0, offset)
-        end = start + max(1, min(limit, 100))
-        return [listing_to_type(x) for x in qs[start:end]]
+        return [listing_to_type(x) for x in qs[start : start + max(1, min(limit, 100))]]
+
+    @strawberry.field
+    def listing_search(
+        self,
+        filters: ListingFilterInput | None = None,
+        first: int = 24,
+        after: str | None = None,
+    ) -> ListingConnectionType:
+        first = max(1, min(first, 100))
+        offset = _decode_cursor(after)
+        qs = _filtered(filters)
+        total = qs.count()
+        rows = list(qs[offset : offset + first + 1])
+        has_next = len(rows) > first
+        rows = rows[:first]
+        return ListingConnectionType(
+            items=[listing_to_type(x) for x in rows],
+            page_info=ListingPageInfoType(
+                has_next_page=has_next,
+                end_cursor=_encode_cursor(offset + len(rows)) if rows else None,
+            ),
+            total_count=total,
+        )
 
     @strawberry.field
     def listing(self, id: str) -> ListingType | None:
@@ -124,3 +116,19 @@ class ListingQuery:
                 saved_by__user=user
             )
         ]
+
+    @strawberry.field
+    def my_recently_viewed_listings(
+        self, info: strawberry.Info, limit: int = 20
+    ) -> list[ListingType]:
+        user = require_user(info)
+        ids = list(
+            RecentlyViewedListing.objects.filter(user=user).values_list(
+                "listing_id", flat=True
+            )[: max(1, min(limit, 50))]
+        )
+        rows = {
+            x.id: x
+            for x in listing_queryset(Listing.objects.public()).filter(id__in=ids)
+        }
+        return [listing_to_type(rows[i]) for i in ids if i in rows]

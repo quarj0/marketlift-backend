@@ -29,7 +29,7 @@ def listing_queryset(queryset=None):
 
     qs = queryset if queryset is not None else Listing.objects.all()
     return qs.select_related("seller__user", "category").prefetch_related(
-        "media__upload", "attribute_values", "promotions__product"
+        "media__upload__variants", "attribute_values", "promotions__product"
     )
 
 
@@ -58,6 +58,7 @@ def listing_to_type(listing) -> ListingType:
         images=[m.content_url for m in listing.media.all()],
         seller=seller_to_type(listing.seller),
         created_at=listing.created_at,
+        expires_at=listing.expires_at,
         status=listing.status,
         views=listing.views,
         negotiable=listing.negotiable,

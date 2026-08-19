@@ -48,6 +48,7 @@ class ListingPromotion(UUIDTimeStampedModel):
     starts_at = models.DateTimeField(default=timezone.now)
     ends_at = models.DateTimeField()
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    expiry_notified_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ("-starts_at",)

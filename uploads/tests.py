@@ -1,4 +1,5 @@
 import io
+from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -14,6 +15,12 @@ from uploads.services import (
 User = get_user_model()
 
 
+def jpeg_bytes():
+    buf = io.BytesIO()
+    Image.new("RGB", (4, 4), "white").save(buf, format="JPEG")
+    return buf.getvalue()
+
+
 @override_settings(MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-test-uploads")
 class UploadServiceTests(TestCase):
     def setUp(self):
@@ -22,7 +29,7 @@ class UploadServiceTests(TestCase):
         )
 
     def test_prepare_store_complete_and_claim(self):
-        payload = b"tiny-image"
+        payload = jpeg_bytes()
         asset, target = prepare_upload(
             user=self.user,
             purpose=UploadAsset.Purpose.MESSAGE_IMAGE,
@@ -48,7 +55,7 @@ class UploadServiceTests(TestCase):
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
 
     def test_rejects_mismatched_purpose(self):
-        payload = b"tiny-image"
+        payload = jpeg_bytes()
         asset, _ = prepare_upload(
             user=self.user,
             purpose=UploadAsset.Purpose.MESSAGE_IMAGE,
@@ -91,7 +98,7 @@ class ListingUploadIntegrationTests(TestCase):
             condition_enabled=False,
             condition_required=False,
         )
-        payload = b"listing-image"
+        payload = jpeg_bytes()
         asset, _ = prepare_upload(
             user=user,
             purpose=UploadAsset.Purpose.LISTING_IMAGE,
@@ -121,5 +128,5 @@ class ListingUploadIntegrationTests(TestCase):
         media = listing.media.select_related("upload").get()
         asset.refresh_from_db()
         self.assertEqual(media.upload_id, asset.id)
-        self.assertEqual(media.content_url, asset.content_url)
+        self.assertEqual(media.content_url, asset.preferred_image_url("detail"))
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)

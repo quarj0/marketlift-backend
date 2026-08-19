@@ -11,7 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit.services import record_audit_event
-from notifications.services import create_notification
+from notifications.services import create_admin_notifications, create_notification
 from .models import VerificationSubmission
 
 
@@ -118,6 +118,14 @@ def submit_verification(
         target_label=str(seller),
         metadata={"risk_level": risk},
         request=request,
+    )
+    create_admin_notifications(
+        notification_type="verification",
+        title="New seller verification",
+        body=f"{seller} submitted identity verification.",
+        href="/verifications",
+        data={"verificationId": str(verification.id), "riskLevel": risk},
+        preference="admin_verification_queue_alerts",
     )
     return verification
 

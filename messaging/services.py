@@ -35,6 +35,13 @@ def start_conversation(*, buyer, listing: Listing):
         raise ValidationError(
             "This listing is not currently available for new conversations."
         )
+    from django.core.exceptions import ObjectDoesNotExist
+
+    try:
+        if listing.seller.settings.vacation:
+            raise ValidationError("This seller is currently in vacation mode.")
+    except ObjectDoesNotExist:
+        pass
     if _blocked_between(buyer, listing.seller.user):
         raise ValidationError("Messaging is unavailable between these accounts.")
 

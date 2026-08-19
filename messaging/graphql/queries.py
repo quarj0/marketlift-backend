@@ -15,7 +15,7 @@ from .types import ConversationType, MessageType
 def conversation_queryset():
     return Conversation.objects.select_related(
         "buyer", "seller__user", "listing__seller__user", "listing__category"
-    ).prefetch_related("listing__media__upload")
+    ).prefetch_related("listing__media__upload__variants")
 
 
 @strawberry.type
@@ -67,6 +67,7 @@ class MessagingQuery:
                 "conversation__seller__user",
                 "attachment__upload",
             )
+            .prefetch_related("attachment__upload__variants")
             .order_by("-created_at")
         )
         if before is not None:

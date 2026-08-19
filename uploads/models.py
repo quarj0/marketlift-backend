@@ -15,6 +15,7 @@ class UploadAsset(UUIDTimeStampedModel):
         VERIFICATION_SELFIE = "verification_selfie", "Verification selfie"
         REPORT_EVIDENCE = "report_evidence", "Report evidence"
         AVATAR = "avatar", "Avatar"
+        SUPPORT_ATTACHMENT = "support_attachment", "Support attachment"
 
     class Status(models.TextChoices):
         PREPARED = "prepared", "Prepared"
@@ -61,6 +62,8 @@ class UploadAsset(UUIDTimeStampedModel):
     ready_at = models.DateTimeField(null=True, blank=True)
     attached_at = models.DateTimeField(null=True, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    processing_error = models.TextField(blank=True)
 
     class Meta:
         ordering = ("-created_at",)
@@ -77,5 +80,45 @@ class UploadAsset(UUIDTimeStampedModel):
     def content_url(self) -> str:
         return f"/api/v1/uploads/{self.id}/content/"
 
+    def variant_url(self, kind: str) -> str | None:
+        cache = getattr(self, "_prefetched_objects_cache", {})
+        if "variants" in cache:
+            variant = next(
+                (item for item in cache["variants"] if item.kind == kind), None
+            )
+        else:
+            variant = self.variants.filter(kind=kind).first()
+        return variant.content_url if variant else None
+
+    def preferred_image_url(self, kind: str = "detail") -> str:
+        return self.variant_url(kind) or self.content_url
+
     def __str__(self) -> str:
         return f"{self.purpose}: {self.original_name}"
+
+
+class UploadVariant(UUIDTimeStampedModel):
+    asset = models.ForeignKey(
+        UploadAsset, on_delete=models.CASCADE, related_name="variants"
+    )
+    kind = models.CharField(max_length=32)
+    storage_alias = models.CharField(max_length=64, default="default")
+    object_key = models.CharField(max_length=500, unique=True)
+    mime_type = models.CharField(max_length=120, default="image/webp")
+    size = models.PositiveBigIntegerField(default=0)
+    width = models.PositiveIntegerField(default=0)
+    height = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("asset", "kind"), name="uploads_unique_asset_variant"
+            )
+        ]
+        indexes = [
+            models.Index(fields=("asset", "kind"), name="uploads_asset_kind_idx")
+        ]
+
+    @property
+    def content_url(self):
+        return f"/api/v1/uploads/{self.asset_id}/variants/{self.kind}/"

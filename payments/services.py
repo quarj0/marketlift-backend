@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit.services import record_audit_event
-from notifications.services import create_notification
+from notifications.services import create_admin_notifications, create_notification
 from promotions.models import ListingPromotion
 from subscriptions.services import activate_paid_subscription
 from .models import Payment
@@ -214,6 +214,14 @@ def _send_to_provider(*, payment, payer, card, request=None):
         payment.save(
             update_fields=("status", "failure_message", "failed_at", "updated_at")
         )
+        create_admin_notifications(
+            notification_type="payment",
+            title="Marketlift payment failed",
+            body=f"Payment {payment.reference} failed during provider checkout.",
+            href="/payments",
+            data={"paymentId": str(payment.id), "reference": payment.reference},
+            preference="admin_payment_failure_alerts",
+        )
         raise ValidationError(str(exc)) from exc
     sync_payment_from_provider(payment=payment, result=result, request=request)
 
@@ -273,6 +281,15 @@ def sync_payment_from_provider(
             href="/selling/payments",
             data={"payment_id": str(payment.id), "status": new},
         )
+        if new == Payment.Status.FAILED:
+            create_admin_notifications(
+                notification_type="payment",
+                title="Marketlift payment failed",
+                body=f"Payment {payment.reference} changed to failed.",
+                href="/payments",
+                data={"paymentId": str(payment.id), "reference": payment.reference},
+                preference="admin_payment_failure_alerts",
+            )
     return payment
 
 

@@ -72,7 +72,7 @@ def message_to_type(message: Message, user) -> MessageType:
         item = message.attachment
         attachment = MessageAttachmentType(
             type=item.attachment_type,
-            url=item.upload.content_url,
+            url=item.upload.preferred_image_url("detail"),
             name=item.name_snapshot,
             mime_type=item.mime_type_snapshot,
             size=item.size_snapshot,

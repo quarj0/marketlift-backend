@@ -1,5 +1,6 @@
 """Django settings for Marketlift."""
 
+import json
 import os
 from pathlib import Path
 
@@ -50,6 +51,10 @@ INSTALLED_APPS = [
     "reports",
     "notifications",
     "audit",
+    "reviews",
+    "saved_searches",
+    "support",
+    "platform_settings",
 ]
 
 MIDDLEWARE = [
@@ -60,8 +65,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "marketlift.security.middleware.SecurityRateLimitMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "marketlift.security.middleware.MaintenanceModeMiddleware",
 ]
 
 ROOT_URLCONF = "marketlift.urls"
@@ -204,9 +211,121 @@ EMAIL_BACKEND = os.getenv(
     "django.core.mail.backends.console.EmailBackend",
 )
 
-# Marketlift service-payment integration. Product-sale payments remain outside Marketlift.
+# Marketlift service-payment integration. Product-sale payments remain outside Marketlift V1.
 MARKETLIFT_PAYMENT_PROVIDER = os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "mock")
 PAYMENT_MOCK_AUTO_APPROVE = env_bool("PAYMENT_MOCK_AUTO_APPROVE", True)
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN", "")
 MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY", "")
 MERCADO_PAGO_WEBHOOK_SECRET = os.getenv("MERCADO_PAGO_WEBHOOK_SECRET", "")
+
+
+# Production/security controls. These stay environment-driven so hosting providers can change.
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", "Marketlift <noreply@marketlift.local>"
+)
+MARKETLIFT_FRONTEND_URL = os.getenv("MARKETLIFT_FRONTEND_URL", "http://localhost:3000")
+SESSION_COOKIE_AGE = int(os.getenv("SESSION_COOKIE_AGE", "1209600"))
+SESSION_SAVE_EVERY_REQUEST = env_bool("SESSION_SAVE_EVERY_REQUEST", False)
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
+SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+USE_X_FORWARDED_HOST = env_bool("USE_X_FORWARDED_HOST", False)
+if env_bool("SECURE_PROXY_SSL_HEADER_ENABLED", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(
+    os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", str(2 * 1024 * 1024))
+)
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(
+    os.getenv("FILE_UPLOAD_MAX_MEMORY_SIZE", str(2 * 1024 * 1024))
+)
+MARKETLIFT_STRICT_UPLOAD_VALIDATION = env_bool(
+    "MARKETLIFT_STRICT_UPLOAD_VALIDATION", True
+)
+MARKETLIFT_PROCESS_UPLOADS_ASYNC = env_bool("MARKETLIFT_PROCESS_UPLOADS_ASYNC", False)
+MARKETLIFT_DJANGO_STORAGE_ALIAS = os.getenv(
+    "MARKETLIFT_DJANGO_STORAGE_ALIAS", "marketlift_media"
+)
+
+CELERY_BEAT_SCHEDULE.update(
+    {
+        "expire-due-listings": {
+            "task": "listings.tasks.expire_due_listings",
+            "schedule": 3600.0,
+        },
+        "saved-search-alerts": {
+            "task": "saved_searches.tasks.process_saved_search_alerts",
+            "schedule": 900.0,
+        },
+        "notification-email-delivery": {
+            "task": "notifications.tasks.deliver_pending_notification_emails",
+            "schedule": 60.0,
+        },
+        "payment-reconciliation": {
+            "task": "payments.tasks.reconcile_pending_payments",
+            "schedule": 900.0,
+        },
+        "promotion-expiry-notifications": {
+            "task": "promotions.tasks.notify_expired_promotions",
+            "schedule": 3600.0,
+        },
+    }
+)
+
+_media_storage_options = {
+    "location": os.getenv(
+        "MARKETLIFT_DJANGO_STORAGE_LOCATION", str(BASE_DIR / ".marketlift-remote")
+    ),
+    "base_url": os.getenv("MARKETLIFT_DJANGO_STORAGE_BASE_URL", "/media/"),
+}
+_extra_storage_options = os.getenv("MARKETLIFT_DJANGO_STORAGE_OPTIONS_JSON", "").strip()
+if _extra_storage_options:
+    try:
+        parsed_options = json.loads(_extra_storage_options)
+        if isinstance(parsed_options, dict):
+            _media_storage_options.update(parsed_options)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            "MARKETLIFT_DJANGO_STORAGE_OPTIONS_JSON must be valid JSON."
+        ) from exc
+
+STORAGES.setdefault(
+    "marketlift_media",
+    {
+        "BACKEND": os.getenv(
+            "MARKETLIFT_DJANGO_STORAGE_CLASS",
+            "django.core.files.storage.FileSystemStorage",
+        ),
+        "OPTIONS": _media_storage_options,
+    },
+)
+
+LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO").upper()
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        }
+    },
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_REQUEST_LOG_LEVEL", "WARNING"),
+            "propagate": False,
+        },
+        "marketlift": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+    },
+}

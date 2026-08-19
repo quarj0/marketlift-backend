@@ -66,6 +66,9 @@ class User(AbstractUser):
 
     suspended_at = models.DateTimeField(null=True, blank=True)
     suspension_reason = models.TextField(blank=True)
+    terms_accepted_at = models.DateTimeField(null=True, blank=True)
+    deactivated_at = models.DateTimeField(null=True, blank=True)
+    deactivation_reason = models.TextField(blank=True)
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -122,3 +125,33 @@ class AccountSettings(UUIDTimeStampedModel):
 
     def __str__(self) -> str:
         return f"Settings for {self.user_id}"
+
+
+class EmailVerificationChallenge(UUIDTimeStampedModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="email_verification_challenges"
+    )
+    code_digest = models.CharField(max_length=64)
+    expires_at = models.DateTimeField(db_index=True)
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(
+                fields=("user", "consumed_at", "-created_at"),
+                name="accounts_verify_user_idx",
+            )
+        ]
+
+
+class PasswordResetRequest(UUIDTimeStampedModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="password_reset_requests"
+    )
+    requested_ip = models.GenericIPAddressField(null=True, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)

@@ -68,6 +68,7 @@ class Listing(UUIDTimeStampedModel):
     paused_at = models.DateTimeField(null=True, blank=True)
     sold_at = models.DateTimeField(null=True, blank=True)
     expired_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     objects = ListingQuerySet.as_manager()
 
@@ -79,6 +80,13 @@ class Listing(UUIDTimeStampedModel):
             models.Index(fields=("state_code", "city", "status")),
             models.Index(fields=("seller", "status")),
             models.Index(fields=("price",)),
+            models.Index(
+                fields=("status", "published_at"), name="listings_status_pub_idx"
+            ),
+            models.Index(
+                fields=("state_code", "status", "-created_at"),
+                name="listings_state_status_idx",
+            ),
         ]
 
     def save(self, *args, **kwargs):
@@ -139,7 +147,9 @@ class ListingMedia(UUIDTimeStampedModel):
 
     @property
     def content_url(self) -> str:
-        return self.upload.content_url if self.upload_id else self.url
+        if self.upload_id:
+            return self.upload.preferred_image_url("detail")
+        return self.url
 
     def __str__(self) -> str:
         return self.content_url
@@ -214,3 +224,27 @@ class SavedListing(UUIDTimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.user_id} saved {self.listing_id}"
+
+
+class RecentlyViewedListing(UUIDTimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="recently_viewed_listings",
+    )
+    listing = models.ForeignKey(
+        Listing, on_delete=models.CASCADE, related_name="recent_viewers"
+    )
+
+    class Meta:
+        ordering = ("-updated_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "listing"), name="listings_unique_recent_view"
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=("user", "-updated_at"), name="listings_recent_user_idx"
+            )
+        ]

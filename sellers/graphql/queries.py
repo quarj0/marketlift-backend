@@ -1,10 +1,9 @@
 import strawberry
 from django.db.models import Q
-
-from marketlift.graphql.auth import require_staff
-from sellers.models import SellerProfile
+from marketlift.graphql.auth import require_staff, require_seller
+from sellers.models import SellerProfile, SellerSettings
 from .mappers import admin_seller_to_type, seller_to_type
-from .types import AdminSellerType, SellerType
+from .types import AdminSellerType, SellerSettingsType, SellerType
 
 
 @strawberry.type
@@ -12,12 +11,26 @@ class SellerQuery:
     @strawberry.field
     def seller(self, id: strawberry.ID) -> SellerType | None:
         try:
-            seller = SellerProfile.objects.select_related("user").get(
-                pk=str(id), is_suspended=False
+            return seller_to_type(
+                SellerProfile.objects.select_related("user").get(
+                    pk=str(id), is_suspended=False
+                )
             )
         except (SellerProfile.DoesNotExist, ValueError):
             return None
-        return seller_to_type(seller)
+
+    @strawberry.field
+    def my_seller_settings(self, info: strawberry.Info) -> SellerSettingsType:
+        seller = require_seller(info)
+        x = SellerSettings.objects.get_or_create(user_profile=seller)[0]
+        return SellerSettingsType(
+            new_inquiry=x.new_inquiry,
+            listing_status=x.listing_status,
+            performance=x.performance,
+            auto_renew=x.auto_renew,
+            show_phone=x.show_phone,
+            vacation=x.vacation,
+        )
 
     @strawberry.field
     def admin_sellers(
@@ -29,7 +42,7 @@ class SellerQuery:
         offset: int = 0,
     ) -> list[AdminSellerType]:
         require_staff(info)
-        qs = SellerProfile.objects.select_related("user").all()
+        qs = SellerProfile.objects.select_related("user")
         if search:
             qs = qs.filter(
                 Q(display_name__icontains=search)
@@ -38,5 +51,7 @@ class SellerQuery:
             )
         if suspended is not None:
             qs = qs.filter(is_suspended=suspended)
-        qs = qs[max(0, offset) : max(0, offset) + max(1, min(limit, 100))]
-        return [admin_seller_to_type(seller) for seller in qs]
+        return [
+            admin_seller_to_type(x)
+            for x in qs[max(0, offset) : max(0, offset) + max(1, min(limit, 100))]
+        ]

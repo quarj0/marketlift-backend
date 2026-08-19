@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import transaction, models
 from django.utils import timezone
 
 from categories.models import Category, CategoryField
@@ -154,9 +154,14 @@ def _write_media(
     ]
 
     if image_upload_ids is not None:
+        from platform_settings.services import get_platform_configuration
+
+        max_images = get_platform_configuration().max_listing_images
         ordered_ids = [str(value) for value in image_upload_ids]
-        if len(ordered_ids) > 12:
-            raise ValidationError({"images": "A listing can have at most 12 images."})
+        if len(ordered_ids) > max_images:
+            raise ValidationError(
+                {"images": f"A listing can have at most {max_images} images."}
+            )
         if len(set(ordered_ids)) != len(ordered_ids):
             raise ValidationError(
                 {"images": "The same upload cannot be attached twice."}
@@ -204,9 +209,14 @@ def _write_media(
 
     # Backward-compatible external URL path while the frontend is migrated to
     # prepared upload IDs. It is intentionally separate from object storage.
+    from platform_settings.services import get_platform_configuration
+
+    max_images = get_platform_configuration().max_listing_images
     urls = [url for url in (image_urls or []) if url]
-    if len(urls) > 12:
-        raise ValidationError({"images": "A listing can have at most 12 images."})
+    if len(urls) > max_images:
+        raise ValidationError(
+            {"images": f"A listing can have at most {max_images} images."}
+        )
     listing.media.all().delete()
     ListingMedia.objects.bulk_create(
         [
@@ -359,18 +369,30 @@ def publish_listing(listing: Listing):
         condition=listing.condition,
         attributes=attributes,
     )
+    from datetime import timedelta
+    from platform_settings.models import PlatformConfiguration
+
+    config = PlatformConfiguration.load()
+    if config.seller_verification_required and not listing.seller.verified:
+        raise ValidationError(
+            "Seller verification is required before publishing listings."
+        )
+
     enforce_listing_limit(listing.seller, excluding_listing=listing)
 
+    now = timezone.now()
     listing.status = Listing.Status.PUBLISHED
-    listing.published_at = timezone.now()
+    listing.published_at = now
     listing.paused_at = None
     listing.expired_at = None
+    listing.expires_at = now + timedelta(days=config.default_listing_duration_days)
     listing.save(
         update_fields=(
             "status",
             "published_at",
             "paused_at",
             "expired_at",
+            "expires_at",
             "updated_at",
         )
     )
@@ -395,3 +417,13 @@ def mark_listing_sold(listing: Listing):
     listing.sold_at = timezone.now()
     listing.save(update_fields=("status", "sold_at", "updated_at"))
     return listing
+
+
+def record_listing_view(*, listing, user=None):
+    Listing.objects.filter(pk=listing.pk).update(views=models.F("views") + 1)
+    if user is not None and getattr(user, "is_authenticated", False):
+        from .models import RecentlyViewedListing
+
+        row, _ = RecentlyViewedListing.objects.get_or_create(user=user, listing=listing)
+        row.save(update_fields=("updated_at",))
+    return True

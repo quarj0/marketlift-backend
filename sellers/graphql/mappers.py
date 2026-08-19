@@ -10,6 +10,9 @@ def seller_to_type(seller) -> SellerType:
         verified=seller.verified,
         seller_type=seller.seller_type,
         is_suspended=seller.is_suspended,
+        rating=float(seller.rating_average),
+        reviews=seller.review_count,
+        positive_review_percent=float(seller.positive_review_percent),
         location=LocationType(
             state=user.state,
             state_code=user.state_code,

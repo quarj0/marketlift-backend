@@ -15,6 +15,7 @@ class ListingFilterInput:
     seller_type: str | None = None
     verified_only: bool = False
     date_listed: str | None = None
+    attribute_filters: JSON | None = None
     sort: str = "relevant"
 
 

@@ -46,6 +46,11 @@ PURPOSE_RULES = {
         5 * 1024 * 1024,
         UploadAsset.Visibility.PUBLIC,
     ),
+    UploadAsset.Purpose.SUPPORT_ATTACHMENT: (
+        DOCUMENT_TYPES,
+        15 * 1024 * 1024,
+        UploadAsset.Visibility.PRIVATE,
+    ),
 }
 
 MIME_EXTENSIONS = {
@@ -168,6 +173,21 @@ def complete_upload(*, asset, user):
         raise ValidationError(
             {"size": "Stored file size does not match the prepared upload."}
         )
+    from django.conf import settings
+
+    if getattr(settings, "MARKETLIFT_STRICT_UPLOAD_VALIDATION", True):
+        try:
+            if asset.mime_type.startswith("image/"):
+                from .processing import validate_image_asset
+
+                validate_image_asset(asset)
+            elif asset.mime_type == "application/pdf":
+                from .processing import validate_pdf_asset
+
+                validate_pdf_asset(asset)
+        except ValueError as exc:
+            get_storage_backend(asset.storage_alias).delete(asset)
+            raise ValidationError(str(exc)) from exc
     asset.actual_size = info.size
     asset.checksum_sha256 = info.checksum_sha256 or asset.checksum_sha256
     asset.status = UploadAsset.Status.READY
@@ -181,6 +201,17 @@ def complete_upload(*, asset, user):
             "updated_at",
         )
     )
+    if asset.mime_type.startswith("image/"):
+        from django.conf import settings
+
+        if getattr(settings, "MARKETLIFT_PROCESS_UPLOADS_ASYNC", False):
+            from .tasks import process_upload_image
+
+            transaction.on_commit(lambda: process_upload_image.delay(str(asset.id)))
+        else:
+            from .processing import process_image_asset
+
+            process_image_asset(asset)
     return asset
 
 

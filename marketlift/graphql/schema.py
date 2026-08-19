@@ -1,68 +1,20 @@
 import strawberry
+from strawberry.extensions import MaxAliasesLimiter, MaxTokensLimiter, QueryDepthLimiter
 from strawberry.tools import merge_types
+from strawberry_django.optimizer import DjangoOptimizerExtension
 
-from accounts.graphql.mutations import AccountMutation
-from accounts.graphql.queries import AccountQuery
-from audit.graphql.queries import AuditQuery
-from categories.graphql.mutations import CategoryMutation
-from categories.graphql.queries import CategoryQuery
-from listings.graphql.mutations import ListingMutation
-from listings.graphql.queries import ListingQuery
-from marketlift.graphql.queries import HealthQuery
-from messaging.graphql.mutations import MessagingMutation
-from messaging.graphql.queries import MessagingQuery
-from moderation.graphql.mutations import ModerationMutation
-from moderation.graphql.queries import ModerationQuery
-from notifications.graphql.mutations import NotificationMutation
-from notifications.graphql.queries import NotificationQuery
-from payments.graphql.mutations import PaymentMutation
-from payments.graphql.queries import PaymentQuery
-from promotions.graphql.mutations import PromotionMutation
-from promotions.graphql.queries import PromotionQuery
-from reports.graphql.mutations import ReportMutation
-from reports.graphql.queries import ReportQuery
-from sellers.graphql.mutations import SellerMutation
-from sellers.graphql.queries import SellerQuery
-from subscriptions.graphql.mutations import SubscriptionMutation
-from subscriptions.graphql.queries import SubscriptionQuery
-from verifications.graphql.mutations import VerificationMutation
-from verifications.graphql.queries import VerificationQuery
+from .registry import MUTATION_TYPES, QUERY_TYPES
 
-Query = merge_types(
-    "Query",
-    (
-        HealthQuery,
-        AccountQuery,
-        SellerQuery,
-        CategoryQuery,
-        ListingQuery,
-        SubscriptionQuery,
-        PromotionQuery,
-        PaymentQuery,
-        VerificationQuery,
-        ModerationQuery,
-        ReportQuery,
-        NotificationQuery,
-        AuditQuery,
-        MessagingQuery,
-    ),
+Query = merge_types("Query", QUERY_TYPES)
+Mutation = merge_types("Mutation", MUTATION_TYPES)
+
+schema = strawberry.Schema(
+    query=Query,
+    mutation=Mutation,
+    extensions=[
+        DjangoOptimizerExtension,
+        lambda: QueryDepthLimiter(max_depth=12),
+        lambda: MaxTokensLimiter(max_token_count=5000),
+        lambda: MaxAliasesLimiter(max_alias_count=30),
+    ],
 )
-Mutation = merge_types(
-    "Mutation",
-    (
-        AccountMutation,
-        SellerMutation,
-        CategoryMutation,
-        ListingMutation,
-        SubscriptionMutation,
-        PromotionMutation,
-        PaymentMutation,
-        VerificationMutation,
-        ModerationMutation,
-        ReportMutation,
-        NotificationMutation,
-        MessagingMutation,
-    ),
-)
-
-schema = strawberry.Schema(query=Query, mutation=Mutation)

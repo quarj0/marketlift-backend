@@ -1,5 +1,7 @@
 import io
 
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
@@ -62,7 +64,9 @@ class MessagingServiceTests(TestCase):
 
     def test_image_attachment_claims_upload(self):
         conversation = start_conversation(buyer=self.buyer, listing=self.listing)
-        payload = b"image"
+        buffer = io.BytesIO()
+        Image.new("RGB", (2, 2), "white").save(buffer, format="JPEG")
+        payload = buffer.getvalue()
         asset, _ = prepare_upload(
             user=self.buyer,
             purpose=UploadAsset.Purpose.MESSAGE_IMAGE,
