@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.core.cache import cache
 from django.db import connection
 from rest_framework.decorators import api_view, permission_classes
@@ -32,6 +34,19 @@ def readiness(request):
         )
     except Exception:
         checks["redis"] = "unavailable"
+
+    try:
+        layer = get_channel_layer()
+        if layer is None:
+            raise RuntimeError("No channel layer configured")
+        channel_name = async_to_sync(layer.new_channel)("marketlift.readiness.")
+        async_to_sync(layer.send)(channel_name, {"type": "readiness.ping"})
+        event = async_to_sync(layer.receive)(channel_name)
+        checks["realtime"] = (
+            "ok" if event.get("type") == "readiness.ping" else "unavailable"
+        )
+    except Exception:
+        checks["realtime"] = "unavailable"
 
     ready = all(value == "ok" for value in checks.values())
     return Response(

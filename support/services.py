@@ -123,3 +123,57 @@ def staff_reply(*, staff, ticket, message, internal=False, status=None, request=
         request=request,
     )
     return row
+
+
+@transaction.atomic
+def update_ticket_workflow(
+    *, staff, ticket, status=None, priority=None, assigned_to=None, request=None
+):
+    if not staff.is_staff:
+        raise PermissionDenied("Admin permission required.")
+    ticket = SupportTicket.objects.select_for_update().get(pk=ticket.pk)
+    changed = []
+    if status is not None:
+        if status not in SupportTicket.Status.values:
+            raise ValidationError({"status": "Invalid support ticket status."})
+        ticket.status = status
+        changed.append("status")
+        if status == SupportTicket.Status.RESOLVED:
+            ticket.resolved_at = timezone.now()
+            ticket.closed_at = None
+            changed += ["resolved_at", "closed_at"]
+        elif status == SupportTicket.Status.CLOSED:
+            ticket.closed_at = timezone.now()
+            changed.append("closed_at")
+        else:
+            ticket.resolved_at = None
+            ticket.closed_at = None
+            changed += ["resolved_at", "closed_at"]
+    if priority is not None:
+        if priority not in SupportTicket.Priority.values:
+            raise ValidationError({"priority": "Invalid support ticket priority."})
+        ticket.priority = priority
+        changed.append("priority")
+    if assigned_to is not None:
+        if not assigned_to.is_staff or not assigned_to.is_active:
+            raise ValidationError(
+                {"assignedTo": "Ticket assignee must be an active administrator."}
+            )
+        ticket.assigned_to = assigned_to
+        changed.append("assigned_to")
+    if changed:
+        ticket.save(update_fields=tuple(dict.fromkeys(changed + ["updated_at"])))
+    record_audit_event(
+        actor=staff,
+        action="support.workflow_updated",
+        target=ticket,
+        target_type="support_ticket",
+        target_label=ticket.reference,
+        metadata={
+            "status": ticket.status,
+            "priority": ticket.priority,
+            "assignedTo": str(ticket.assigned_to_id) if ticket.assigned_to_id else None,
+        },
+        request=request,
+    )
+    return ticket

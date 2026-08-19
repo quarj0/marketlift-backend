@@ -1,5 +1,6 @@
 import strawberry
 from marketlift.graphql.auth import require_user
+from marketlift.realtime.counts import unread_notification_count
 from notifications.models import Notification
 from .types import NotificationType
 
@@ -37,6 +38,4 @@ class NotificationQuery:
 
     @strawberry.field
     def unread_notification_count(self, info: strawberry.Info) -> int:
-        return Notification.objects.filter(
-            user=require_user(info), read_at__isnull=True
-        ).count()
+        return unread_notification_count(require_user(info))

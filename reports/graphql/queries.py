@@ -32,7 +32,7 @@ class ReportQuery:
         limit: int = 50,
         offset: int = 0,
     ) -> list[ReportType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "moderator"})
         qs = Report.objects.select_related(
             "reporter",
             "listing",
@@ -53,7 +53,7 @@ class ReportQuery:
 
     @strawberry.field
     def report(self, info: strawberry.Info, id: str) -> ReportType | None:
-        require_staff(info)
+        require_staff(info, roles={"admin", "moderator"})
         try:
             r = (
                 Report.objects.select_related(

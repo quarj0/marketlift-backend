@@ -52,7 +52,7 @@ class VerificationMutation:
     def move_verification_to_review(
         self, info: strawberry.Info, id: strawberry.ID, note: str = ""
     ) -> VerificationType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             item = move_to_review(
                 verification=_get(id),
@@ -68,7 +68,7 @@ class VerificationMutation:
     def approve_verification(
         self, info: strawberry.Info, id: strawberry.ID, note: str = ""
     ) -> VerificationType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             item = approve_verification(
                 verification=_get(id),
@@ -84,7 +84,7 @@ class VerificationMutation:
     def reject_verification(
         self, info: strawberry.Info, id: strawberry.ID, note: str
     ) -> VerificationType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             item = reject_verification(
                 verification=_get(id),

@@ -37,7 +37,7 @@ class PlatformSettingsMutation:
         info: strawberry.Info,
         input: PlatformConfigurationInput,
     ) -> PlatformConfigurationType:
-        staff = require_staff(info)
+        staff = require_staff(info, roles={"admin"})
         config = PlatformConfiguration.load()
         before = {field: getattr(config, field) for field in _EDITABLE_FIELDS}
 
@@ -87,7 +87,7 @@ class PlatformSettingsMutation:
     @strawberry.mutation
     @transaction.atomic
     def invalidate_all_sessions(self, info: strawberry.Info, reason: str) -> int:
-        staff = require_staff(info)
+        staff = require_staff(info, roles={"admin"})
         reason = (reason or "").strip()
         if not reason:
             raise validation_error(ValidationError({"reason": "A reason is required."}))

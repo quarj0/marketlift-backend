@@ -73,4 +73,24 @@ def admin_user_to_type(user):
             district=user.district or None,
         ),
         seller_id=str(seller.id) if seller else None,
+        admin_role=(user.admin_role or None) if user.is_staff else None,
+    )
+
+
+def admin_invitation_to_type(invitation):
+    from .types import AdminInvitationType
+
+    return AdminInvitationType(
+        id=str(invitation.id),
+        email=invitation.email,
+        role=invitation.role,
+        active=invitation.active,
+        invited_by=(
+            invitation.invited_by.full_name or invitation.invited_by.email
+            if invitation.invited_by_id
+            else None
+        ),
+        expires_at=invitation.expires_at,
+        accepted_at=invitation.accepted_at,
+        revoked_at=invitation.revoked_at,
     )

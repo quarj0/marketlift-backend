@@ -9,7 +9,12 @@ from marketlift.graphql.auth import (
 )
 from marketlift.graphql.errors import validation_error
 from sellers.models import SellerProfile, SellerSettings
-from sellers.services import restore_seller, suspend_seller
+from sellers.services import (
+    follow_seller,
+    restore_seller,
+    suspend_seller,
+    unfollow_seller,
+)
 from .mappers import admin_seller_to_type, seller_to_type
 from .types import AdminSellerType, SellerSettingsInput, SellerSettingsType, SellerType
 
@@ -69,10 +74,36 @@ class SellerMutation:
         )
 
     @strawberry.mutation
+    def follow_seller(
+        self, info: strawberry.Info, seller_id: strawberry.ID
+    ) -> SellerType:
+        user = require_user(info)
+        try:
+            seller = SellerProfile.objects.select_related("user").get(
+                pk=str(seller_id), is_suspended=False, user__is_active=True
+            )
+            return seller_to_type(follow_seller(user=user, seller=seller))
+        except SellerProfile.DoesNotExist as exc:
+            raise GraphQLError("Seller not found.") from exc
+        except ValidationError as exc:
+            raise validation_error(exc) from exc
+
+    @strawberry.mutation
+    def unfollow_seller(
+        self, info: strawberry.Info, seller_id: strawberry.ID
+    ) -> SellerType:
+        user = require_user(info)
+        try:
+            seller = SellerProfile.objects.select_related("user").get(pk=str(seller_id))
+            return seller_to_type(unfollow_seller(user=user, seller=seller))
+        except SellerProfile.DoesNotExist as exc:
+            raise GraphQLError("Seller not found.") from exc
+
+    @strawberry.mutation
     def suspend_seller(
         self, info: strawberry.Info, seller_id: strawberry.ID, reason: str
     ) -> AdminSellerType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             s = SellerProfile.objects.select_related("user").get(pk=str(seller_id))
             return admin_seller_to_type(
@@ -92,7 +123,7 @@ class SellerMutation:
     def restore_seller(
         self, info: strawberry.Info, seller_id: strawberry.ID, reason: str
     ) -> AdminSellerType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             s = SellerProfile.objects.select_related("user").get(pk=str(seller_id))
             return admin_seller_to_type(

@@ -62,3 +62,14 @@ class CategoryType:
 class DeleteCategoryPayload:
     slug: str
     affected_listings: int
+
+
+@strawberry.input
+class CategoryAdminInput:
+    name: str
+    slug: str | None = None
+    icon: str | None = None
+    description: str | None = None
+    parent_id: str | None = None
+    active: bool = True
+    sort_order: int = 0

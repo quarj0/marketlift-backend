@@ -13,6 +13,7 @@ class ListingQuerySet(models.QuerySet):
             seller__is_suspended=False,
             category__isnull=False,
             category__active=True,
+            seller_deleted_at__isnull=True,
         )
 
 
@@ -69,6 +70,8 @@ class Listing(UUIDTimeStampedModel):
     sold_at = models.DateTimeField(null=True, blank=True)
     expired_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    seller_deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    seller_delete_reason = models.TextField(blank=True)
 
     objects = ListingQuerySet.as_manager()
 
@@ -120,6 +123,7 @@ class Listing(UUIDTimeStampedModel):
             and not self.seller.is_suspended
             and self.category_id is not None
             and self.category.active
+            and self.seller_deleted_at is None
         )
 
     def __str__(self) -> str:

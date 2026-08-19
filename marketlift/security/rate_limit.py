@@ -1,6 +1,7 @@
 import hashlib
 import logging
 
+from django.conf import settings
 from django.core.cache import cache
 from rest_framework.exceptions import Throttled
 
@@ -8,8 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 def client_ip(request):
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "").split(",", 1)[0].strip()
-    return forwarded or request.META.get("REMOTE_ADDR") or "unknown"
+    if getattr(settings, "MARKETLIFT_TRUST_PROXY_HEADERS", False):
+        forwarded = (
+            request.META.get("HTTP_X_FORWARDED_FOR", "").split(",", 1)[0].strip()
+        )
+        if forwarded:
+            return forwarded
+    return request.META.get("REMOTE_ADDR") or "unknown"
 
 
 def _identity(request):
@@ -31,9 +37,9 @@ def enforce_rate_limit(request, scope, *, limit, window):
             cache.set(key, 1, timeout=window)
             count = 1
     except Exception:
-        # Rate limiting is a protection layer, not a reason to make the whole
-        # marketplace unavailable if the cache has a short outage.
-        logger.exception("Rate-limit cache unavailable for scope %s", scope)
+        logger.warning(
+            "Rate-limit cache unavailable for scope %s", scope, exc_info=True
+        )
         return
 
     if count > limit:

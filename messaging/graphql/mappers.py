@@ -34,6 +34,16 @@ def conversation_to_type(conversation, user) -> ConversationType:
         if media:
             primary_image = media[0].url
     last_message = conversation.last_message_preview
+    unread = (
+        int(conversation._viewer_unread)
+        if hasattr(conversation, "_viewer_unread")
+        else conversation.unread_count_for(user)
+    )
+    blocked = (
+        bool(conversation._viewer_blocked)
+        if hasattr(conversation, "_viewer_blocked")
+        else is_blocked_by_current_user(user=user, conversation=conversation)
+    )
     archived = (
         conversation.buyer_archived_at is not None
         if role == "buyer"
@@ -60,9 +70,9 @@ def conversation_to_type(conversation, user) -> ConversationType:
         ),
         last_message=last_message,
         last_message_at=conversation.last_message_at,
-        unread=conversation.unread_count_for(user),
+        unread=unread,
         archived=archived,
-        blocked=is_blocked_by_current_user(user=user, conversation=conversation),
+        blocked=blocked,
     )
 
 

@@ -9,12 +9,18 @@ from marketlift.graphql.types import LocationType
 class SellerType:
     id: strawberry.ID
     name: str
+    avatar_url: str | None
     verified: bool
     seller_type: str
     is_suspended: bool
     rating: float
     reviews: int
     positive_review_percent: float
+    response_rate: float | None
+    active_listings: int
+    follower_count: int
+    is_followed: bool
+    member_since: datetime
     location: LocationType
 
 
@@ -51,3 +57,32 @@ class SellerSettingsInput:
     auto_renew: bool | None = None
     show_phone: bool | None = None
     vacation: bool | None = None
+
+
+@strawberry.type
+class SellerDashboardPlanType:
+    name: str
+    code: str
+    used: int
+    limit: int
+
+
+@strawberry.type
+class SellerDashboardListingType:
+    id: strawberry.ID
+    title: str
+    status: str
+    views: int
+    inquiries: int
+    created_at: datetime
+
+
+@strawberry.type
+class SellingDashboardType:
+    active: int
+    drafts: int
+    under_review: int
+    views: int
+    messages: int
+    plan: SellerDashboardPlanType
+    recent_listings: list[SellerDashboardListingType]

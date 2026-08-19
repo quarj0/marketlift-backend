@@ -30,7 +30,7 @@ class VerificationQuery:
         limit: int = 50,
         offset: int = 0,
     ) -> list[VerificationType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "moderator"})
         qs = VerificationSubmission.objects.select_related(
             "seller", "seller__user"
         ).all()
@@ -53,7 +53,7 @@ class VerificationQuery:
     def verification(
         self, info: strawberry.Info, id: strawberry.ID
     ) -> VerificationType | None:
-        require_staff(info)
+        require_staff(info, roles={"admin", "moderator"})
         try:
             item = VerificationSubmission.objects.select_related(
                 "seller", "seller__user"
@@ -66,7 +66,7 @@ class VerificationQuery:
     def verification_queue_summary(
         self, info: strawberry.Info
     ) -> VerificationQueueSummaryType:
-        require_staff(info)
+        require_staff(info, roles={"admin", "moderator"})
         today = timezone.localdate()
         return VerificationQueueSummaryType(
             pending=VerificationSubmission.objects.filter(

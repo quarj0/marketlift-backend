@@ -56,3 +56,36 @@ class SellerSettings(UUIDTimeStampedModel):
 
     class Meta:
         verbose_name_plural = "seller settings"
+
+
+class SellerFollow(UUIDTimeStampedModel):
+    follower = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="followed_sellers",
+    )
+    seller = models.ForeignKey(
+        SellerProfile,
+        on_delete=models.CASCADE,
+        related_name="followers",
+    )
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("follower", "seller"),
+                name="sellers_unique_follow",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=("follower", "-created_at"), name="sellers_follow_user_idx"
+            ),
+            models.Index(
+                fields=("seller", "-created_at"), name="sellers_follow_seller_idx"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.follower_id} follows {self.seller_id}"

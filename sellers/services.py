@@ -80,3 +80,23 @@ def restore_seller(*, seller, actor, reason: str, request=None):
         href="/selling/listings",
     )
     return seller
+
+
+@transaction.atomic
+def follow_seller(*, user, seller):
+    from .models import SellerFollow
+
+    if seller.user_id == user.pk:
+        raise ValidationError("You cannot follow your own seller profile.")
+    if seller.is_suspended or not seller.user.is_active:
+        raise ValidationError("This seller is not currently available to follow.")
+    SellerFollow.objects.get_or_create(follower=user, seller=seller)
+    return seller
+
+
+@transaction.atomic
+def unfollow_seller(*, user, seller):
+    from .models import SellerFollow
+
+    SellerFollow.objects.filter(follower=user, seller=seller).delete()
+    return seller

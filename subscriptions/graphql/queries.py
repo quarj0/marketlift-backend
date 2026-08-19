@@ -26,7 +26,7 @@ class SubscriptionQuery:
 
     @strawberry.field
     def admin_seller_plans(self, info: strawberry.Info) -> list[SellerPlanType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "finance"})
         return [plan_to_type(plan) for plan in SellerPlan.objects.all()]
 
     @strawberry.field
@@ -38,7 +38,7 @@ class SubscriptionQuery:
         limit: int = 50,
         offset: int = 0,
     ) -> list[SellerSubscriptionType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "finance"})
         qs = SellerSubscription.objects.select_related(
             "plan", "seller", "seller__user"
         ).all()

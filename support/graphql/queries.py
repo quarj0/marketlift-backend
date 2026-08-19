@@ -21,7 +21,21 @@ class SupportQuery:
     def support_tickets(
         self, info: strawberry.Info, status: str | None = None, limit: int = 100
     ) -> list[SupportTicketType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "support"})
         qs = SupportTicket.objects.select_related("user", "assigned_to")
         qs = qs.filter(status=status) if status else qs
         return [ticket_to_type(x, True) for x in qs[: max(1, min(limit, 200))]]
+
+    @strawberry.field
+    def support_ticket(
+        self, info: strawberry.Info, id: strawberry.ID
+    ) -> SupportTicketType | None:
+        u = require_user(info)
+        try:
+            qs = SupportTicket.objects.select_related("user", "assigned_to")
+            ticket = qs.get(pk=str(id))
+            if not u.is_staff and ticket.user_id != u.pk:
+                return None
+            return ticket_to_type(ticket, u.is_staff)
+        except (SupportTicket.DoesNotExist, ValueError):
+            return None

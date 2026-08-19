@@ -28,6 +28,7 @@ class UserManager(DjangoUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("admin_role", "super_admin")
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
@@ -44,6 +45,13 @@ class User(AbstractUser):
     Buying and selling use the same account. A user becomes a seller by gaining
     a sellers.SellerProfile; seller is intentionally not an account role.
     """
+
+    class AdminRole(models.TextChoices):
+        SUPER_ADMIN = "super_admin", "Super admin"
+        ADMIN = "admin", "Administrator"
+        MODERATOR = "moderator", "Moderator"
+        SUPPORT = "support", "Support"
+        FINANCE = "finance", "Finance"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = None
@@ -69,6 +77,9 @@ class User(AbstractUser):
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     deactivated_at = models.DateTimeField(null=True, blank=True)
     deactivation_reason = models.TextField(blank=True)
+    admin_role = models.CharField(
+        max_length=20, choices=AdminRole.choices, blank=True, default=""
+    )
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -155,3 +166,58 @@ class PasswordResetRequest(UUIDTimeStampedModel):
 
     class Meta:
         ordering = ("-created_at",)
+
+
+class AdminLoginChallenge(UUIDTimeStampedModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="admin_login_challenges"
+    )
+    code_digest = models.CharField(max_length=64)
+    expires_at = models.DateTimeField(db_index=True)
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    requested_ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(
+                fields=("user", "consumed_at", "-created_at"),
+                name="accounts_admin_mfa_idx",
+            )
+        ]
+
+
+class AdminInvitation(UUIDTimeStampedModel):
+    email = models.EmailField(db_index=True)
+    role = models.CharField(max_length=20, choices=User.AdminRole.choices)
+    token_digest = models.CharField(max_length=64, unique=True)
+    invited_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="admin_invitations_sent",
+    )
+    expires_at = models.DateTimeField(db_index=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(
+                fields=("email", "accepted_at", "revoked_at"),
+                name="accounts_admin_invite_idx",
+            )
+        ]
+
+    @property
+    def active(self):
+        from django.utils import timezone
+
+        return (
+            self.accepted_at is None
+            and self.revoked_at is None
+            and self.expires_at > timezone.now()
+        )

@@ -21,13 +21,20 @@ def env_list(name: str, default: str = "") -> list[str]:
     ]
 
 
+MARKETLIFT_ENV = os.getenv("MARKETLIFT_ENV", "development").strip().lower()
+IS_PRODUCTION = MARKETLIFT_ENV in {"production", "prod"}
+
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY", "django-insecure-marketlift-local-development-only"
 )
-DEBUG = env_bool("DJANGO_DEBUG", True)
+SECRET_KEY_FALLBACKS = env_list("DJANGO_SECRET_KEY_FALLBACKS")
+DEBUG = env_bool("DJANGO_DEBUG", not IS_PRODUCTION)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
+    "marketlift.realtime",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -55,6 +62,7 @@ INSTALLED_APPS = [
     "saved_searches",
     "support",
     "platform_settings",
+    "marketlift.security",
 ]
 
 MIDDLEWARE = [
@@ -107,6 +115,7 @@ DATABASES = {
         "CONN_MAX_AGE": int(
             os.getenv("DB_CONN_MAX_AGE", os.getenv("POSTGRES_CONN_MAX_AGE", "60"))
         ),
+        "CONN_HEALTH_CHECKS": env_bool("DB_CONN_HEALTH_CHECKS", True),
     }
 }
 
@@ -153,6 +162,31 @@ CSRF_TRUSTED_ORIGINS = env_list(
 )
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+
+# Realtime transport. Redis is an implementation detail of the channel layer and
+# can point at any compatible managed/self-hosted Redis endpoint. Database and
+# object-storage providers remain independent from realtime delivery.
+CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL", "redis://127.0.0.1:6379/3")
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": os.getenv(
+            "MARKETLIFT_CHANNEL_LAYER_BACKEND",
+            "channels_redis.core.RedisChannelLayer",
+        ),
+        "CONFIG": {
+            "hosts": [CHANNEL_REDIS_URL],
+            "capacity": int(os.getenv("MARKETLIFT_CHANNEL_CAPACITY", "1000")),
+            "expiry": int(os.getenv("MARKETLIFT_CHANNEL_EXPIRY_SECONDS", "60")),
+        },
+    }
+}
+MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS = env_list(
+    "MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS",
+    ",".join(CORS_ALLOWED_ORIGINS),
+)
+MARKETLIFT_WEBSOCKET_ACTION_RATE_LIMIT_PER_MINUTE = int(
+    os.getenv("MARKETLIFT_WEBSOCKET_ACTION_RATE_LIMIT_PER_MINUTE", "180")
+)
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
@@ -163,9 +197,9 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_COOKIE_NAME = os.getenv("SESSION_COOKIE_NAME", "marketlift_sessionid")
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", False)
+SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", IS_PRODUCTION)
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
-CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", False)
+CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", IS_PRODUCTION)
 CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/1")
@@ -224,9 +258,16 @@ DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL", "Marketlift <noreply@marketlift.local>"
 )
 MARKETLIFT_FRONTEND_URL = os.getenv("MARKETLIFT_FRONTEND_URL", "http://localhost:3000")
+MARKETLIFT_ADMIN_FRONTEND_URL = os.getenv(
+    "MARKETLIFT_ADMIN_FRONTEND_URL", "http://localhost:3001"
+)
+MARKETLIFT_ADMIN_MFA_REQUIRED = env_bool("MARKETLIFT_ADMIN_MFA_REQUIRED", IS_PRODUCTION)
+MARKETLIFT_ADMIN_MFA_TTL_SECONDS = int(
+    os.getenv("MARKETLIFT_ADMIN_MFA_TTL_SECONDS", "600")
+)
 SESSION_COOKIE_AGE = int(os.getenv("SESSION_COOKIE_AGE", "1209600"))
 SESSION_SAVE_EVERY_REQUEST = env_bool("SESSION_SAVE_EVERY_REQUEST", False)
-SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", IS_PRODUCTION)
 SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
 SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
@@ -235,6 +276,19 @@ X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 USE_X_FORWARDED_HOST = env_bool("USE_X_FORWARDED_HOST", False)
+MARKETLIFT_TRUST_PROXY_HEADERS = env_bool("MARKETLIFT_TRUST_PROXY_HEADERS", False)
+MARKETLIFT_GRAPHQL_RATE_LIMIT_PER_MINUTE = int(
+    os.getenv("MARKETLIFT_GRAPHQL_RATE_LIMIT_PER_MINUTE", "120")
+)
+MARKETLIFT_GRAPHQL_MAX_DEPTH = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_DEPTH", "12"))
+MARKETLIFT_GRAPHQL_MAX_TOKENS = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_TOKENS", "5000"))
+MARKETLIFT_GRAPHQL_MAX_ALIASES = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_ALIASES", "30"))
+MARKETLIFT_DISABLE_GRAPHQL_INTROSPECTION = env_bool(
+    "MARKETLIFT_DISABLE_GRAPHQL_INTROSPECTION", IS_PRODUCTION
+)
+MARKETLIFT_GRAPHQL_IDE_ENABLED = env_bool(
+    "MARKETLIFT_GRAPHQL_IDE_ENABLED", not IS_PRODUCTION
+)
 if env_bool("SECURE_PROXY_SSL_HEADER_ENABLED", False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(
@@ -272,6 +326,10 @@ CELERY_BEAT_SCHEDULE.update(
         "promotion-expiry-notifications": {
             "task": "promotions.tasks.notify_expired_promotions",
             "schedule": 3600.0,
+        },
+        "cleanup-expired-sessions": {
+            "task": "marketlift.tasks.cleanup_expired_sessions",
+            "schedule": 86400.0,
         },
     }
 )

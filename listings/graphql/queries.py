@@ -1,11 +1,12 @@
 import base64
 from uuid import UUID
 import strawberry
+from django.db.models import Q
+from django.utils import timezone
 from listings.models import Listing, RecentlyViewedListing
 from listings.search import apply_listing_filters, apply_listing_sort
-from marketlift.graphql.auth import require_seller, require_user
-from promotions.models import ListingPromotion, PromotionProduct
-from django.utils import timezone
+from marketlift.graphql.auth import require_seller, require_staff, require_user
+from promotions.models import PromotionProduct
 from .inputs import ListingFilterInput
 from .mappers import listing_queryset, listing_to_type
 from .types import ListingConnectionType, ListingPageInfoType, ListingType
@@ -39,6 +40,11 @@ def _filtered(filters):
     qs = listing_queryset(Listing.objects.public())
     qs = apply_listing_filters(qs, filters)
     return apply_listing_sort(qs, filters.sort)
+
+
+def _get_public(value):
+    qs = listing_queryset(Listing.objects.public())
+    return qs.get(pk=value) if _looks_like_uuid(value) else qs.get(slug=value)
 
 
 @strawberry.type
@@ -79,12 +85,10 @@ class ListingQuery:
 
     @strawberry.field
     def listing(self, id: str) -> ListingType | None:
-        qs = listing_queryset(Listing.objects.public())
         try:
-            item = qs.get(pk=id) if _looks_like_uuid(id) else qs.get(slug=id)
+            return listing_to_type(_get_public(id))
         except Listing.DoesNotExist:
             return None
-        return listing_to_type(item)
 
     @strawberry.field
     def featured_listings(self, limit: int = 8) -> list[ListingType]:
@@ -103,9 +107,51 @@ class ListingQuery:
         return [listing_to_type(x) for x in qs[: max(1, min(limit, 50))]]
 
     @strawberry.field
+    def recent_listings(self, limit: int = 12) -> list[ListingType]:
+        qs = listing_queryset(Listing.objects.public()).order_by(
+            "-published_at", "-created_at"
+        )
+        return [listing_to_type(x) for x in qs[: max(1, min(limit, 50))]]
+
+    @strawberry.field
+    def nearby_listings(
+        self, state_code: str, city: str | None = None, limit: int = 12
+    ) -> list[ListingType]:
+        qs = listing_queryset(Listing.objects.public()).filter(
+            state_code__iexact=state_code.strip()
+        )
+        if city:
+            qs = qs.filter(city__iexact=city.strip())
+        return [
+            listing_to_type(x)
+            for x in qs.order_by("-published_at", "-created_at")[
+                : max(1, min(limit, 50))
+            ]
+        ]
+
+    @strawberry.field
+    def similar_listings(self, listing_id: str, limit: int = 8) -> list[ListingType]:
+        try:
+            source = _get_public(listing_id)
+        except Listing.DoesNotExist:
+            return []
+        qs = (
+            listing_queryset(Listing.objects.public())
+            .filter(category_id=source.category_id)
+            .exclude(pk=source.pk)
+        )
+        qs = qs.order_by("-created_at")
+        return [listing_to_type(x) for x in qs[: max(1, min(limit, 50))]]
+
+    @strawberry.field
     def my_listings(self, info: strawberry.Info) -> list[ListingType]:
         seller = require_seller(info)
-        return [listing_to_type(x) for x in listing_queryset(seller.listings.all())]
+        return [
+            listing_to_type(x)
+            for x in listing_queryset(
+                seller.listings.filter(seller_deleted_at__isnull=True)
+            )
+        ]
 
     @strawberry.field
     def my_saved_listings(self, info: strawberry.Info) -> list[ListingType]:
@@ -132,3 +178,42 @@ class ListingQuery:
             for x in listing_queryset(Listing.objects.public()).filter(id__in=ids)
         }
         return [listing_to_type(rows[i]) for i in ids if i in rows]
+
+    @strawberry.field
+    def admin_listings(
+        self,
+        info: strawberry.Info,
+        search: str | None = None,
+        status: str | None = None,
+        include_seller_deleted: bool = True,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ListingType]:
+        require_staff(info, roles={"admin", "moderator", "support"})
+        qs = Listing.objects.all()
+        if not include_seller_deleted:
+            qs = qs.filter(seller_deleted_at__isnull=True)
+        if status:
+            qs = qs.filter(status=status)
+        if search:
+            qs = qs.filter(
+                Q(title__icontains=search)
+                | Q(seller__display_name__icontains=search)
+                | Q(seller__user__email__icontains=search)
+                | Q(category_name_snapshot__icontains=search)
+            )
+        start = max(0, offset)
+        return [
+            listing_to_type(x)
+            for x in listing_queryset(qs)[start : start + max(1, min(limit, 200))]
+        ]
+
+    @strawberry.field
+    def admin_listing(self, info: strawberry.Info, id: str) -> ListingType | None:
+        require_staff(info, roles={"admin", "moderator", "support"})
+        qs = listing_queryset(Listing.objects.all())
+        try:
+            item = qs.get(pk=id) if _looks_like_uuid(id) else qs.get(slug=id)
+        except Listing.DoesNotExist:
+            return None
+        return listing_to_type(item)

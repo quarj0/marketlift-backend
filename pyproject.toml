@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "channels[daphne]>=4.3,<5",
+    "channels-redis>=4.3,<5",
     "python-dotenv>=1.0,<2",
     "djangorestframework>=3.16.0",
     "httpx>=0.28,<1",

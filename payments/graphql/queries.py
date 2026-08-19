@@ -43,7 +43,7 @@ class PaymentQuery:
         limit: int = 50,
         offset: int = 0,
     ) -> list[PaymentType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "finance"})
         qs = Payment.objects.select_related(
             "seller", "seller__user", "seller_plan", "listing", "promotion_product"
         ).all()
@@ -66,7 +66,7 @@ class PaymentQuery:
 
     @strawberry.field
     def payment_summary(self, info: strawberry.Info) -> PaymentSummaryType:
-        require_staff(info)
+        require_staff(info, roles={"admin", "finance"})
         qs = Payment.objects.all()
         paid = qs.filter(status=Payment.Status.PAID)
         refunded = qs.filter(status=Payment.Status.REFUNDED)

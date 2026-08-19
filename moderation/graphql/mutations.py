@@ -31,7 +31,7 @@ class ModerationMutation:
     def move_listing_to_review(
         self, info: strawberry.Info, listing_id: strawberry.ID, reason: str
     ) -> ModerationCaseType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             case = move_listing_to_review(
                 listing=_listing(listing_id),
@@ -47,7 +47,7 @@ class ModerationMutation:
     def approve_listing(
         self, info: strawberry.Info, listing_id: strawberry.ID, reason: str = ""
     ) -> ModerationCaseType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             case = approve_listing_case(
                 listing=_listing(listing_id),
@@ -63,7 +63,7 @@ class ModerationMutation:
     def reject_listing(
         self, info: strawberry.Info, listing_id: strawberry.ID, reason: str
     ) -> ModerationCaseType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             case = reject_listing_case(
                 listing=_listing(listing_id),
@@ -79,7 +79,7 @@ class ModerationMutation:
     def remove_listing(
         self, info: strawberry.Info, listing_id: strawberry.ID, reason: str
     ) -> ListingType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             listing = remove_listing(
                 listing=_listing(listing_id),

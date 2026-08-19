@@ -15,7 +15,7 @@ class ModerationQuery:
         limit: int = 50,
         offset: int = 0,
     ) -> list[ModerationCaseType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "moderator"})
         qs = ModerationCase.objects.select_related("listing", "decided_by")
         if not include_final:
             qs = qs.filter(status=ModerationCase.Status.REVIEW)

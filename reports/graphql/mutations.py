@@ -44,7 +44,7 @@ class ReportMutation:
     def move_report_to_review(
         self, info: strawberry.Info, report_id: strawberry.ID, note: str = ""
     ) -> ReportType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             r = move_report_to_review(
                 report=_report(report_id),
@@ -60,7 +60,7 @@ class ReportMutation:
     def resolve_report(
         self, info: strawberry.Info, report_id: strawberry.ID, reason: str
     ) -> ReportType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             r = resolve_report(
                 report=_report(report_id),
@@ -76,7 +76,7 @@ class ReportMutation:
     def dismiss_report(
         self, info: strawberry.Info, report_id: strawberry.ID, reason: str
     ) -> ReportType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             r = dismiss_report(
                 report=_report(report_id),
@@ -92,7 +92,7 @@ class ReportMutation:
     def save_report_note(
         self, info: strawberry.Info, report_id: strawberry.ID, note: str
     ) -> ReportType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "moderator"})
         try:
             r = save_internal_note(
                 report=_report(report_id),

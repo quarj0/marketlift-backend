@@ -21,6 +21,22 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=8)
     terms = serializers.BooleanField()
 
+    def validate(self, data):
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from accounts.models import User
+
+        candidate = User(
+            email=data.get("email", ""),
+            full_name=data.get("fullName", ""),
+            phone=data.get("phone") or None,
+        )
+        try:
+            validate_password(data.get("password", ""), candidate)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"password": list(exc.messages)}) from exc
+        return data
+
     def validate_fullName(self, value):
         value = value.strip()
         if len(value) < 2:
@@ -64,6 +80,11 @@ def serialize_session_user(user):
         "phone": user.phone,
         "isStaff": user.is_staff,
         "isSuperuser": user.is_superuser,
+        "adminRole": (
+            (user.admin_role or ("super_admin" if user.is_superuser else None))
+            if user.is_staff
+            else None
+        ),
         "emailVerified": bool(user.email_verified_at),
         "sellerProfile": (
             {
@@ -76,3 +97,14 @@ def serialize_session_user(user):
             else None
         ),
     }
+
+
+class AdminMfaVerifySerializer(serializers.Serializer):
+    challengeId = serializers.UUIDField()
+    code = serializers.CharField(min_length=6, max_length=6)
+
+
+class AdminInvitationAcceptSerializer(serializers.Serializer):
+    token = serializers.CharField(min_length=20, max_length=200)
+    fullName = serializers.CharField(min_length=2, max_length=160)
+    password = serializers.CharField(write_only=True, min_length=8)

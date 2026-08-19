@@ -26,7 +26,7 @@ def _series(rows):
 class AnalyticsQuery:
     @strawberry.field
     def admin_dashboard(self, info: strawberry.Info) -> AdminDashboardType:
-        require_staff(info)
+        require_staff(info, roles={"admin", "finance", "moderator", "support"})
         data = dashboard_data()
         return AdminDashboardType(
             counts=DashboardCountsType(**data["counts"]),
@@ -37,7 +37,7 @@ class AnalyticsQuery:
     def admin_analytics(
         self, info: strawberry.Info, days: int = 30
     ) -> AdminAnalyticsType:
-        require_staff(info)
+        require_staff(info, roles={"admin", "finance", "moderator", "support"})
         data = analytics_data(days)
         return AdminAnalyticsType(
             user_growth=_series(data["user_growth"]),

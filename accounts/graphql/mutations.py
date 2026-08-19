@@ -2,7 +2,7 @@ import strawberry
 from django.core.exceptions import ValidationError
 from graphql import GraphQLError
 
-from accounts.models import User
+from accounts.models import AdminInvitation, User
 from accounts.services import (
     change_password,
     deactivate_account,
@@ -12,15 +12,22 @@ from accounts.services import (
     update_profile,
 )
 from marketlift.graphql.auth import request_from_info, require_staff, require_user
+from accounts.auth_services import create_admin_invitation, revoke_admin_invitation
 from marketlift.graphql.errors import validation_error
 from uploads.models import UploadAsset
 
-from .mappers import admin_user_to_type, settings_to_type, user_to_type
+from .mappers import (
+    admin_invitation_to_type,
+    admin_user_to_type,
+    settings_to_type,
+    user_to_type,
+)
 from .types import (
     AccountProfileInput,
     AccountSettingsInput,
     AccountSettingsType,
     AccountUserType,
+    AdminInvitationType,
     AdminUserType,
 )
 
@@ -131,7 +138,7 @@ class AccountMutation:
         user_id: strawberry.ID,
         reason: str,
     ) -> AdminUserType:
-        staff = require_staff(info)
+        staff = require_staff(info, roles={"admin", "moderator"})
         try:
             target = User.objects.get(pk=str(user_id))
             target = suspend_account(
@@ -153,7 +160,7 @@ class AccountMutation:
         user_id: strawberry.ID,
         reason: str,
     ) -> AdminUserType:
-        staff = require_staff(info)
+        staff = require_staff(info, roles={"admin", "moderator"})
         try:
             target = User.objects.get(pk=str(user_id))
             target = reactivate_account(
@@ -167,3 +174,73 @@ class AccountMutation:
             raise GraphQLError("User not found.") from exc
         except ValidationError as exc:
             raise validation_error(exc)
+
+    @strawberry.mutation
+    def set_admin_role(
+        self,
+        info: strawberry.Info,
+        user_id: strawberry.ID,
+        role: str,
+        enabled: bool = True,
+    ) -> AdminUserType:
+        actor = require_staff(info, roles={User.AdminRole.SUPER_ADMIN})
+        if role not in User.AdminRole.values:
+            raise GraphQLError("Invalid administrator role.")
+        try:
+            target = User.objects.get(pk=str(user_id))
+        except User.DoesNotExist as exc:
+            raise GraphQLError("User not found.") from exc
+        if target.is_superuser and not enabled:
+            raise GraphQLError(
+                "Superuser access cannot be disabled through this action."
+            )
+        target.is_staff = enabled
+        target.admin_role = role if enabled else ""
+        target.save(update_fields=("is_staff", "admin_role", "updated_at"))
+        from audit.services import record_audit_event
+
+        record_audit_event(
+            actor=actor,
+            action="admin.role_updated",
+            target=target,
+            target_type="user",
+            target_label=target.full_name or target.email,
+            metadata={"role": target.admin_role, "enabled": enabled},
+            request=request_from_info(info),
+        )
+        return admin_user_to_type(target)
+
+    @strawberry.mutation
+    def invite_administrator(
+        self, info: strawberry.Info, email: str, role: str
+    ) -> AdminInvitationType:
+        actor = require_staff(info, roles={User.AdminRole.SUPER_ADMIN})
+        try:
+            invitation, _ = create_admin_invitation(
+                email=email,
+                role=role,
+                invited_by=actor,
+                request=request_from_info(info),
+            )
+            return admin_invitation_to_type(invitation)
+        except ValidationError as exc:
+            raise validation_error(exc) from exc
+
+    @strawberry.mutation
+    def revoke_admin_invitation(
+        self, info: strawberry.Info, invitation_id: strawberry.ID
+    ) -> AdminInvitationType:
+        actor = require_staff(info, roles={User.AdminRole.SUPER_ADMIN})
+        try:
+            invitation = AdminInvitation.objects.select_related("invited_by").get(
+                pk=str(invitation_id)
+            )
+            return admin_invitation_to_type(
+                revoke_admin_invitation(
+                    invitation=invitation, actor=actor, request=request_from_info(info)
+                )
+            )
+        except AdminInvitation.DoesNotExist as exc:
+            raise GraphQLError("Administrator invitation not found.") from exc
+        except ValidationError as exc:
+            raise validation_error(exc) from exc

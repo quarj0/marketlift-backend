@@ -13,6 +13,7 @@ class ListingFilterInput:
     max_price: float | None = None
     condition: str | None = None
     seller_type: str | None = None
+    seller_id: strawberry.ID | None = None
     verified_only: bool = False
     date_listed: str | None = None
     attribute_filters: JSON | None = None

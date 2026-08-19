@@ -4,7 +4,12 @@ from graphql import GraphQLError
 from marketlift.graphql.auth import require_staff, require_user
 from marketlift.graphql.errors import validation_error
 from support.models import SupportTicket
-from support.services import add_customer_message, create_ticket, staff_reply
+from support.services import (
+    add_customer_message,
+    create_ticket,
+    staff_reply,
+    update_ticket_workflow,
+)
 from uploads.models import UploadAsset
 from .inputs import CreateSupportTicketInput
 from .mappers import message_to_type, ticket_to_type
@@ -72,7 +77,7 @@ class SupportMutation:
         internal: bool = False,
         status: str | None = None,
     ) -> SupportTicketType:
-        staff = require_staff(info)
+        staff = require_staff(info, roles={"admin", "support"})
         try:
             t = SupportTicket.objects.get(pk=str(ticket_id))
             staff_reply(
@@ -92,4 +97,39 @@ class SupportMutation:
                 validation_error(e)
                 if isinstance(e, ValidationError)
                 else GraphQLError(str(e))
+            )
+
+    @strawberry.mutation
+    def admin_update_support_ticket(
+        self,
+        info: strawberry.Info,
+        ticket_id: strawberry.ID,
+        status: str | None = None,
+        priority: str | None = None,
+        assigned_to_user_id: strawberry.ID | None = None,
+    ) -> SupportTicketType:
+        staff = require_staff(info, roles={"admin", "support"})
+        from accounts.models import User
+
+        try:
+            ticket = SupportTicket.objects.get(pk=str(ticket_id))
+            assignee = None
+            if assigned_to_user_id is not None:
+                assignee = User.objects.get(pk=str(assigned_to_user_id))
+            ticket = update_ticket_workflow(
+                staff=staff,
+                ticket=ticket,
+                status=status,
+                priority=priority,
+                assigned_to=assignee,
+                request=getattr(info.context, "request", info.context),
+            )
+            return ticket_to_type(ticket, True)
+        except (SupportTicket.DoesNotExist, User.DoesNotExist) as exc:
+            raise GraphQLError("Ticket or assignee not found.") from exc
+        except (ValidationError, PermissionDenied) as exc:
+            raise (
+                validation_error(exc)
+                if isinstance(exc, ValidationError)
+                else GraphQLError(str(exc))
             )

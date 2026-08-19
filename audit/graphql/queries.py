@@ -30,7 +30,7 @@ class AuditQuery:
         limit: int = 100,
         offset: int = 0,
     ) -> list[AuditEventType]:
-        require_staff(info)
+        require_staff(info, roles={"admin", "moderator"})
         qs = AuditEvent.objects.all()
         if action:
             qs = qs.filter(action=action)

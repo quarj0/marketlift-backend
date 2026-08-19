@@ -52,6 +52,7 @@ def apply_listing_filters(qs, filters):
     district = _get(filters, "district")
     condition = _get(filters, "condition")
     seller_type = _get(filters, "seller_type")
+    seller_id = _get(filters, "seller_id")
     if category:
         qs = qs.filter(category__slug=category)
     if state:
@@ -64,6 +65,8 @@ def apply_listing_filters(qs, filters):
         qs = qs.filter(condition=condition)
     if seller_type:
         qs = qs.filter(seller__seller_type=seller_type)
+    if seller_id:
+        qs = qs.filter(seller_id=seller_id)
     if _get(filters, "verified_only", False):
         qs = qs.filter(seller__verified_at__isnull=False)
     mn = _decimal(_get(filters, "min_price"))

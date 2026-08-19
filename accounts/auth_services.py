@@ -24,6 +24,14 @@ def _mask_email(email):
     return (local[:1] + "***@" + domain) if domain else "***"
 
 
+def _mask_identifier(identifier):
+    identifier = (identifier or "").strip()
+    if "@" in identifier:
+        return _mask_email(identifier)
+    digits = "".join(ch for ch in identifier if ch.isdigit())
+    return ("***" + digits[-2:]) if digits else "***"
+
+
 def create_email_verification(*, user, send=True):
     EmailVerificationChallenge.objects.filter(
         user=user, consumed_at__isnull=True
@@ -78,8 +86,9 @@ def request_password_reset(*, identifier, request=None):
         else User.objects.filter(phone=identifier)
     )
     user = qs.first()
+    masked_destination = _mask_identifier(identifier)
     if not user:
-        return {"success": True, "maskedDestination": "***"}
+        return {"success": True, "maskedDestination": masked_destination}
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     combined = f"{uid}.{token}"
@@ -95,7 +104,7 @@ def request_password_reset(*, identifier, request=None):
         [user.email],
         fail_silently=False,
     )
-    return {"success": True, "maskedDestination": _mask_email(user.email)}
+    return {"success": True, "maskedDestination": masked_destination}
 
 
 @transaction.atomic
@@ -116,3 +125,174 @@ def reset_password(*, combined_token, new_password):
         used_at=timezone.now()
     )
     return True
+
+
+def _secret_digest(namespace, value):
+    return hmac.new(
+        settings.SECRET_KEY.encode(),
+        f"{namespace}:{value}".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def create_admin_login_challenge(*, user, request=None, send=True):
+    from .models import AdminLoginChallenge
+
+    AdminLoginChallenge.objects.filter(user=user, consumed_at__isnull=True).update(
+        consumed_at=timezone.now()
+    )
+    code = f"{secrets.randbelow(900000) + 100000:06d}"
+    row = AdminLoginChallenge.objects.create(
+        user=user,
+        code_digest=_secret_digest(f"admin-mfa:{user.pk}", code),
+        expires_at=timezone.now()
+        + timedelta(seconds=settings.MARKETLIFT_ADMIN_MFA_TTL_SECONDS),
+        requested_ip=(request.META.get("REMOTE_ADDR") if request else None),
+    )
+    if send:
+        send_mail(
+            "Your Marketlift administrator sign-in code",
+            f"Your Marketlift administrator sign-in code is {code}. It expires shortly. If you did not attempt to sign in, change your password and contact the platform owner.",
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+    return row, code
+
+
+@transaction.atomic
+def verify_admin_login_challenge(*, challenge_id, code):
+    from .models import AdminLoginChallenge
+
+    try:
+        row = (
+            AdminLoginChallenge.objects.select_for_update()
+            .select_related("user")
+            .get(pk=challenge_id)
+        )
+    except (AdminLoginChallenge.DoesNotExist, ValueError) as exc:
+        raise ValidationError(
+            "Invalid or expired administrator sign-in challenge."
+        ) from exc
+    if row.consumed_at is not None or row.expires_at <= timezone.now():
+        raise ValidationError("Invalid or expired administrator sign-in challenge.")
+    row.attempts += 1
+    if row.attempts > 6:
+        row.consumed_at = timezone.now()
+        row.save(update_fields=("attempts", "consumed_at", "updated_at"))
+        raise ValidationError("Too many administrator verification attempts.")
+    expected = _secret_digest(f"admin-mfa:{row.user_id}", str(code).strip())
+    if not hmac.compare_digest(row.code_digest, expected):
+        row.save(update_fields=("attempts", "updated_at"))
+        raise ValidationError("Invalid administrator verification code.")
+    row.consumed_at = timezone.now()
+    row.save(update_fields=("attempts", "consumed_at", "updated_at"))
+    if not row.user.is_active or not row.user.is_staff:
+        raise ValidationError("Administrator access is no longer available.")
+    return row.user
+
+
+def create_admin_invitation(*, email, role, invited_by, request=None, send=True):
+    from .models import AdminInvitation
+    from audit.services import record_audit_event
+
+    email = User.objects.normalize_email((email or "").strip())
+    if role not in User.AdminRole.values:
+        raise ValidationError({"role": "Invalid administrator role."})
+    if role == User.AdminRole.SUPER_ADMIN:
+        raise ValidationError(
+            {
+                "role": "Super admin access must be granted through an existing superuser."
+            }
+        )
+    if User.objects.filter(email__iexact=email).exists():
+        raise ValidationError(
+            {
+                "email": "This email already has a Marketlift account. Assign its administrator role directly."
+            }
+        )
+    AdminInvitation.objects.filter(
+        email__iexact=email, accepted_at__isnull=True, revoked_at__isnull=True
+    ).update(revoked_at=timezone.now())
+    raw_token = secrets.token_urlsafe(32)
+    invitation = AdminInvitation.objects.create(
+        email=email,
+        role=role,
+        token_digest=_secret_digest("admin-invite", raw_token),
+        invited_by=invited_by,
+        expires_at=timezone.now() + timedelta(hours=48),
+    )
+    if send:
+        base = settings.MARKETLIFT_ADMIN_FRONTEND_URL.rstrip("/")
+        send_mail(
+            "You're invited to Marketlift administration",
+            f"Accept your Marketlift administrator invitation: {base}/accept-invite?token={raw_token}\n\nThis invitation expires in 48 hours.",
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+    record_audit_event(
+        actor=invited_by,
+        action="admin.invitation_created",
+        target=invitation,
+        target_type="admin_invitation",
+        target_label=email,
+        metadata={"role": role},
+        request=request,
+    )
+    return invitation, raw_token
+
+
+@transaction.atomic
+def accept_admin_invitation(*, token, full_name, password):
+    from django.contrib.auth.password_validation import validate_password
+    from .models import AdminInvitation
+
+    digest = _secret_digest("admin-invite", (token or "").strip())
+    try:
+        invitation = AdminInvitation.objects.select_for_update().get(
+            token_digest=digest
+        )
+    except AdminInvitation.DoesNotExist as exc:
+        raise ValidationError("Invalid or expired administrator invitation.") from exc
+    if not invitation.active:
+        raise ValidationError("Invalid or expired administrator invitation.")
+    if User.objects.filter(email__iexact=invitation.email).exists():
+        raise ValidationError("This invitation can no longer be accepted.")
+    candidate = User(email=invitation.email, full_name=(full_name or "").strip())
+    if not candidate.full_name:
+        raise ValidationError({"fullName": "Full name is required."})
+    validate_password(password, candidate)
+    user = User.objects.create_user(
+        email=invitation.email,
+        full_name=candidate.full_name,
+        password=password,
+        is_active=True,
+        is_staff=True,
+        admin_role=invitation.role,
+        email_verified_at=timezone.now(),
+    )
+    invitation.accepted_at = timezone.now()
+    invitation.save(update_fields=("accepted_at", "updated_at"))
+    return user
+
+
+@transaction.atomic
+def revoke_admin_invitation(*, invitation, actor, request=None):
+    from audit.services import record_audit_event
+
+    if invitation.accepted_at is not None:
+        raise ValidationError("An accepted invitation cannot be revoked.")
+    if invitation.revoked_at is None:
+        invitation.revoked_at = timezone.now()
+        invitation.save(update_fields=("revoked_at", "updated_at"))
+    record_audit_event(
+        actor=actor,
+        action="admin.invitation_revoked",
+        target=invitation,
+        target_type="admin_invitation",
+        target_label=invitation.email,
+        metadata={"role": invitation.role},
+        request=request,
+    )
+    return invitation

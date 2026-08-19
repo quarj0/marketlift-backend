@@ -28,6 +28,8 @@ class ListingType:
     featured: bool
     urgent: bool
     favorites: int
+    inquiries: int
+    seller_deleted_at: datetime | None
 
 
 @strawberry.type

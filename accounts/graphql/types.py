@@ -2,6 +2,7 @@ from datetime import datetime
 import strawberry
 from marketlift.graphql.types import LocationType
 from strawberry.scalars import JSON
+from listings.graphql.types import ListingType
 
 
 @strawberry.type
@@ -75,6 +76,8 @@ class AccountOverviewType:
     unread_messages: int
     reviews_count: int
     recently_viewed_count: int
+    recently_viewed: list["ListingType"]
+    saved_listings: list["ListingType"]
 
 
 @strawberry.type
@@ -89,3 +92,16 @@ class AdminUserType:
     joined_at: datetime
     location: LocationType
     seller_id: strawberry.ID | None
+    admin_role: str | None
+
+
+@strawberry.type
+class AdminInvitationType:
+    id: strawberry.ID
+    email: str
+    role: str
+    active: bool
+    invited_by: str | None
+    expires_at: datetime
+    accepted_at: datetime | None
+    revoked_at: datetime | None

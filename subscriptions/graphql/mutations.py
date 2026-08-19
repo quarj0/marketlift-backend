@@ -47,7 +47,7 @@ class SubscriptionMutation:
         features: list[str] | None = None,
         active: bool = True,
     ) -> SellerPlanType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "finance"})
         try:
             plan = create_seller_plan(
                 code=code,
@@ -82,7 +82,7 @@ class SubscriptionMutation:
         features: list[str],
         active: bool = True,
     ) -> SellerPlanType:
-        actor = require_staff(info)
+        actor = require_staff(info, roles={"admin", "finance"})
         try:
             plan = SellerPlan.objects.get(code=id)
         except SellerPlan.DoesNotExist as exc:

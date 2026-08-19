@@ -11,5 +11,5 @@ class PlatformSettingsQuery:
     def platform_configuration(
         self, info: strawberry.Info
     ) -> PlatformConfigurationType:
-        require_staff(info)
+        require_staff(info, roles={"admin"})
         return config_to_type(PlatformConfiguration.load())

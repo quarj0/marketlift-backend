@@ -300,6 +300,8 @@ def update_listing(
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
 ):
+    if listing.seller_deleted_at is not None:
+        raise ValidationError("A deleted listing cannot be edited.")
     if listing.status in FINAL_STATUSES:
         raise ValidationError("A rejected or removed listing cannot be edited.")
     if listing.seller.is_suspended:
@@ -350,6 +352,8 @@ def enforce_listing_limit(seller, *, excluding_listing=None):
 
 @transaction.atomic
 def publish_listing(listing: Listing):
+    if listing.seller_deleted_at is not None:
+        raise ValidationError("A deleted listing cannot be published.")
     if listing.seller.is_suspended:
         raise ValidationError("Selling access is suspended.")
     if listing.status == Listing.Status.PUBLISHED:
@@ -427,3 +431,27 @@ def record_listing_view(*, listing, user=None):
         row, _ = RecentlyViewedListing.objects.get_or_create(user=user, listing=listing)
         row.save(update_fields=("updated_at",))
     return True
+
+
+@transaction.atomic
+def delete_listing_by_seller(*, listing: Listing, reason: str = "", request=None):
+    """Soft-delete a seller-owned listing while retaining moderation/audit history."""
+    if listing.seller_deleted_at is not None:
+        return listing
+    listing.seller_deleted_at = timezone.now()
+    listing.seller_delete_reason = (reason or "").strip()[:2000]
+    listing.save(
+        update_fields=("seller_deleted_at", "seller_delete_reason", "updated_at")
+    )
+    from audit.services import record_audit_event
+
+    record_audit_event(
+        actor=listing.seller.user,
+        action="listing.deleted_by_seller",
+        target=listing,
+        target_type="listing",
+        target_label=listing.title,
+        metadata={"reason": listing.seller_delete_reason},
+        request=request,
+    )
+    return listing

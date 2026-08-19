@@ -1,16 +1,26 @@
-"""
-ASGI config for marketlift project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.1/howto/deployment/asgi/
-"""
+"""ASGI entry point for HTTP and authenticated Marketlift realtime traffic."""
 
 import os
 
-from django.core.asgi import get_asgi_application
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "marketlift.settings")
 
-application = get_asgi_application()
+from channels.auth import AuthMiddlewareStack
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.security.websocket import OriginValidator
+from django.conf import settings
+from django.core.asgi import get_asgi_application
+
+# Initialize Django before importing consumers that touch ORM models.
+django_asgi_app = get_asgi_application()
+
+from marketlift.realtime.routing import websocket_urlpatterns
+
+application = ProtocolTypeRouter(
+    {
+        "http": django_asgi_app,
+        "websocket": OriginValidator(
+            AuthMiddlewareStack(URLRouter(websocket_urlpatterns)),
+            settings.MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS,
+        ),
+    }
+)

@@ -7,13 +7,19 @@ from categories.models import Category
 from listings.models import Listing, SavedListing
 from listings.services import (
     create_listing,
+    delete_listing_by_seller,
     mark_listing_sold,
     pause_listing,
     publish_listing,
     record_listing_view,
     update_listing,
 )
-from marketlift.graphql.auth import request_user, require_seller, require_user
+from marketlift.graphql.auth import (
+    request_from_info,
+    request_user,
+    require_seller,
+    require_user,
+)
 from marketlift.graphql.errors import validation_error
 from .inputs import ListingInput
 from .mappers import listing_queryset, listing_to_type
@@ -123,6 +129,16 @@ class ListingMutation:
         except ValidationError as exc:
             raise validation_error(exc) from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
+
+    @strawberry.mutation
+    def delete_my_listing(
+        self, info: strawberry.Info, listing_id: strawberry.ID, reason: str = ""
+    ) -> bool:
+        listing = _owned(info, listing_id)
+        delete_listing_by_seller(
+            listing=listing, reason=reason, request=request_from_info(info)
+        )
+        return True
 
     @strawberry.mutation
     def save_listing(self, info: strawberry.Info, listing_id: strawberry.ID) -> bool:

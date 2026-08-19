@@ -108,9 +108,9 @@ def send_message(
         raise ValidationError(
             "Messaging is unavailable while this seller account is suspended."
         )
-    if (
-        conversation.listing_id
-        and conversation.listing.status in FINAL_UNAVAILABLE_LISTING_STATUSES
+    if conversation.listing_id and (
+        conversation.listing.status in FINAL_UNAVAILABLE_LISTING_STATUSES
+        or conversation.listing.seller_deleted_at is not None
     ):
         raise ValidationError("Messaging is closed for this listing.")
 
@@ -170,6 +170,14 @@ def send_message(
         href=f"/messages/{conversation.id}",
         data={"conversationId": str(conversation.id), "messageId": str(message.id)},
     )
+    message_id = message.pk
+
+    def _publish_message():
+        from marketlift.realtime.events import publish_message_created
+
+        publish_message_created(message_id)
+
+    transaction.on_commit(_publish_message, robust=True)
     return message
 
 
@@ -184,6 +192,16 @@ def mark_conversation_read(*, user, conversation: Conversation):
     else:
         conversation.seller_last_read_at = now
         conversation.save(update_fields=("seller_last_read_at", "updated_at"))
+
+    conversation_id = conversation.pk
+    reader_id = user.pk
+
+    def _publish_read():
+        from marketlift.realtime.events import publish_conversation_read
+
+        publish_conversation_read(conversation_id, reader_id)
+
+    transaction.on_commit(_publish_read, robust=True)
     return conversation
 
 
