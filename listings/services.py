@@ -11,7 +11,6 @@ from subscriptions.services import get_effective_plan
 
 from .models import Listing, ListingAttribute, ListingMedia
 
-
 FINAL_STATUSES = {Listing.Status.REJECTED, Listing.Status.REMOVED}
 PUBLISHABLE_STATUSES = {
     Listing.Status.DRAFT,
@@ -22,14 +21,19 @@ ACTIVE_LIMIT_STATUSES = {Listing.Status.PUBLISHED, Listing.Status.UNDER_REVIEW}
 
 
 def _validate_scalar(field: CategoryField, value):
-    if field.field_type in {CategoryField.FieldType.TEXT, CategoryField.FieldType.TEXTAREA}:
+    if field.field_type in {
+        CategoryField.FieldType.TEXT,
+        CategoryField.FieldType.TEXTAREA,
+    }:
         if not isinstance(value, str):
             raise ValidationError({field.key: f"{field.label} must be text."})
         return value.strip()
 
     if field.field_type == CategoryField.FieldType.SELECT:
         if not isinstance(value, str):
-            raise ValidationError({field.key: f"{field.label} must be a selected value."})
+            raise ValidationError(
+                {field.key: f"{field.label} must be a selected value."}
+            )
         allowed = set(field.options.values_list("value", flat=True))
         if value not in allowed:
             raise ValidationError({field.key: f"Invalid option for {field.label}."})
@@ -48,15 +52,21 @@ def _validate_scalar(field: CategoryField, value):
         except (InvalidOperation, TypeError, ValueError):
             raise ValidationError({field.key: f"{field.label} must be a number."})
         if field.min_value is not None and number < field.min_value:
-            raise ValidationError({field.key: f"{field.label} must be at least {field.min_value}."})
+            raise ValidationError(
+                {field.key: f"{field.label} must be at least {field.min_value}."}
+            )
         if field.max_value is not None and number > field.max_value:
-            raise ValidationError({field.key: f"{field.label} must be at most {field.max_value}."})
+            raise ValidationError(
+                {field.key: f"{field.label} must be at most {field.max_value}."}
+            )
         return number
 
     raise ValidationError({field.key: f"Unsupported field type: {field.field_type}."})
 
 
-def validate_listing_payload(*, category: Category, price, condition: str, attributes: dict | None):
+def validate_listing_payload(
+    *, category: Category, price, condition: str, attributes: dict | None
+):
     errors: dict[str, str] = {}
 
     if category.pricing_mode == Category.PricingMode.REQUIRED and price is None:
@@ -88,15 +98,21 @@ def validate_listing_payload(*, category: Category, price, condition: str, attri
             normalized[field.key] = (field, _validate_scalar(field, raw))
         except ValidationError as exc:
             for key, messages in exc.message_dict.items():
-                errors[key] = messages[0] if isinstance(messages, list) else str(messages)
+                errors[key] = (
+                    messages[0] if isinstance(messages, list) else str(messages)
+                )
 
     if errors:
         raise ValidationError(errors)
     return normalized
 
 
-def _write_attributes(listing: Listing, normalized: dict[str, tuple[CategoryField, object]]):
-    ListingAttribute.objects.filter(listing=listing).exclude(key__in=normalized.keys()).delete()
+def _write_attributes(
+    listing: Listing, normalized: dict[str, tuple[CategoryField, object]]
+):
+    ListingAttribute.objects.filter(listing=listing).exclude(
+        key__in=normalized.keys()
+    ).delete()
     for key, (field, value) in normalized.items():
         defaults = {
             "field": field,
@@ -250,7 +266,9 @@ def publish_listing(listing: Listing):
     if listing.status == Listing.Status.PUBLISHED:
         return listing
     if listing.status not in PUBLISHABLE_STATUSES:
-        raise ValidationError(f"Listing cannot be published from status '{listing.status}'.")
+        raise ValidationError(
+            f"Listing cannot be published from status '{listing.status}'."
+        )
     if not listing.category_id or not listing.category.active:
         raise ValidationError("The listing category is unavailable.")
 
@@ -268,7 +286,15 @@ def publish_listing(listing: Listing):
     listing.published_at = timezone.now()
     listing.paused_at = None
     listing.expired_at = None
-    listing.save(update_fields=("status", "published_at", "paused_at", "expired_at", "updated_at"))
+    listing.save(
+        update_fields=(
+            "status",
+            "published_at",
+            "paused_at",
+            "expired_at",
+            "updated_at",
+        )
+    )
     return listing
 
 

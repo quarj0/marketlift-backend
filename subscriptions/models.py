@@ -50,7 +50,9 @@ class SellerSubscription(UUIDTimeStampedModel):
         choices=BillingCycle.choices,
         default=BillingCycle.MONTHLY,
     )
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.ACTIVE)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.ACTIVE
+    )
     current_period_start = models.DateTimeField(null=True, blank=True)
     current_period_end = models.DateTimeField(null=True, blank=True)
     cancel_at_period_end = models.BooleanField(default=False)

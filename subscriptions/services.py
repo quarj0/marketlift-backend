@@ -4,7 +4,9 @@ from .models import SellerPlan, SellerSubscription
 def get_effective_plan(seller):
     subscription = (
         SellerSubscription.objects.select_related("plan")
-        .filter(seller=seller, status=SellerSubscription.Status.ACTIVE, plan__active=True)
+        .filter(
+            seller=seller, status=SellerSubscription.Status.ACTIVE, plan__active=True
+        )
         .first()
     )
     if subscription:

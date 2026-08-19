@@ -15,4 +15,5 @@ dependencies = [
     "psycopg[binary]>=3.3.4",
     "strawberry-graphql-django>=0.87.0",
     "whitenoise>=6.12.0",
+    "black>=26.5.1",
 ]

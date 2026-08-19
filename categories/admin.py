@@ -19,7 +19,14 @@ class CategoryFieldAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "active", "schema_version", "sort_order", "updated_at")
+    list_display = (
+        "name",
+        "slug",
+        "active",
+        "schema_version",
+        "sort_order",
+        "updated_at",
+    )
     list_filter = ("active", "pricing_mode", "condition_enabled")
     search_fields = ("name", "slug", "description")
     ordering = ("sort_order", "name")

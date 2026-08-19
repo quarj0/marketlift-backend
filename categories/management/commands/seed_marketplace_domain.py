@@ -18,9 +18,15 @@ class Command(BaseCommand):
         base_dir = Path(__file__).resolve().parents[2]
         project_dir = base_dir.parent
 
-        category_data = json.loads((base_dir / "data" / "category_config.json").read_text())
-        plans_data = json.loads((project_dir / "subscriptions" / "data" / "plans.json").read_text())
-        products_data = json.loads((project_dir / "promotions" / "data" / "products.json").read_text())
+        category_data = json.loads(
+            (base_dir / "data" / "category_config.json").read_text()
+        )
+        plans_data = json.loads(
+            (project_dir / "subscriptions" / "data" / "plans.json").read_text()
+        )
+        products_data = json.loads(
+            (project_dir / "promotions" / "data" / "products.json").read_text()
+        )
 
         category_count = self._seed_categories(category_data)
         plan_count = self._seed_plans(plans_data)
@@ -46,9 +52,13 @@ class Command(BaseCommand):
                     "schema_version": item.get("schemaVersion", 1),
                     "pricing_mode": item.get("pricing", {}).get("mode", "required"),
                     "pricing_label": item.get("pricing", {}).get("label", "Price (R$)"),
-                    "pricing_placeholder": item.get("pricing", {}).get("placeholder", ""),
+                    "pricing_placeholder": item.get("pricing", {}).get(
+                        "placeholder", ""
+                    ),
                     "condition_enabled": item.get("condition", {}).get("enabled", True),
-                    "condition_required": item.get("condition", {}).get("required", True),
+                    "condition_required": item.get("condition", {}).get(
+                        "required", True
+                    ),
                 },
             )
 
@@ -74,7 +84,9 @@ class Command(BaseCommand):
                 seen_field_keys.append(field.key)
 
                 seen_options = []
-                for option_index, option_data in enumerate(field_data.get("options", [])):
+                for option_index, option_data in enumerate(
+                    field_data.get("options", [])
+                ):
                     option, _ = CategoryFieldOption.objects.update_or_create(
                         field=field,
                         value=option_data["value"],

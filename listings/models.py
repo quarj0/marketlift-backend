@@ -60,7 +60,9 @@ class Listing(UUIDTimeStampedModel):
     city = models.CharField(max_length=100)
     district = models.CharField(max_length=120, blank=True)
 
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.DRAFT)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.DRAFT
+    )
     views = models.PositiveBigIntegerField(default=0)
     published_at = models.DateTimeField(null=True, blank=True)
     paused_at = models.DateTimeField(null=True, blank=True)
@@ -132,7 +134,9 @@ class ListingMedia(UUIDTimeStampedModel):
 
 
 class ListingAttribute(UUIDTimeStampedModel):
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="attribute_values")
+    listing = models.ForeignKey(
+        Listing, on_delete=models.CASCADE, related_name="attribute_values"
+    )
     field = models.ForeignKey(
         "categories.CategoryField",
         null=True,
@@ -144,7 +148,9 @@ class ListingAttribute(UUIDTimeStampedModel):
     label_snapshot = models.CharField(max_length=120)
     field_type_snapshot = models.CharField(max_length=16)
     text_value = models.TextField(null=True, blank=True)
-    number_value = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
+    number_value = models.DecimalField(
+        max_digits=18, decimal_places=4, null=True, blank=True
+    )
     boolean_value = models.BooleanField(null=True, blank=True)
 
     class Meta:

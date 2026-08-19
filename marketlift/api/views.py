@@ -27,7 +27,9 @@ def readiness(request):
 
     try:
         cache.set("marketlift:readiness", "ok", timeout=10)
-        checks["redis"] = "ok" if cache.get("marketlift:readiness") == "ok" else "unavailable"
+        checks["redis"] = (
+            "ok" if cache.get("marketlift:readiness") == "ok" else "unavailable"
+        )
     except Exception:
         checks["redis"] = "unavailable"
 

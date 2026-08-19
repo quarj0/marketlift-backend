@@ -63,6 +63,10 @@ class User(AbstractUser):
 
     email_verified_at = models.DateTimeField(null=True, blank=True)
     phone_verified_at = models.DateTimeField(null=True, blank=True)
+
+    suspended_at = models.DateTimeField(null=True, blank=True)
+    suspension_reason = models.TextField(blank=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()

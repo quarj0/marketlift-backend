@@ -16,22 +16,47 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='SellerProfile',
+            name="SellerProfile",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('seller_type', models.CharField(choices=[('individual', 'Individual'), ('business', 'Business')], default='individual', max_length=16)),
-                ('display_name', models.CharField(blank=True, max_length=160)),
-                ('activated_at', models.DateTimeField(auto_now_add=True)),
-                ('verified_at', models.DateTimeField(blank=True, null=True)),
-                ('is_suspended', models.BooleanField(default=False)),
-                ('suspended_at', models.DateTimeField(blank=True, null=True)),
-                ('suspension_reason', models.TextField(blank=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='seller_profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "seller_type",
+                    models.CharField(
+                        choices=[
+                            ("individual", "Individual"),
+                            ("business", "Business"),
+                        ],
+                        default="individual",
+                        max_length=16,
+                    ),
+                ),
+                ("display_name", models.CharField(blank=True, max_length=160)),
+                ("activated_at", models.DateTimeField(auto_now_add=True)),
+                ("verified_at", models.DateTimeField(blank=True, null=True)),
+                ("is_suspended", models.BooleanField(default=False)),
+                ("suspended_at", models.DateTimeField(blank=True, null=True)),
+                ("suspension_reason", models.TextField(blank=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="seller_profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-activated_at',),
+                "ordering": ("-activated_at",),
             },
         ),
     ]

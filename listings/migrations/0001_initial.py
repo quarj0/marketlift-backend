@@ -11,134 +11,281 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('categories', '0001_initial'),
-        ('sellers', '0001_initial'),
+        ("categories", "0001_initial"),
+        ("sellers", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Listing',
+            name="Listing",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('category_slug_snapshot', models.SlugField(blank=True, max_length=80)),
-                ('category_name_snapshot', models.CharField(blank=True, max_length=120)),
-                ('category_schema_version', models.PositiveIntegerField(default=1)),
-                ('slug', models.SlugField(blank=True, max_length=220, unique=True)),
-                ('title', models.CharField(max_length=180)),
-                ('description', models.TextField()),
-                ('price', models.DecimalField(blank=True, decimal_places=2, max_digits=14, null=True)),
-                ('condition', models.CharField(blank=True, choices=[('New', 'New'), ('Like new', 'Like new'), ('Used', 'Used')], max_length=16)),
-                ('negotiable', models.BooleanField(default=False)),
-                ('state', models.CharField(max_length=100)),
-                ('state_code', models.CharField(max_length=8)),
-                ('city', models.CharField(max_length=100)),
-                ('district', models.CharField(blank=True, max_length=120)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('published', 'Published'), ('paused', 'Paused'), ('sold', 'Sold'), ('expired', 'Expired'), ('under_review', 'Under review'), ('rejected', 'Rejected'), ('removed', 'Removed')], default='draft', max_length=16)),
-                ('views', models.PositiveBigIntegerField(default=0)),
-                ('published_at', models.DateTimeField(blank=True, null=True)),
-                ('paused_at', models.DateTimeField(blank=True, null=True)),
-                ('sold_at', models.DateTimeField(blank=True, null=True)),
-                ('expired_at', models.DateTimeField(blank=True, null=True)),
-                ('category', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='listings', to='categories.category')),
-                ('seller', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='listings', to='sellers.sellerprofile')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("category_slug_snapshot", models.SlugField(blank=True, max_length=80)),
+                (
+                    "category_name_snapshot",
+                    models.CharField(blank=True, max_length=120),
+                ),
+                ("category_schema_version", models.PositiveIntegerField(default=1)),
+                ("slug", models.SlugField(blank=True, max_length=220, unique=True)),
+                ("title", models.CharField(max_length=180)),
+                ("description", models.TextField()),
+                (
+                    "price",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=14, null=True
+                    ),
+                ),
+                (
+                    "condition",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("New", "New"),
+                            ("Like new", "Like new"),
+                            ("Used", "Used"),
+                        ],
+                        max_length=16,
+                    ),
+                ),
+                ("negotiable", models.BooleanField(default=False)),
+                ("state", models.CharField(max_length=100)),
+                ("state_code", models.CharField(max_length=8)),
+                ("city", models.CharField(max_length=100)),
+                ("district", models.CharField(blank=True, max_length=120)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("published", "Published"),
+                            ("paused", "Paused"),
+                            ("sold", "Sold"),
+                            ("expired", "Expired"),
+                            ("under_review", "Under review"),
+                            ("rejected", "Rejected"),
+                            ("removed", "Removed"),
+                        ],
+                        default="draft",
+                        max_length=16,
+                    ),
+                ),
+                ("views", models.PositiveBigIntegerField(default=0)),
+                ("published_at", models.DateTimeField(blank=True, null=True)),
+                ("paused_at", models.DateTimeField(blank=True, null=True)),
+                ("sold_at", models.DateTimeField(blank=True, null=True)),
+                ("expired_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "category",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="listings",
+                        to="categories.category",
+                    ),
+                ),
+                (
+                    "seller",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="listings",
+                        to="sellers.sellerprofile",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-created_at',),
+                "ordering": ("-created_at",),
             },
         ),
         migrations.CreateModel(
-            name='ListingAttribute',
+            name="ListingAttribute",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('key', models.SlugField(max_length=80)),
-                ('label_snapshot', models.CharField(max_length=120)),
-                ('field_type_snapshot', models.CharField(max_length=16)),
-                ('text_value', models.TextField(blank=True, null=True)),
-                ('number_value', models.DecimalField(blank=True, decimal_places=4, max_digits=18, null=True)),
-                ('boolean_value', models.BooleanField(blank=True, null=True)),
-                ('field', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='listing_values', to='categories.categoryfield')),
-                ('listing', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attribute_values', to='listings.listing')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("key", models.SlugField(max_length=80)),
+                ("label_snapshot", models.CharField(max_length=120)),
+                ("field_type_snapshot", models.CharField(max_length=16)),
+                ("text_value", models.TextField(blank=True, null=True)),
+                (
+                    "number_value",
+                    models.DecimalField(
+                        blank=True, decimal_places=4, max_digits=18, null=True
+                    ),
+                ),
+                ("boolean_value", models.BooleanField(blank=True, null=True)),
+                (
+                    "field",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="listing_values",
+                        to="categories.categoryfield",
+                    ),
+                ),
+                (
+                    "listing",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attribute_values",
+                        to="listings.listing",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('key',),
+                "ordering": ("key",),
             },
         ),
         migrations.CreateModel(
-            name='ListingMedia',
+            name="ListingMedia",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('url', models.URLField(max_length=1000)),
-                ('alt_text', models.CharField(blank=True, max_length=180)),
-                ('sort_order', models.PositiveIntegerField(default=0)),
-                ('is_primary', models.BooleanField(default=False)),
-                ('listing', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='media', to='listings.listing')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("url", models.URLField(max_length=1000)),
+                ("alt_text", models.CharField(blank=True, max_length=180)),
+                ("sort_order", models.PositiveIntegerField(default=0)),
+                ("is_primary", models.BooleanField(default=False)),
+                (
+                    "listing",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="media",
+                        to="listings.listing",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('sort_order', 'created_at'),
+                "ordering": ("sort_order", "created_at"),
             },
         ),
         migrations.CreateModel(
-            name='SavedListing',
+            name="SavedListing",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('listing', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='saved_by', to='listings.listing')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='saved_listings', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "listing",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="saved_by",
+                        to="listings.listing",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="saved_listings",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-created_at',),
+                "ordering": ("-created_at",),
             },
         ),
         migrations.AddIndex(
-            model_name='listing',
-            index=models.Index(fields=['status', '-created_at'], name='listings_li_status_f5055b_idx'),
+            model_name="listing",
+            index=models.Index(
+                fields=["status", "-created_at"], name="listings_li_status_f5055b_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='listing',
-            index=models.Index(fields=['category', 'status', '-created_at'], name='listings_li_categor_a7cd4f_idx'),
+            model_name="listing",
+            index=models.Index(
+                fields=["category", "status", "-created_at"],
+                name="listings_li_categor_a7cd4f_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='listing',
-            index=models.Index(fields=['state_code', 'city', 'status'], name='listings_li_state_c_0e1902_idx'),
+            model_name="listing",
+            index=models.Index(
+                fields=["state_code", "city", "status"],
+                name="listings_li_state_c_0e1902_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='listing',
-            index=models.Index(fields=['seller', 'status'], name='listings_li_seller__3237a3_idx'),
+            model_name="listing",
+            index=models.Index(
+                fields=["seller", "status"], name="listings_li_seller__3237a3_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='listing',
-            index=models.Index(fields=['price'], name='listings_li_price_d6caaa_idx'),
+            model_name="listing",
+            index=models.Index(fields=["price"], name="listings_li_price_d6caaa_idx"),
         ),
         migrations.AddIndex(
-            model_name='listingattribute',
-            index=models.Index(fields=['key', 'text_value'], name='listings_li_key_de44c1_idx'),
+            model_name="listingattribute",
+            index=models.Index(
+                fields=["key", "text_value"], name="listings_li_key_de44c1_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='listingattribute',
-            index=models.Index(fields=['key', 'number_value'], name='listings_li_key_99abd1_idx'),
+            model_name="listingattribute",
+            index=models.Index(
+                fields=["key", "number_value"], name="listings_li_key_99abd1_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='listingattribute',
-            index=models.Index(fields=['key', 'boolean_value'], name='listings_li_key_12f48e_idx'),
+            model_name="listingattribute",
+            index=models.Index(
+                fields=["key", "boolean_value"], name="listings_li_key_12f48e_idx"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='listingattribute',
-            constraint=models.UniqueConstraint(fields=('listing', 'key'), name='listings_unique_attribute_key'),
+            model_name="listingattribute",
+            constraint=models.UniqueConstraint(
+                fields=("listing", "key"), name="listings_unique_attribute_key"
+            ),
         ),
         migrations.AddIndex(
-            model_name='listingmedia',
-            index=models.Index(fields=['listing', 'sort_order'], name='listings_li_listing_7324d5_idx'),
+            model_name="listingmedia",
+            index=models.Index(
+                fields=["listing", "sort_order"], name="listings_li_listing_7324d5_idx"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='savedlisting',
-            constraint=models.UniqueConstraint(fields=('user', 'listing'), name='listings_unique_saved_listing'),
+            model_name="savedlisting",
+            constraint=models.UniqueConstraint(
+                fields=("user", "listing"), name="listings_unique_saved_listing"
+            ),
         ),
     ]

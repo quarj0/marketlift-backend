@@ -24,7 +24,9 @@ class MarketplaceDomainTests(TestCase):
             state_code="SP",
             city="São Paulo",
         )
-        cls.seller = SellerProfile.objects.create(user=cls.user, display_name="Seller Example")
+        cls.seller = SellerProfile.objects.create(
+            user=cls.user, display_name="Seller Example"
+        )
         cls.category = Category.objects.get(slug="phones")
 
     def listing_payload(self, title="iPhone 15 Pro"):
@@ -48,7 +50,9 @@ class MarketplaceDomainTests(TestCase):
 
     def test_seed_matches_frontend_domain_counts(self):
         self.assertEqual(Category.objects.count(), 13)
-        self.assertEqual(sum(category.fields.count() for category in Category.objects.all()), 99)
+        self.assertEqual(
+            sum(category.fields.count() for category in Category.objects.all()), 99
+        )
         self.assertEqual(SellerPlan.objects.count(), 4)
         self.assertEqual(PromotionProduct.objects.count(), 4)
 

@@ -72,9 +72,15 @@ class CategoryField(UUIDTimeStampedModel):
     placeholder = models.CharField(max_length=200, blank=True)
     help_text = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
-    min_value = models.DecimalField(max_digits=16, decimal_places=4, null=True, blank=True)
-    max_value = models.DecimalField(max_digits=16, decimal_places=4, null=True, blank=True)
-    step_value = models.DecimalField(max_digits=16, decimal_places=4, null=True, blank=True)
+    min_value = models.DecimalField(
+        max_digits=16, decimal_places=4, null=True, blank=True
+    )
+    max_value = models.DecimalField(
+        max_digits=16, decimal_places=4, null=True, blank=True
+    )
+    step_value = models.DecimalField(
+        max_digits=16, decimal_places=4, null=True, blank=True
+    )
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -93,7 +99,9 @@ class CategoryField(UUIDTimeStampedModel):
             and self.max_value is not None
             and self.min_value > self.max_value
         ):
-            raise ValidationError({"max_value": "Maximum must be greater than minimum."})
+            raise ValidationError(
+                {"max_value": "Maximum must be greater than minimum."}
+            )
 
     def __str__(self) -> str:
         return f"{self.category.slug}.{self.key}"

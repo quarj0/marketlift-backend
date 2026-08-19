@@ -9,80 +9,167 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('slug', models.SlugField(max_length=80, unique=True)),
-                ('name', models.CharField(max_length=120)),
-                ('icon', models.CharField(blank=True, max_length=80)),
-                ('description', models.TextField(blank=True)),
-                ('active', models.BooleanField(default=True)),
-                ('sort_order', models.PositiveIntegerField(default=0)),
-                ('schema_version', models.PositiveIntegerField(default=1)),
-                ('pricing_mode', models.CharField(choices=[('required', 'Required'), ('optional', 'Optional')], default='required', max_length=12)),
-                ('pricing_label', models.CharField(default='Price (R$)', max_length=120)),
-                ('pricing_placeholder', models.CharField(blank=True, max_length=120)),
-                ('condition_enabled', models.BooleanField(default=True)),
-                ('condition_required', models.BooleanField(default=True)),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subcategories', to='categories.category')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("slug", models.SlugField(max_length=80, unique=True)),
+                ("name", models.CharField(max_length=120)),
+                ("icon", models.CharField(blank=True, max_length=80)),
+                ("description", models.TextField(blank=True)),
+                ("active", models.BooleanField(default=True)),
+                ("sort_order", models.PositiveIntegerField(default=0)),
+                ("schema_version", models.PositiveIntegerField(default=1)),
+                (
+                    "pricing_mode",
+                    models.CharField(
+                        choices=[("required", "Required"), ("optional", "Optional")],
+                        default="required",
+                        max_length=12,
+                    ),
+                ),
+                (
+                    "pricing_label",
+                    models.CharField(default="Price (R$)", max_length=120),
+                ),
+                ("pricing_placeholder", models.CharField(blank=True, max_length=120)),
+                ("condition_enabled", models.BooleanField(default=True)),
+                ("condition_required", models.BooleanField(default=True)),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="subcategories",
+                        to="categories.category",
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'categories',
-                'ordering': ('sort_order', 'name'),
+                "verbose_name_plural": "categories",
+                "ordering": ("sort_order", "name"),
             },
         ),
         migrations.CreateModel(
-            name='CategoryField',
+            name="CategoryField",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('key', models.SlugField(max_length=80)),
-                ('label', models.CharField(max_length=120)),
-                ('field_type', models.CharField(choices=[('text', 'Text'), ('textarea', 'Textarea'), ('number', 'Number'), ('select', 'Select'), ('boolean', 'Boolean')], max_length=16)),
-                ('required', models.BooleanField(default=False)),
-                ('filterable', models.BooleanField(default=False)),
-                ('placeholder', models.CharField(blank=True, max_length=200)),
-                ('help_text', models.TextField(blank=True)),
-                ('unit', models.CharField(blank=True, max_length=32)),
-                ('min_value', models.DecimalField(blank=True, decimal_places=4, max_digits=16, null=True)),
-                ('max_value', models.DecimalField(blank=True, decimal_places=4, max_digits=16, null=True)),
-                ('step_value', models.DecimalField(blank=True, decimal_places=4, max_digits=16, null=True)),
-                ('sort_order', models.PositiveIntegerField(default=0)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fields', to='categories.category')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("key", models.SlugField(max_length=80)),
+                ("label", models.CharField(max_length=120)),
+                (
+                    "field_type",
+                    models.CharField(
+                        choices=[
+                            ("text", "Text"),
+                            ("textarea", "Textarea"),
+                            ("number", "Number"),
+                            ("select", "Select"),
+                            ("boolean", "Boolean"),
+                        ],
+                        max_length=16,
+                    ),
+                ),
+                ("required", models.BooleanField(default=False)),
+                ("filterable", models.BooleanField(default=False)),
+                ("placeholder", models.CharField(blank=True, max_length=200)),
+                ("help_text", models.TextField(blank=True)),
+                ("unit", models.CharField(blank=True, max_length=32)),
+                (
+                    "min_value",
+                    models.DecimalField(
+                        blank=True, decimal_places=4, max_digits=16, null=True
+                    ),
+                ),
+                (
+                    "max_value",
+                    models.DecimalField(
+                        blank=True, decimal_places=4, max_digits=16, null=True
+                    ),
+                ),
+                (
+                    "step_value",
+                    models.DecimalField(
+                        blank=True, decimal_places=4, max_digits=16, null=True
+                    ),
+                ),
+                ("sort_order", models.PositiveIntegerField(default=0)),
+                (
+                    "category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fields",
+                        to="categories.category",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('sort_order', 'label'),
+                "ordering": ("sort_order", "label"),
             },
         ),
         migrations.CreateModel(
-            name='CategoryFieldOption',
+            name="CategoryFieldOption",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('value', models.CharField(max_length=120)),
-                ('label', models.CharField(max_length=120)),
-                ('sort_order', models.PositiveIntegerField(default=0)),
-                ('field', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='options', to='categories.categoryfield')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("value", models.CharField(max_length=120)),
+                ("label", models.CharField(max_length=120)),
+                ("sort_order", models.PositiveIntegerField(default=0)),
+                (
+                    "field",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="options",
+                        to="categories.categoryfield",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('sort_order', 'label'),
+                "ordering": ("sort_order", "label"),
             },
         ),
         migrations.AddConstraint(
-            model_name='categoryfield',
-            constraint=models.UniqueConstraint(fields=('category', 'key'), name='categories_unique_field_key'),
+            model_name="categoryfield",
+            constraint=models.UniqueConstraint(
+                fields=("category", "key"), name="categories_unique_field_key"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='categoryfieldoption',
-            constraint=models.UniqueConstraint(fields=('field', 'value'), name='categories_unique_option_value'),
+            model_name="categoryfieldoption",
+            constraint=models.UniqueConstraint(
+                fields=("field", "value"), name="categories_unique_option_value"
+            ),
         ),
     ]

@@ -42,7 +42,9 @@ class ListingPromotion(UUIDTimeStampedModel):
         on_delete=models.PROTECT,
         related_name="activations",
     )
-    source = models.CharField(max_length=16, choices=Source.choices, default=Source.PURCHASE)
+    source = models.CharField(
+        max_length=16, choices=Source.choices, default=Source.PURCHASE
+    )
     starts_at = models.DateTimeField(default=timezone.now)
     ends_at = models.DateTimeField()
     cancelled_at = models.DateTimeField(null=True, blank=True)

@@ -16,9 +16,23 @@ class ListingAttributeInline(admin.TabularInline):
 
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ("title", "seller", "category_name", "price", "status", "city", "created_at")
+    list_display = (
+        "title",
+        "seller",
+        "category_name",
+        "price",
+        "status",
+        "city",
+        "created_at",
+    )
     list_filter = ("status", "condition", "category", "state_code")
-    search_fields = ("title", "slug", "description", "seller__display_name", "seller__user__email")
+    search_fields = (
+        "title",
+        "slug",
+        "description",
+        "seller__display_name",
+        "seller__user__email",
+    )
     readonly_fields = (
         "slug",
         "category_slug_snapshot",
