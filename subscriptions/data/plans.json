@@ -1,0 +1,46 @@
+[
+  {
+    "code": "free",
+    "name": "Free",
+    "monthly_price": "0.00",
+    "yearly_price": "0.00",
+    "listing_limit": 5,
+    "promotion_credits": 0,
+    "visibility_weight": "1.00",
+    "recommended": false,
+    "features": ["5 active listings", "Standard visibility", "Basic seller profile"]
+  },
+  {
+    "code": "basic",
+    "name": "Basic",
+    "monthly_price": "39.90",
+    "yearly_price": "399.00",
+    "listing_limit": 25,
+    "promotion_credits": 0,
+    "visibility_weight": "1.10",
+    "recommended": false,
+    "features": ["25 active listings", "Up to 10 photos", "Basic performance statistics"]
+  },
+  {
+    "code": "pro",
+    "name": "Pro",
+    "monthly_price": "89.90",
+    "yearly_price": "899.00",
+    "listing_limit": 100,
+    "promotion_credits": 4,
+    "visibility_weight": "1.35",
+    "recommended": true,
+    "features": ["100 active listings", "Priority visibility", "4 featured credits / month", "Seller analytics", "Verified seller tools"]
+  },
+  {
+    "code": "business",
+    "name": "Business",
+    "monthly_price": "199.90",
+    "yearly_price": "1999.00",
+    "listing_limit": 300,
+    "promotion_credits": 12,
+    "visibility_weight": "1.60",
+    "recommended": false,
+    "features": ["300+ active listings", "Business storefront", "Advanced analytics", "Priority support", "12 featured credits / month"]
+  }
+]

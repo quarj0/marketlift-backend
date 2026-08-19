@@ -1,0 +1,30 @@
+[
+  {
+    "code": "featured",
+    "name": "Featured",
+    "description": "Stand out with a premium Featured badge and stronger placement.",
+    "duration_days": 7,
+    "price": "19.90"
+  },
+  {
+    "code": "top_search",
+    "name": "Top of Search",
+    "description": "Move higher in relevant search results for more discovery.",
+    "duration_days": 3,
+    "price": "14.90"
+  },
+  {
+    "code": "urgent",
+    "name": "Urgent",
+    "description": "Add an Urgent badge to attract buyers who are ready to act.",
+    "duration_days": 7,
+    "price": "9.90"
+  },
+  {
+    "code": "homepage",
+    "name": "Homepage Featured",
+    "description": "Eligible for premium placement on the Marketlift homepage.",
+    "duration_days": 3,
+    "price": "29.90"
+  }
+]

@@ -1,4 +1,4 @@
-.PHONY: infra-up infra-down infra-logs migrate migrations superuser dev worker beat test check
+.PHONY: infra-up infra-down infra-logs migrate migrations seed-domain superuser dev worker beat test check
 
 infra-up:
 	docker compose up -d postgres redis
@@ -14,6 +14,9 @@ migrations:
 
 migrate:
 	uv run python manage.py migrate
+
+seed-domain:
+	uv run python manage.py seed_marketplace_domain
 
 superuser:
 	uv run python manage.py createsuperuser
