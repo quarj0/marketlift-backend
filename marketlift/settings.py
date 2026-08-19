@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "categories",
     "subscriptions",
     "promotions",
+    "payments",
+    "verifications",
     "moderation",
     "reports",
     "notifications",
@@ -150,6 +152,12 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:63
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "300"))
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    "expire-due-seller-subscriptions": {
+        "task": "subscriptions.tasks.expire_due_seller_subscriptions",
+        "schedule": 3600.0,
+    },
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -162,3 +170,10 @@ EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend",
 )
+
+# Marketlift service-payment integration. Product-sale payments remain outside Marketlift V1.
+MARKETLIFT_PAYMENT_PROVIDER = os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "mock")
+PAYMENT_MOCK_AUTO_APPROVE = env_bool("PAYMENT_MOCK_AUTO_APPROVE", True)
+MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN", "")
+MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY", "")
+MERCADO_PAGO_WEBHOOK_SECRET = os.getenv("MERCADO_PAGO_WEBHOOK_SECRET", "")

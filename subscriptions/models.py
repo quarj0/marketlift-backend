@@ -57,6 +57,7 @@ class SellerSubscription(UUIDTimeStampedModel):
     current_period_end = models.DateTimeField(null=True, blank=True)
     cancel_at_period_end = models.BooleanField(default=False)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    promotion_credits_remaining = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ("-created_at",)
