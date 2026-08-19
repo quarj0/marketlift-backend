@@ -12,7 +12,6 @@ from uploads.services import claim_upload
 
 from .models import Conversation, Message, MessageAttachment, UserBlock
 
-
 FINAL_UNAVAILABLE_LISTING_STATUSES = {Listing.Status.REJECTED, Listing.Status.REMOVED}
 
 
@@ -33,7 +32,9 @@ def start_conversation(*, buyer, listing: Listing):
     if listing.seller.user_id == buyer.pk:
         raise ValidationError("You cannot message yourself about your own listing.")
     if not listing.is_publicly_visible:
-        raise ValidationError("This listing is not currently available for new conversations.")
+        raise ValidationError(
+            "This listing is not currently available for new conversations."
+        )
     if _blocked_between(buyer, listing.seller.user):
         raise ValidationError("Messaging is unavailable between these accounts.")
 
@@ -50,7 +51,14 @@ def start_conversation(*, buyer, listing: Listing):
             conversation.seller = listing.seller
         conversation.listing_title_snapshot = listing.title
         conversation.buyer_archived_at = None
-        conversation.save(update_fields=("seller", "listing_title_snapshot", "buyer_archived_at", "updated_at"))
+        conversation.save(
+            update_fields=(
+                "seller",
+                "listing_title_snapshot",
+                "buyer_archived_at",
+                "updated_at",
+            )
+        )
     return conversation
 
 
@@ -65,7 +73,13 @@ def get_conversation_for_user(*, user, conversation_id) -> Conversation:
 
 
 @transaction.atomic
-def send_message(*, user, conversation: Conversation, text: str = "", upload: UploadAsset | None = None):
+def send_message(
+    *,
+    user,
+    conversation: Conversation,
+    text: str = "",
+    upload: UploadAsset | None = None,
+):
     # Lock only the Conversation row. ``listing`` is nullable, so combining
     # select_for_update() with select_related("listing") makes PostgreSQL try
     # to lock the nullable side of an OUTER JOIN, which PostgreSQL rejects.
@@ -84,8 +98,13 @@ def send_message(*, user, conversation: Conversation, text: str = "", upload: Up
     if _blocked_between(user, other):
         raise ValidationError("Messaging is blocked between these accounts.")
     if conversation.seller.is_suspended:
-        raise ValidationError("Messaging is unavailable while this seller account is suspended.")
-    if conversation.listing_id and conversation.listing.status in FINAL_UNAVAILABLE_LISTING_STATUSES:
+        raise ValidationError(
+            "Messaging is unavailable while this seller account is suspended."
+        )
+    if (
+        conversation.listing_id
+        and conversation.listing.status in FINAL_UNAVAILABLE_LISTING_STATUSES
+    ):
         raise ValidationError("Messaging is closed for this listing.")
 
     text = (text or "").strip()
@@ -96,7 +115,9 @@ def send_message(*, user, conversation: Conversation, text: str = "", upload: Up
 
     claimed_upload = None
     if upload is not None:
-        claimed_upload = claim_upload(asset=upload, user=user, purpose=UploadAsset.Purpose.MESSAGE_IMAGE)
+        claimed_upload = claim_upload(
+            asset=upload, user=user, purpose=UploadAsset.Purpose.MESSAGE_IMAGE
+        )
 
     message = Message.objects.create(conversation=conversation, sender=user, text=text)
     if claimed_upload is not None:
@@ -115,11 +136,23 @@ def send_message(*, user, conversation: Conversation, text: str = "", upload: Up
     if conversation.buyer_id == user.pk:
         conversation.buyer_archived_at = None
         conversation.seller_archived_at = None
-        update_fields = ("last_message_at", "last_message_preview", "buyer_archived_at", "seller_archived_at", "updated_at")
+        update_fields = (
+            "last_message_at",
+            "last_message_preview",
+            "buyer_archived_at",
+            "seller_archived_at",
+            "updated_at",
+        )
     else:
         conversation.seller_archived_at = None
         conversation.buyer_archived_at = None
-        update_fields = ("last_message_at", "last_message_preview", "seller_archived_at", "buyer_archived_at", "updated_at")
+        update_fields = (
+            "last_message_at",
+            "last_message_preview",
+            "seller_archived_at",
+            "buyer_archived_at",
+            "updated_at",
+        )
     conversation.save(update_fields=update_fields)
 
     create_notification(
@@ -182,5 +215,11 @@ def is_blocked_by_current_user(*, user, conversation: Conversation) -> bool:
 def message_is_read(*, message: Message) -> bool:
     conversation = message.conversation
     if message.sender_id == conversation.buyer_id:
-        return bool(conversation.seller_last_read_at and conversation.seller_last_read_at >= message.created_at)
-    return bool(conversation.buyer_last_read_at and conversation.buyer_last_read_at >= message.created_at)
+        return bool(
+            conversation.seller_last_read_at
+            and conversation.seller_last_read_at >= message.created_at
+        )
+    return bool(
+        conversation.buyer_last_read_at
+        and conversation.buyer_last_read_at >= message.created_at
+    )
