@@ -1,0 +1,18 @@
+[project]
+name = "marketlift-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "python-dotenv>=1.0,<2",
+    "celery[redis]>=5.5.0,<6",
+    "redis>=6.0.0,<7",
+    "django>=6.1",
+    "django-cors-headers>=4.9.0",
+    "djangorestframework>=3.18.0",
+    "pillow>=12.3.0",
+    "psycopg[binary]>=3.3.4",
+    "strawberry-graphql-django>=0.87.0",
+    "whitenoise>=6.12.0",
+]
