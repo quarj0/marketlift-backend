@@ -32,3 +32,4 @@ class ListingInput:
     negotiable: bool = False
     attributes: JSON | None = None
     image_urls: list[str] | None = None
+    image_upload_ids: list[strawberry.ID] | None = None

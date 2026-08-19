@@ -8,6 +8,8 @@ from django.utils import timezone
 
 from categories.models import Category, CategoryField
 from subscriptions.services import get_effective_plan
+from uploads.models import UploadAsset
+from uploads.services import claim_upload, retire_upload
 
 from .models import Listing, ListingAttribute, ListingMedia
 
@@ -135,22 +137,87 @@ def _write_attributes(
         )
 
 
-def _write_media(listing: Listing, image_urls: list[str] | None):
-    if image_urls is None:
+def _write_media(
+    listing: Listing,
+    *,
+    owner,
+    image_urls: list[str] | None,
+    image_upload_ids: list | None,
+):
+    if image_urls is None and image_upload_ids is None:
         return
+
+    current_uploads = [
+        media.upload
+        for media in listing.media.select_related("upload")
+        if media.upload_id
+    ]
+
+    if image_upload_ids is not None:
+        ordered_ids = [str(value) for value in image_upload_ids]
+        if len(ordered_ids) > 12:
+            raise ValidationError({"images": "A listing can have at most 12 images."})
+        if len(set(ordered_ids)) != len(ordered_ids):
+            raise ValidationError(
+                {"images": "The same upload cannot be attached twice."}
+            )
+        assets = {
+            str(asset.id): asset
+            for asset in UploadAsset.objects.filter(id__in=ordered_ids)
+        }
+        if len(assets) != len(ordered_ids):
+            raise ValidationError(
+                {"images": "One or more image uploads were not found."}
+            )
+        current_ids = {str(item.id) for item in current_uploads}
+        resolved = []
+        for asset_id in ordered_ids:
+            asset = assets[asset_id]
+            if asset_id not in current_ids:
+                asset = claim_upload(
+                    asset=asset, user=owner, purpose=UploadAsset.Purpose.LISTING_IMAGE
+                )
+            elif asset.owner_id != owner.pk:
+                raise ValidationError(
+                    {"images": "A listing image belongs to another account."}
+                )
+            resolved.append(asset)
+
+        listing.media.all().delete()
+        ListingMedia.objects.bulk_create(
+            [
+                ListingMedia(
+                    listing=listing,
+                    upload=asset,
+                    url=asset.content_url,
+                    sort_order=index,
+                    is_primary=index == 0,
+                )
+                for index, asset in enumerate(resolved)
+            ]
+        )
+        retained_ids = {asset.id for asset in resolved}
+        for old in current_uploads:
+            if old.id not in retained_ids:
+                retire_upload(asset=old)
+        return
+
+    # Backward-compatible external URL path while the frontend is migrated to
+    # prepared upload IDs. It is intentionally separate from object storage.
+    urls = [url for url in (image_urls or []) if url]
+    if len(urls) > 12:
+        raise ValidationError({"images": "A listing can have at most 12 images."})
     listing.media.all().delete()
     ListingMedia.objects.bulk_create(
         [
             ListingMedia(
-                listing=listing,
-                url=url,
-                sort_order=index,
-                is_primary=index == 0,
+                listing=listing, url=url, sort_order=index, is_primary=index == 0
             )
-            for index, url in enumerate(image_urls)
-            if url
+            for index, url in enumerate(urls)
         ]
     )
+    for old in current_uploads:
+        retire_upload(asset=old)
 
 
 @transaction.atomic
@@ -169,6 +236,7 @@ def create_listing(
     district: str = "",
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
+    image_upload_ids: list | None = None,
 ):
     if seller.is_suspended:
         raise ValidationError("Selling access is suspended.")
@@ -195,7 +263,12 @@ def create_listing(
         district=district.strip(),
     )
     _write_attributes(listing, normalized)
-    _write_media(listing, image_urls)
+    _write_media(
+        listing,
+        owner=seller.user,
+        image_urls=image_urls,
+        image_upload_ids=image_upload_ids,
+    )
     return listing
 
 
@@ -215,6 +288,7 @@ def update_listing(
     district: str = "",
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
+    image_upload_ids: list | None = None,
 ):
     if listing.status in FINAL_STATUSES:
         raise ValidationError("A rejected or removed listing cannot be edited.")
@@ -241,7 +315,12 @@ def update_listing(
     listing.district = district.strip()
     listing.save()
     _write_attributes(listing, normalized)
-    _write_media(listing, image_urls)
+    _write_media(
+        listing,
+        owner=listing.seller.user,
+        image_urls=image_urls,
+        image_upload_ids=image_upload_ids,
+    )
     return listing
 
 

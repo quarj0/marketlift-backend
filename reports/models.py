@@ -10,6 +10,7 @@ class Report(UUIDTimeStampedModel):
         LISTING = "listing", "Listing"
         SELLER = "seller", "Seller"
         USER = "user", "User"
+        MESSAGE = "message", "Message"
 
     class Reason(models.TextChoices):
         ACCOUNT = "account", "Account"
@@ -60,6 +61,13 @@ class Report(UUIDTimeStampedModel):
         on_delete=models.SET_NULL,
         related_name="reports_received",
     )
+    message = models.ForeignKey(
+        "messaging.Message",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reports",
+    )
     target_label_snapshot = models.CharField(max_length=240)
     reason = models.CharField(max_length=16, choices=Reason.choices)
     statement = models.TextField()
@@ -106,6 +114,8 @@ class Report(UUIDTimeStampedModel):
             return str(self.seller)
         if self.user_target_id:
             return self.user_target.full_name or self.user_target.email
+        if self.message_id:
+            return self.target_label_snapshot
         return self.target_label_snapshot
 
     def clean(self):
@@ -113,6 +123,7 @@ class Report(UUIDTimeStampedModel):
             self.TargetType.LISTING: self.listing_id,
             self.TargetType.SELLER: self.seller_id,
             self.TargetType.USER: self.user_target_id,
+            self.TargetType.MESSAGE: self.message_id,
         }
         if not mapping.get(self.target_type):
             raise ValidationError("The selected report target is required.")

@@ -10,4 +10,7 @@ def validation_error(exc: ValidationError) -> GraphQLError:
                 messages = [messages]
             parts.extend(f"{field}: {message}" for message in messages)
         return GraphQLError("; ".join(parts))
-    return GraphQLError("; ".join(exc.messages))
+    messages = getattr(exc, "messages", None)
+    if messages:
+        return GraphQLError("; ".join(messages))
+    return GraphQLError(str(exc))

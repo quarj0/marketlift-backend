@@ -13,7 +13,12 @@ class ReportQuery:
         return [
             report_to_type(r)
             for r in Report.objects.select_related(
-                "reporter", "listing", "seller__user", "user_target", "assigned_to"
+                "reporter",
+                "listing",
+                "seller__user",
+                "user_target",
+                "message",
+                "assigned_to",
             ).filter(reporter=require_user(info))[: max(1, min(limit, 100))]
         ]
 
@@ -29,7 +34,12 @@ class ReportQuery:
     ) -> list[ReportType]:
         require_staff(info)
         qs = Report.objects.select_related(
-            "reporter", "listing", "seller__user", "user_target", "assigned_to"
+            "reporter",
+            "listing",
+            "seller__user",
+            "user_target",
+            "message",
+            "assigned_to",
         )
         if status:
             qs = qs.filter(status=status)
@@ -47,11 +57,21 @@ class ReportQuery:
         try:
             r = (
                 Report.objects.select_related(
-                    "reporter", "listing", "seller__user", "user_target", "assigned_to"
+                    "reporter",
+                    "listing",
+                    "seller__user",
+                    "user_target",
+                    "message",
+                    "assigned_to",
                 ).get(pk=id)
                 if len(id) > 20
                 else Report.objects.select_related(
-                    "reporter", "listing", "seller__user", "user_target", "assigned_to"
+                    "reporter",
+                    "listing",
+                    "seller__user",
+                    "user_target",
+                    "message",
+                    "assigned_to",
                 ).get(reference=id)
             )
         except (Report.DoesNotExist, ValueError):

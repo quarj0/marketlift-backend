@@ -2,7 +2,7 @@ from .types import ReportType
 
 
 def report_to_type(r):
-    target_id = r.listing_id or r.seller_id or r.user_target_id or ""
+    target_id = r.listing_id or r.seller_id or r.user_target_id or r.message_id or ""
     return ReportType(
         id=str(r.id),
         reference=r.reference,

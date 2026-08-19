@@ -9,6 +9,8 @@ from categories.graphql.queries import CategoryQuery
 from listings.graphql.mutations import ListingMutation
 from listings.graphql.queries import ListingQuery
 from marketlift.graphql.queries import HealthQuery
+from messaging.graphql.mutations import MessagingMutation
+from messaging.graphql.queries import MessagingQuery
 from moderation.graphql.mutations import ModerationMutation
 from moderation.graphql.queries import ModerationQuery
 from notifications.graphql.mutations import NotificationMutation
@@ -42,6 +44,7 @@ Query = merge_types(
         ReportQuery,
         NotificationQuery,
         AuditQuery,
+        MessagingQuery,
     ),
 )
 Mutation = merge_types(
@@ -58,6 +61,7 @@ Mutation = merge_types(
         ModerationMutation,
         ReportMutation,
         NotificationMutation,
+        MessagingMutation,
     ),
 )
 

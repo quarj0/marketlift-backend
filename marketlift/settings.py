@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     "promotions",
     "payments",
     "verifications",
+    "uploads",
+    "messaging",
     "moderation",
     "reports",
     "notifications",
@@ -84,15 +86,27 @@ ASGI_APPLICATION = "marketlift.asgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "marketlift"),
-        "USER": os.getenv("POSTGRES_USER", "marketlift"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "marketlift"),
-        "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
-        "PORT": os.getenv("POSTGRES_PORT", "5433"),
-        "CONN_MAX_AGE": int(os.getenv("POSTGRES_CONN_MAX_AGE", "60")),
+        # Provider-neutral database configuration. Supabase, Neon, a local
+        # Docker PostgreSQL server, or any other compatible host can supply
+        # these values without changing application code.
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
+        "NAME": os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "marketlift")),
+        "USER": os.getenv("DB_USER", os.getenv("POSTGRES_USER", "marketlift")),
+        "PASSWORD": os.getenv(
+            "DB_PASSWORD", os.getenv("POSTGRES_PASSWORD", "marketlift")
+        ),
+        "HOST": os.getenv("DB_HOST", os.getenv("POSTGRES_HOST", "127.0.0.1")),
+        "PORT": os.getenv("DB_PORT", os.getenv("POSTGRES_PORT", "5433")),
+        "CONN_MAX_AGE": int(
+            os.getenv("DB_CONN_MAX_AGE", os.getenv("POSTGRES_CONN_MAX_AGE", "60"))
+        ),
     }
 }
+
+DB_SSLMODE = os.getenv("DB_SSLMODE", "").strip()
+if DB_SSLMODE and DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
+    DATABASES["default"]["OPTIONS"] = {"sslmode": DB_SSLMODE}
+
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -157,7 +171,26 @@ CELERY_BEAT_SCHEDULE = {
         "task": "subscriptions.tasks.expire_due_seller_subscriptions",
         "schedule": 3600.0,
     },
+    "cleanup-expired-uploads": {
+        "task": "uploads.tasks.cleanup_expired_uploads",
+        "schedule": 21600.0,
+    },
 }
+
+MEDIA_ROOT = Path(os.getenv("MARKETLIFT_MEDIA_ROOT", BASE_DIR / "media"))
+MEDIA_URL = "/media/"
+
+# Domain code talks to a logical storage alias only. Swap this dotted class
+# path later without changing listings, messaging, verification, or reports.
+MARKETLIFT_STORAGE_BACKENDS = {
+    "default": os.getenv(
+        "MARKETLIFT_STORAGE_BACKEND",
+        "uploads.storage.local.LocalStorageBackend",
+    )
+}
+MARKETLIFT_LOCAL_UPLOAD_ROOT = Path(
+    os.getenv("MARKETLIFT_LOCAL_UPLOAD_ROOT", BASE_DIR / ".marketlift-uploads")
+)
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -171,7 +204,7 @@ EMAIL_BACKEND = os.getenv(
     "django.core.mail.backends.console.EmailBackend",
 )
 
-# Marketlift service-payment integration. Product-sale payments remain outside Marketlift V1.
+# Marketlift service-payment integration. Product-sale payments remain outside Marketlift.
 MARKETLIFT_PAYMENT_PROVIDER = os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "mock")
 PAYMENT_MOCK_AUTO_APPROVE = env_bool("PAYMENT_MOCK_AUTO_APPROVE", True)
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN", "")

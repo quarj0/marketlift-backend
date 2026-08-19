@@ -54,6 +54,7 @@ class ListingMutation:
                 district=input.district,
                 attributes=dict(input.attributes or {}),
                 image_urls=input.image_urls,
+                image_upload_ids=input.image_upload_ids,
             )
         except Category.DoesNotExist as exc:
             raise GraphQLError("Category not found.") from exc
@@ -84,6 +85,7 @@ class ListingMutation:
                 district=input.district,
                 attributes=dict(input.attributes or {}),
                 image_urls=input.image_urls,
+                image_upload_ids=input.image_upload_ids,
             )
         except Category.DoesNotExist as exc:
             raise GraphQLError("Category not found.") from exc

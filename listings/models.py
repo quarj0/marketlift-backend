@@ -120,7 +120,15 @@ class Listing(UUIDTimeStampedModel):
 
 class ListingMedia(UUIDTimeStampedModel):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="media")
-    url = models.URLField(max_length=1000)
+    upload = models.OneToOneField(
+        "uploads.UploadAsset",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="listing_media",
+    )
+    # Kept for legacy/external image URLs. New Marketlift uploads use `upload`.
+    url = models.CharField(max_length=1000, blank=True)
     alt_text = models.CharField(max_length=180, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
     is_primary = models.BooleanField(default=False)
@@ -129,8 +137,12 @@ class ListingMedia(UUIDTimeStampedModel):
         ordering = ("sort_order", "created_at")
         indexes = [models.Index(fields=("listing", "sort_order"))]
 
+    @property
+    def content_url(self) -> str:
+        return self.upload.content_url if self.upload_id else self.url
+
     def __str__(self) -> str:
-        return self.url
+        return self.content_url
 
 
 class ListingAttribute(UUIDTimeStampedModel):

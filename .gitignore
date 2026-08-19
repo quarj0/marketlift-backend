@@ -26,3 +26,5 @@ media/
 .coverage
 .vscode/
 .idea/
+
+.marketlift-uploads/

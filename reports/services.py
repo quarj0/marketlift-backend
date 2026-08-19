@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 from audit.services import record_audit_event
 from listings.models import Listing
+from messaging.models import Message
 from notifications.services import create_notification
 from sellers.models import SellerProfile
 from .models import Report
@@ -32,10 +33,17 @@ def _target(target_type, target_id):
                 "user_target": obj,
                 "target_label_snapshot": obj.full_name or obj.email,
             }
+        if target_type == Report.TargetType.MESSAGE:
+            obj = Message.objects.select_related(
+                "sender", "conversation__buyer", "conversation__seller__user"
+            ).get(pk=str(target_id))
+            preview = (obj.text or "Image message")[:120]
+            return {"message": obj, "target_label_snapshot": f"Message: {preview}"}
     except (
         Listing.DoesNotExist,
         SellerProfile.DoesNotExist,
         User.DoesNotExist,
+        Message.DoesNotExist,
         ValueError,
     ) as exc:
         raise ValidationError("Report target not found.") from exc
@@ -63,6 +71,14 @@ def create_report(
         raise ValidationError("You cannot report your own seller profile.")
     if data.get("listing") and data["listing"].seller.user_id == reporter.pk:
         raise ValidationError("You cannot report your own listing.")
+    if data.get("message"):
+        message = data["message"]
+        if not message.conversation.includes_user(reporter):
+            raise ValidationError(
+                "You can only report messages from your own conversations."
+            )
+        if message.sender_id == reporter.pk:
+            raise ValidationError("You cannot report your own message.")
     report = Report(
         reporter=reporter,
         target_type=target_type,
