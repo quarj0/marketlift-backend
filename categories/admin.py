@@ -10,8 +10,8 @@ class CategoryFieldOptionInline(admin.TabularInline):
 
 @admin.register(CategoryField)
 class CategoryFieldAdmin(admin.ModelAdmin):
-    list_display = ("category", "key", "label", "field_type", "required", "filterable")
-    list_filter = ("field_type", "required", "filterable", "category")
+    list_display = ("category", "key", "label", "field_type", "required", "filterable", "allow_custom_value")
+    list_filter = ("field_type", "required", "filterable", "allow_custom_value", "category")
     search_fields = ("category__name", "category__slug", "key", "label")
     ordering = ("category__sort_order", "category__name", "sort_order")
     inlines = (CategoryFieldOptionInline,)

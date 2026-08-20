@@ -14,6 +14,7 @@ class CategoryFieldDefinitionType:
     type: str
     required: bool
     filterable: bool
+    allow_custom_value: bool
     placeholder: str | None
     help_text: str | None
     unit: str | None
@@ -64,6 +65,14 @@ class DeleteCategoryPayload:
     affected_listings: int
 
 
+@strawberry.type
+class DeleteCategoryFieldPayload:
+    category_id: str
+    field_id: str
+    historical_values: int
+    schema_version: int
+
+
 @strawberry.input
 class CategoryAdminInput:
     name: str
@@ -73,3 +82,33 @@ class CategoryAdminInput:
     parent_id: str | None = None
     active: bool = True
     sort_order: int = 0
+    pricing_mode: str = "required"
+    pricing_label: str = "Price (R$)"
+    pricing_placeholder: str | None = None
+    condition_enabled: bool = True
+    condition_required: bool = True
+
+
+@strawberry.input
+class CategoryFieldOptionAdminInput:
+    label: str
+    value: str | None = None
+    sort_order: int | None = None
+
+
+@strawberry.input
+class CategoryFieldAdminInput:
+    key: str
+    label: str
+    type: str
+    required: bool = False
+    filterable: bool = False
+    allow_custom_value: bool = False
+    placeholder: str | None = None
+    help_text: str | None = None
+    unit: str | None = None
+    min: float | None = None
+    max: float | None = None
+    step: float | None = None
+    sort_order: int = 0
+    options: list[CategoryFieldOptionAdminInput] | None = None

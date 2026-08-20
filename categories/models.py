@@ -69,6 +69,9 @@ class CategoryField(UUIDTimeStampedModel):
     field_type = models.CharField(max_length=16, choices=FieldType.choices)
     required = models.BooleanField(default=False)
     filterable = models.BooleanField(default=False)
+    # For SELECT fields, options are strict by default. When enabled, options
+    # become suggestions and sellers may submit another non-empty scalar value.
+    allow_custom_value = models.BooleanField(default=False)
     placeholder = models.CharField(max_length=200, blank=True)
     help_text = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
@@ -102,6 +105,12 @@ class CategoryField(UUIDTimeStampedModel):
             raise ValidationError(
                 {"max_value": "Maximum must be greater than minimum."}
             )
+
+    @property
+    def custom_values_allowed(self) -> bool:
+        # Text/textarea/number inputs are inherently free-form. The flag only
+        # changes SELECT semantics from strict choices to suggestions + custom.
+        return self.field_type != self.FieldType.SELECT or self.allow_custom_value
 
     def __str__(self) -> str:
         return f"{self.category.slug}.{self.key}"

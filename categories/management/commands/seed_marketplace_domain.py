@@ -13,6 +13,16 @@ from subscriptions.models import SellerPlan
 class Command(BaseCommand):
     help = "Seed Marketlift categories, category fields, seller plans, and promotion products."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--force-category-schema",
+            action="store_true",
+            help=(
+                "Re-apply the bundled category schema to existing categories. "
+                "Without this flag, existing admin-managed category fields/options are preserved."
+            ),
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
         base_dir = Path(__file__).resolve().parents[2]
@@ -28,7 +38,9 @@ class Command(BaseCommand):
             (project_dir / "promotions" / "data" / "products.json").read_text()
         )
 
-        category_count = self._seed_categories(category_data)
+        category_count = self._seed_categories(
+            category_data, force=options["force_category_schema"]
+        )
         plan_count = self._seed_plans(plans_data)
         product_count = self._seed_products(products_data)
 
@@ -39,66 +51,79 @@ class Command(BaseCommand):
             )
         )
 
-    def _seed_categories(self, category_data):
+    def _seed_categories(self, category_data, *, force=False):
         for category_index, item in enumerate(category_data):
-            category, _ = Category.objects.update_or_create(
-                slug=item["id"],
-                defaults={
-                    "name": item["name"],
-                    "icon": item.get("icon", ""),
-                    "description": item.get("description", ""),
-                    "active": True,
-                    "sort_order": category_index,
-                    "schema_version": item.get("schemaVersion", 1),
-                    "pricing_mode": item.get("pricing", {}).get("mode", "required"),
-                    "pricing_label": item.get("pricing", {}).get("label", "Price (R$)"),
-                    "pricing_placeholder": item.get("pricing", {}).get(
-                        "placeholder", ""
-                    ),
-                    "condition_enabled": item.get("condition", {}).get("enabled", True),
-                    "condition_required": item.get("condition", {}).get(
-                        "required", True
-                    ),
-                },
+            defaults = {
+                "name": item["name"],
+                "icon": item.get("icon", ""),
+                "description": item.get("description", ""),
+                "active": True,
+                "sort_order": category_index,
+                "schema_version": item.get("schemaVersion", 1),
+                "pricing_mode": item.get("pricing", {}).get("mode", "required"),
+                "pricing_label": item.get("pricing", {}).get("label", "Price (R$)"),
+                "pricing_placeholder": item.get("pricing", {}).get("placeholder", ""),
+                "condition_enabled": item.get("condition", {}).get("enabled", True),
+                "condition_required": item.get("condition", {}).get("required", True),
+            }
+            category, category_created = Category.objects.get_or_create(
+                slug=item["id"], defaults=defaults
             )
+            if force and not category_created:
+                for key, value in defaults.items():
+                    setattr(category, key, value)
+                category.save()
 
             seen_field_keys = []
             for field_index, field_data in enumerate(item.get("fields", [])):
-                field, _ = CategoryField.objects.update_or_create(
+                field_defaults = {
+                    "label": field_data["label"],
+                    "field_type": field_data["type"],
+                    "required": field_data.get("required", False),
+                    "filterable": field_data.get("filterable", False),
+                    "allow_custom_value": field_data.get("allowCustomValue", False),
+                    "placeholder": field_data.get("placeholder", ""),
+                    "help_text": field_data.get("helpText", ""),
+                    "unit": field_data.get("unit", ""),
+                    "min_value": self._decimal_or_none(field_data.get("min")),
+                    "max_value": self._decimal_or_none(field_data.get("max")),
+                    "step_value": self._decimal_or_none(field_data.get("step")),
+                    "sort_order": field_index,
+                }
+                field, field_created = CategoryField.objects.get_or_create(
                     category=category,
                     key=field_data["id"],
-                    defaults={
-                        "label": field_data["label"],
-                        "field_type": field_data["type"],
-                        "required": field_data.get("required", False),
-                        "filterable": field_data.get("filterable", False),
-                        "placeholder": field_data.get("placeholder", ""),
-                        "help_text": field_data.get("helpText", ""),
-                        "unit": field_data.get("unit", ""),
-                        "min_value": self._decimal_or_none(field_data.get("min")),
-                        "max_value": self._decimal_or_none(field_data.get("max")),
-                        "step_value": self._decimal_or_none(field_data.get("step")),
-                        "sort_order": field_index,
-                    },
+                    defaults=field_defaults,
                 )
+                if force and not field_created:
+                    for key, value in field_defaults.items():
+                        setattr(field, key, value)
+                    field.save()
                 seen_field_keys.append(field.key)
 
                 seen_options = []
                 for option_index, option_data in enumerate(
                     field_data.get("options", [])
                 ):
-                    option, _ = CategoryFieldOption.objects.update_or_create(
+                    option_defaults = {
+                        "label": option_data["label"],
+                        "sort_order": option_index,
+                    }
+                    option, option_created = CategoryFieldOption.objects.get_or_create(
                         field=field,
                         value=option_data["value"],
-                        defaults={
-                            "label": option_data["label"],
-                            "sort_order": option_index,
-                        },
+                        defaults=option_defaults,
                     )
+                    if force and not option_created:
+                        option.label = option_defaults["label"]
+                        option.sort_order = option_defaults["sort_order"]
+                        option.save(update_fields=("label", "sort_order", "updated_at"))
                     seen_options.append(option.value)
-                field.options.exclude(value__in=seen_options).delete()
+                if force:
+                    field.options.exclude(value__in=seen_options).delete()
 
-            category.fields.exclude(key__in=seen_field_keys).delete()
+            if force:
+                category.fields.exclude(key__in=seen_field_keys).delete()
         return len(category_data)
 
     def _seed_plans(self, plans_data):

@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.middleware.csrf import get_token
 from accounts.auth_services import (
     accept_admin_invitation,
     create_admin_login_challenge,
@@ -40,7 +40,13 @@ class CsrfView(APIView):
     authentication_classes = []
 
     def get(self, request):
-        return Response({"csrf": "ready"})
+        csrf_token = get_token(request)
+
+        return Response(
+            {
+                "csrfToken": csrf_token,
+            }
+        )
 
 
 class SessionView(APIView):

@@ -31,6 +31,7 @@ def category_to_type(category) -> CategoryType:
                 type=field.field_type,
                 required=field.required,
                 filterable=field.filterable,
+                allow_custom_value=field.custom_values_allowed,
                 placeholder=field.placeholder or None,
                 help_text=field.help_text or None,
                 unit=field.unit or None,

@@ -32,14 +32,26 @@ def _validate_scalar(field: CategoryField, value):
         return value.strip()
 
     if field.field_type == CategoryField.FieldType.SELECT:
-        if not isinstance(value, str):
+        if isinstance(value, bool) or not isinstance(value, (str, int, float, Decimal)):
             raise ValidationError(
-                {field.key: f"{field.label} must be a selected value."}
+                {field.key: f"{field.label} must be a selected or typed value."}
             )
-        allowed = set(field.options.values_list("value", flat=True))
-        if value not in allowed:
-            raise ValidationError({field.key: f"Invalid option for {field.label}."})
-        return value
+        candidate = str(value).strip()
+        if not candidate:
+            raise ValidationError({field.key: f"{field.label} cannot be empty."})
+
+        # Normalize a typed option label/value back to the canonical option value.
+        # Example: typing "Apple" stores "apple" when that option exists.
+        options = list(field.options.values_list("value", "label"))
+        candidate_folded = candidate.casefold()
+        for option_value, option_label in options:
+            if candidate_folded in {option_value.casefold(), option_label.casefold()}:
+                return option_value
+
+        if field.allow_custom_value:
+            return candidate
+
+        raise ValidationError({field.key: f"Invalid option for {field.label}."})
 
     if field.field_type == CategoryField.FieldType.BOOLEAN:
         if not isinstance(value, bool):
