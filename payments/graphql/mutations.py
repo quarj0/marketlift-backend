@@ -1,11 +1,10 @@
 import strawberry
 from dataclasses import asdict
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 
 from listings.models import Listing
 from marketlift.graphql.auth import request_from_info, require_seller
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import not_found_error, validation_error
 from payments.models import Payment
 from payments.services import (
     create_promotion_payment,
@@ -42,7 +41,7 @@ class PaymentMutation:
         try:
             plan = SellerPlan.objects.get(code=plan_id, active=True)
         except SellerPlan.DoesNotExist as exc:
-            raise GraphQLError("Seller plan not found.") from exc
+            raise not_found_error("Seller plan", code="SELLER_PLAN_NOT_FOUND") from exc
         try:
             p = create_subscription_payment(
                 seller=seller,
@@ -55,7 +54,7 @@ class PaymentMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="PAYMENT_VALIDATION_ERROR") from exc
         return payment_to_type(p)
 
     @strawberry.mutation
@@ -74,7 +73,9 @@ class PaymentMutation:
             listing = Listing.objects.get(pk=str(listing_id))
             product = PromotionProduct.objects.get(code=promotion_id, active=True)
         except (Listing.DoesNotExist, PromotionProduct.DoesNotExist, ValueError) as exc:
-            raise GraphQLError("Listing or promotion not found.") from exc
+            raise not_found_error(
+                "Listing or promotion", code="PAYMENT_TARGET_NOT_FOUND"
+            ) from exc
         try:
             p = create_promotion_payment(
                 seller=seller,
@@ -87,7 +88,7 @@ class PaymentMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="PAYMENT_VALIDATION_ERROR") from exc
         return payment_to_type(p)
 
     @strawberry.mutation
@@ -98,9 +99,9 @@ class PaymentMutation:
                 "seller", "seller_plan", "listing", "promotion_product"
             ).get(pk=str(id), seller=seller)
         except (Payment.DoesNotExist, ValueError) as exc:
-            raise GraphQLError("Payment not found.") from exc
+            raise not_found_error("Payment", code="PAYMENT_NOT_FOUND") from exc
         try:
             p = refresh_payment(payment=p, request=request_from_info(info))
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="PAYMENT_VALIDATION_ERROR") from exc
         return payment_to_type(p)

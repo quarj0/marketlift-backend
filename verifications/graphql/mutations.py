@@ -1,9 +1,12 @@
 import strawberry
-from graphql import GraphQLError
 from django.core.exceptions import ValidationError
 
 from marketlift.graphql.auth import request_from_info, require_seller, require_staff
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import (
+    finality_validation_error,
+    not_found_error,
+    validation_error,
+)
 from verifications.models import VerificationSubmission
 from verifications.services import (
     approve_verification,
@@ -22,7 +25,7 @@ def _get(id):
             "seller", "seller__user"
         ).get(pk=str(id))
     except (VerificationSubmission.DoesNotExist, ValueError) as exc:
-        raise GraphQLError("Verification not found.") from exc
+        raise not_found_error("Verification", code="VERIFICATION_NOT_FOUND") from exc
 
 
 @strawberry.type
@@ -45,7 +48,7 @@ class VerificationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="VERIFICATION_VALIDATION_ERROR") from exc
         return verification_to_type(item)
 
     @strawberry.mutation
@@ -61,7 +64,11 @@ class VerificationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="VERIFICATION_FINAL",
+                default_code="VERIFICATION_VALIDATION_ERROR",
+            ) from exc
         return verification_to_type(item)
 
     @strawberry.mutation
@@ -77,7 +84,11 @@ class VerificationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="VERIFICATION_FINAL",
+                default_code="VERIFICATION_VALIDATION_ERROR",
+            ) from exc
         return verification_to_type(item)
 
     @strawberry.mutation
@@ -93,5 +104,9 @@ class VerificationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="VERIFICATION_FINAL",
+                default_code="VERIFICATION_VALIDATION_ERROR",
+            ) from exc
         return verification_to_type(item)

@@ -1,11 +1,13 @@
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 from listings.models import Listing
 from listings.graphql.mappers import listing_queryset, listing_to_type
 from listings.graphql.types import ListingType
 from marketlift.graphql.auth import request_from_info, require_staff
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import (
+    finality_validation_error,
+    not_found_error,
+)
 from moderation.services import (
     approve_listing_case,
     move_listing_to_review,
@@ -22,7 +24,7 @@ def _listing(id):
             pk=str(id)
         )
     except (Listing.DoesNotExist, ValueError) as exc:
-        raise GraphQLError("Listing not found.") from exc
+        raise not_found_error("Listing", code="LISTING_NOT_FOUND") from exc
 
 
 @strawberry.type
@@ -40,7 +42,11 @@ class ModerationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="MODERATION_CASE_FINAL",
+                default_code="MODERATION_VALIDATION_ERROR",
+            ) from exc
         return moderation_case_to_type(case)
 
     @strawberry.mutation
@@ -56,7 +62,11 @@ class ModerationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="MODERATION_CASE_FINAL",
+                default_code="MODERATION_VALIDATION_ERROR",
+            ) from exc
         return moderation_case_to_type(case)
 
     @strawberry.mutation
@@ -72,7 +82,11 @@ class ModerationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="MODERATION_CASE_FINAL",
+                default_code="MODERATION_VALIDATION_ERROR",
+            ) from exc
         return moderation_case_to_type(case)
 
     @strawberry.mutation
@@ -88,5 +102,9 @@ class ModerationMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="MODERATION_CASE_FINAL",
+                default_code="MODERATION_VALIDATION_ERROR",
+            ) from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))

@@ -1,9 +1,8 @@
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 
 from marketlift.graphql.auth import request_from_info, require_seller, require_staff
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import not_found_error, validation_error
 from subscriptions.models import SellerPlan
 from subscriptions.services import (
     cancel_subscription,
@@ -29,7 +28,7 @@ class SubscriptionMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="SUBSCRIPTION_VALIDATION_ERROR") from exc
         return subscription_to_type(item)
 
     @strawberry.mutation
@@ -64,7 +63,7 @@ class SubscriptionMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="SUBSCRIPTION_VALIDATION_ERROR") from exc
         return plan_to_type(plan)
 
     @strawberry.mutation
@@ -86,7 +85,7 @@ class SubscriptionMutation:
         try:
             plan = SellerPlan.objects.get(code=id)
         except SellerPlan.DoesNotExist as exc:
-            raise GraphQLError("Seller plan not found.") from exc
+            raise not_found_error("Seller plan", code="SELLER_PLAN_NOT_FOUND") from exc
         try:
             plan = update_seller_plan(
                 plan=plan,
@@ -103,5 +102,5 @@ class SubscriptionMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="SUBSCRIPTION_VALIDATION_ERROR") from exc
         return plan_to_type(plan)

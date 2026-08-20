@@ -1,8 +1,7 @@
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 from marketlift.graphql.auth import require_user
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import not_found_error, validation_error
 from saved_searches.models import SavedSearch
 from saved_searches.services import create_saved_search
 from .inputs import SavedSearchInput
@@ -27,7 +26,7 @@ class SavedSearchMutation:
                 )
             )
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="SAVED_SEARCH_VALIDATION_ERROR")
 
     @strawberry.mutation
     def update_saved_search_alerts(
@@ -37,7 +36,7 @@ class SavedSearchMutation:
         try:
             x = user.saved_searches.get(pk=str(id))
         except SavedSearch.DoesNotExist:
-            raise GraphQLError("Saved search not found.")
+            raise not_found_error("Saved search", code="SAVED_SEARCH_NOT_FOUND")
         x.alerts_enabled = enabled
         x.save(update_fields=("alerts_enabled", "updated_at"))
         return saved_search_to_type(x)

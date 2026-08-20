@@ -1,8 +1,11 @@
 import strawberry
 from django.core.exceptions import PermissionDenied, ValidationError
-from graphql import GraphQLError
 from marketlift.graphql.auth import require_staff, require_user
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import (
+    not_found_error,
+    permission_error,
+    validation_error,
+)
 from support.models import SupportTicket
 from support.services import (
     add_customer_message,
@@ -40,9 +43,9 @@ class SupportMutation:
                 )
             )
         except UploadAsset.DoesNotExist:
-            raise GraphQLError("Upload not found.")
+            raise not_found_error("Upload", code="UPLOAD_NOT_FOUND")
         except ValidationError as e:
-            raise validation_error(e)
+            raise validation_error(e, code="SUPPORT_VALIDATION_ERROR")
 
     @strawberry.mutation
     def reply_support_ticket(
@@ -60,12 +63,12 @@ class SupportMutation:
                 add_customer_message(user=u, ticket=t, message=message, upload=upload)
             )
         except (SupportTicket.DoesNotExist, UploadAsset.DoesNotExist):
-            raise GraphQLError("Ticket or upload not found.")
+            raise not_found_error("Ticket or upload", code="SUPPORT_TARGET_NOT_FOUND")
         except (ValidationError, PermissionDenied) as e:
             raise (
-                validation_error(e)
+                validation_error(e, code="SUPPORT_VALIDATION_ERROR")
                 if isinstance(e, ValidationError)
-                else GraphQLError(str(e))
+                else permission_error(e, code="SUPPORT_PERMISSION_DENIED")
             )
 
     @strawberry.mutation
@@ -91,12 +94,12 @@ class SupportMutation:
             t.refresh_from_db()
             return ticket_to_type(t, True)
         except SupportTicket.DoesNotExist:
-            raise GraphQLError("Ticket not found.")
+            raise not_found_error("Ticket", code="SUPPORT_TICKET_NOT_FOUND")
         except (ValidationError, PermissionDenied) as e:
             raise (
-                validation_error(e)
+                validation_error(e, code="SUPPORT_VALIDATION_ERROR")
                 if isinstance(e, ValidationError)
-                else GraphQLError(str(e))
+                else permission_error(e, code="SUPPORT_PERMISSION_DENIED")
             )
 
     @strawberry.mutation
@@ -126,10 +129,12 @@ class SupportMutation:
             )
             return ticket_to_type(ticket, True)
         except (SupportTicket.DoesNotExist, User.DoesNotExist) as exc:
-            raise GraphQLError("Ticket or assignee not found.") from exc
+            raise not_found_error(
+                "Ticket or assignee", code="SUPPORT_TARGET_NOT_FOUND"
+            ) from exc
         except (ValidationError, PermissionDenied) as exc:
             raise (
-                validation_error(exc)
+                validation_error(exc, code="SUPPORT_VALIDATION_ERROR")
                 if isinstance(exc, ValidationError)
-                else GraphQLError(str(exc))
+                else permission_error(exc, code="SUPPORT_PERMISSION_DENIED")
             )

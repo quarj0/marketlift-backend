@@ -1,10 +1,13 @@
 import strawberry
 from django.core.exceptions import PermissionDenied, ValidationError
-from graphql import GraphQLError
 
 from listings.models import Listing
 from marketlift.graphql.auth import require_user
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import (
+    not_found_error,
+    permission_error,
+    validation_error,
+)
 from messaging.services import (
     block_conversation_user,
     get_conversation_for_user,
@@ -40,9 +43,11 @@ class MessagingMutation:
             item = start_conversation(buyer=user, listing=listing)
             item = conversation_queryset().get(pk=item.pk)
         except (Listing.DoesNotExist, ValueError) as exc:
-            raise GraphQLError("Listing not found.") from exc
-        except (ValidationError, PermissionDenied) as exc:
-            raise validation_error(exc) from exc
+            raise not_found_error("Listing", code="LISTING_NOT_FOUND") from exc
+        except ValidationError as exc:
+            raise validation_error(exc, code="MESSAGING_VALIDATION_ERROR") from exc
+        except PermissionDenied as exc:
+            raise permission_error(exc, code="MESSAGING_PERMISSION_DENIED") from exc
         return conversation_to_type(item, user)
 
     @strawberry.mutation
@@ -56,7 +61,7 @@ class MessagingMutation:
             try:
                 upload = UploadAsset.objects.get(pk=str(input.upload_id))
             except (UploadAsset.DoesNotExist, ValueError) as exc:
-                raise GraphQLError("Upload not found.") from exc
+                raise not_found_error("Upload", code="UPLOAD_NOT_FOUND") from exc
         try:
             message = send_message(
                 user=user,
@@ -64,8 +69,10 @@ class MessagingMutation:
                 text=input.text or "",
                 upload=upload,
             )
-        except (ValidationError, PermissionDenied) as exc:
-            raise validation_error(exc) from exc
+        except ValidationError as exc:
+            raise validation_error(exc, code="MESSAGING_VALIDATION_ERROR") from exc
+        except PermissionDenied as exc:
+            raise permission_error(exc, code="MESSAGING_PERMISSION_DENIED") from exc
         message = Message.objects.select_related(
             "sender",
             "conversation__buyer",
@@ -83,8 +90,10 @@ class MessagingMutation:
             mark_conversation_read(
                 user=user, conversation=_conversation(user, conversation_id)
             )
-        except (ValidationError, PermissionDenied) as exc:
-            raise validation_error(exc) from exc
+        except ValidationError as exc:
+            raise validation_error(exc, code="MESSAGING_VALIDATION_ERROR") from exc
+        except PermissionDenied as exc:
+            raise permission_error(exc, code="MESSAGING_PERMISSION_DENIED") from exc
         return True
 
     @strawberry.mutation
@@ -102,8 +111,10 @@ class MessagingMutation:
                 archived=archived,
             )
             item = conversation_queryset().get(pk=item.pk)
-        except (ValidationError, PermissionDenied) as exc:
-            raise validation_error(exc) from exc
+        except ValidationError as exc:
+            raise validation_error(exc, code="MESSAGING_VALIDATION_ERROR") from exc
+        except PermissionDenied as exc:
+            raise permission_error(exc, code="MESSAGING_PERMISSION_DENIED") from exc
         return conversation_to_type(item, user)
 
     @strawberry.mutation
@@ -116,8 +127,10 @@ class MessagingMutation:
                 user=user, conversation=_conversation(user, conversation_id)
             )
             item = conversation_queryset().get(pk=item.pk)
-        except (ValidationError, PermissionDenied) as exc:
-            raise validation_error(exc) from exc
+        except ValidationError as exc:
+            raise validation_error(exc, code="MESSAGING_VALIDATION_ERROR") from exc
+        except PermissionDenied as exc:
+            raise permission_error(exc, code="MESSAGING_PERMISSION_DENIED") from exc
         return conversation_to_type(item, user)
 
     @strawberry.mutation
@@ -130,6 +143,8 @@ class MessagingMutation:
                 user=user, conversation=_conversation(user, conversation_id)
             )
             item = conversation_queryset().get(pk=item.pk)
-        except (ValidationError, PermissionDenied) as exc:
-            raise validation_error(exc) from exc
+        except ValidationError as exc:
+            raise validation_error(exc, code="MESSAGING_VALIDATION_ERROR") from exc
+        except PermissionDenied as exc:
+            raise permission_error(exc, code="MESSAGING_PERMISSION_DENIED") from exc
         return conversation_to_type(item, user)

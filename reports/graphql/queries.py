@@ -1,5 +1,4 @@
 import strawberry
-from graphql import GraphQLError
 from marketlift.graphql.auth import require_staff, require_user
 from reports.models import Report
 from .mappers import report_to_type

@@ -1,8 +1,8 @@
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 
 from marketlift.graphql.auth import require_user
+from marketlift.graphql.errors import not_found_error
 from notifications.services import mark_all_notifications_read, mark_notification_read
 
 
@@ -16,7 +16,9 @@ class NotificationMutation:
         try:
             mark_notification_read(user=user, notification_id=notification_id)
         except ValidationError as exc:
-            raise GraphQLError("Notification not found.") from exc
+            raise not_found_error(
+                "Notification", code="NOTIFICATION_NOT_FOUND"
+            ) from exc
         return True
 
     @strawberry.mutation

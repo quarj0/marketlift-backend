@@ -59,7 +59,7 @@ class PlatformSettingsMutation:
                 raise ValidationError("High-risk threshold must be between 0 and 100.")
             config.full_clean(exclude=("id", "singleton_key"))
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="PLATFORM_SETTINGS_VALIDATION_ERROR")
 
         config.save()
         try:
@@ -90,7 +90,10 @@ class PlatformSettingsMutation:
         staff = require_staff(info, roles={"admin"})
         reason = (reason or "").strip()
         if not reason:
-            raise validation_error(ValidationError({"reason": "A reason is required."}))
+            raise validation_error(
+                ValidationError({"reason": "A reason is required."}),
+                code="PLATFORM_SETTINGS_VALIDATION_ERROR",
+            )
 
         count = Session.objects.count()
         Session.objects.all().delete()

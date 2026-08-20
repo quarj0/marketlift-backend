@@ -1,6 +1,11 @@
 import strawberry
 from django.db.models import Count, Exists, F, OuterRef, Q, Sum
-from marketlift.graphql.auth import request_user, require_staff, require_seller
+from marketlift.graphql.auth import (
+    request_user,
+    require_staff,
+    require_seller,
+    require_user,
+)
 from sellers.models import SellerFollow, SellerProfile, SellerSettings
 from subscriptions.services import get_effective_plan
 from .mappers import admin_seller_to_type, seller_to_type
@@ -89,11 +94,7 @@ class SellerQuery:
     def my_followed_sellers(
         self, info: strawberry.Info, limit: int = 100
     ) -> list[SellerType]:
-        viewer = request_user(info)
-        if not viewer or not viewer.is_authenticated:
-            from graphql import GraphQLError
-
-            raise GraphQLError("Authentication required.")
+        viewer = require_user(info)
         qs = seller_queryset(viewer=viewer).filter(followers__follower=viewer)
         return [seller_to_type(x) for x in qs[: max(1, min(limit, 200))]]
 

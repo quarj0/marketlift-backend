@@ -1,13 +1,12 @@
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 from marketlift.graphql.auth import (
     request_from_info,
     require_staff,
     require_seller,
     require_user,
 )
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 from sellers.models import SellerProfile, SellerSettings
 from sellers.services import (
     follow_seller,
@@ -32,9 +31,15 @@ class SellerMutation:
         from platform_settings.models import PlatformConfiguration
 
         if not PlatformConfiguration.load().allow_seller_activation:
-            raise GraphQLError("Seller activation is temporarily disabled.")
+            raise domain_error(
+                "Seller activation is temporarily disabled.",
+                code="SELLER_ACTIVATION_DISABLED",
+                status=409,
+            )
         if seller_type not in SellerProfile.SellerType.values:
-            raise GraphQLError("Invalid seller type.")
+            raise domain_error(
+                "Invalid seller type.", code="INVALID_SELLER_TYPE", status=422
+            )
         seller, created = SellerProfile.objects.get_or_create(
             user=user,
             defaults={"seller_type": seller_type, "display_name": display_name.strip()},
@@ -84,9 +89,9 @@ class SellerMutation:
             )
             return seller_to_type(follow_seller(user=user, seller=seller))
         except SellerProfile.DoesNotExist as exc:
-            raise GraphQLError("Seller not found.") from exc
+            raise not_found_error("Seller", code="SELLER_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="SELLER_VALIDATION_ERROR") from exc
 
     @strawberry.mutation
     def unfollow_seller(
@@ -97,7 +102,7 @@ class SellerMutation:
             seller = SellerProfile.objects.select_related("user").get(pk=str(seller_id))
             return seller_to_type(unfollow_seller(user=user, seller=seller))
         except SellerProfile.DoesNotExist as exc:
-            raise GraphQLError("Seller not found.") from exc
+            raise not_found_error("Seller", code="SELLER_NOT_FOUND") from exc
 
     @strawberry.mutation
     def suspend_seller(
@@ -115,9 +120,9 @@ class SellerMutation:
                 )
             )
         except SellerProfile.DoesNotExist:
-            raise GraphQLError("Seller not found.")
+            raise not_found_error("Seller", code="SELLER_NOT_FOUND")
         except ValidationError as e:
-            raise validation_error(e)
+            raise validation_error(e, code="SELLER_VALIDATION_ERROR")
 
     @strawberry.mutation
     def restore_seller(
@@ -135,6 +140,6 @@ class SellerMutation:
                 )
             )
         except SellerProfile.DoesNotExist:
-            raise GraphQLError("Seller not found.")
+            raise not_found_error("Seller", code="SELLER_NOT_FOUND")
         except ValidationError as e:
-            raise validation_error(e)
+            raise validation_error(e, code="SELLER_VALIDATION_ERROR")

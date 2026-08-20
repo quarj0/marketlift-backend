@@ -1,8 +1,11 @@
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 from marketlift.graphql.auth import request_from_info, require_staff, require_user
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import (
+    finality_validation_error,
+    not_found_error,
+    validation_error,
+)
 from reports.models import Report
 from reports.services import (
     create_report,
@@ -20,7 +23,7 @@ def _report(id):
     try:
         return Report.objects.select_related("reporter").get(pk=str(id))
     except (Report.DoesNotExist, ValueError) as exc:
-        raise GraphQLError("Report not found.") from exc
+        raise not_found_error("Report", code="REPORT_NOT_FOUND") from exc
 
 
 @strawberry.type
@@ -37,7 +40,7 @@ class ReportMutation:
                 priority=input.priority,
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="REPORT_VALIDATION_ERROR") from exc
         return report_to_type(r)
 
     @strawberry.mutation
@@ -53,7 +56,11 @@ class ReportMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="REPORT_FINAL",
+                default_code="REPORT_VALIDATION_ERROR",
+            ) from exc
         return report_to_type(r)
 
     @strawberry.mutation
@@ -69,7 +76,11 @@ class ReportMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="REPORT_FINAL",
+                default_code="REPORT_VALIDATION_ERROR",
+            ) from exc
         return report_to_type(r)
 
     @strawberry.mutation
@@ -85,7 +96,11 @@ class ReportMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="REPORT_FINAL",
+                default_code="REPORT_VALIDATION_ERROR",
+            ) from exc
         return report_to_type(r)
 
     @strawberry.mutation
@@ -101,5 +116,9 @@ class ReportMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise finality_validation_error(
+                exc,
+                final_code="REPORT_FINAL",
+                default_code="REPORT_VALIDATION_ERROR",
+            ) from exc
         return report_to_type(r)

@@ -1,4 +1,3 @@
-import strawberry
 from django.conf import settings
 from strawberry.extensions import (
     DisableIntrospection,
@@ -10,6 +9,7 @@ from strawberry.tools import merge_types
 from strawberry_django.optimizer import DjangoOptimizerExtension
 
 from .registry import MUTATION_TYPES, QUERY_TYPES
+from .schema_class import MarketliftSchema
 
 Query = merge_types("Query", QUERY_TYPES)
 Mutation = merge_types("Mutation", MUTATION_TYPES)
@@ -23,4 +23,4 @@ extensions = [
 if settings.MARKETLIFT_DISABLE_GRAPHQL_INTROSPECTION:
     extensions.append(DisableIntrospection)
 
-schema = strawberry.Schema(query=Query, mutation=Mutation, extensions=extensions)
+schema = MarketliftSchema(query=Query, mutation=Mutation, extensions=extensions)

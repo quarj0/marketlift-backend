@@ -1,7 +1,6 @@
 import strawberry
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
-from graphql import GraphQLError
 
 from audit.services import record_audit_event
 from categories.models import Category, CategoryField
@@ -11,7 +10,7 @@ from categories.services import (
     update_category_field,
 )
 from marketlift.graphql.auth import request_from_info, require_staff
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 
 from .mappers import category_to_type
 from .types import (
@@ -80,7 +79,11 @@ class CategoryMutation:
         name = input.name.strip()
         slug = slugify((input.slug or name).strip())[:80]
         if not name or not slug:
-            raise GraphQLError("Category name and slug are required.")
+            raise domain_error(
+                "Category name and slug are required.",
+                code="CATEGORY_INPUT_INVALID",
+                status=422,
+            )
         try:
             parent = (
                 Category.objects.get(slug=input.parent_id) if input.parent_id else None
@@ -109,9 +112,11 @@ class CategoryMutation:
             )
             return category_to_type(_category_qs().get(pk=category.pk))
         except Category.DoesNotExist as exc:
-            raise GraphQLError("Parent category not found.") from exc
+            raise not_found_error(
+                "Parent category", code="PARENT_CATEGORY_NOT_FOUND"
+            ) from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="CATEGORY_VALIDATION_ERROR") from exc
 
     @strawberry.mutation
     def update_category(
@@ -154,9 +159,9 @@ class CategoryMutation:
             )
             return category_to_type(_category_qs().get(pk=category.pk))
         except Category.DoesNotExist as exc:
-            raise GraphQLError("Category not found.") from exc
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="CATEGORY_VALIDATION_ERROR") from exc
 
     @strawberry.mutation
     def create_category_field(
@@ -199,9 +204,9 @@ class CategoryMutation:
             )
             return _field_to_type(field)
         except Category.DoesNotExist as exc:
-            raise GraphQLError("Category not found.") from exc
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="CATEGORY_VALIDATION_ERROR") from exc
 
     @strawberry.mutation
     def update_category_field(
@@ -247,9 +252,11 @@ class CategoryMutation:
             )
             return _field_to_type(field)
         except CategoryField.DoesNotExist as exc:
-            raise GraphQLError("Category field not found.") from exc
+            raise not_found_error(
+                "Category field", code="CATEGORY_FIELD_NOT_FOUND"
+            ) from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="CATEGORY_VALIDATION_ERROR") from exc
 
     @strawberry.mutation
     def delete_category_field(
@@ -286,7 +293,9 @@ class CategoryMutation:
                 schema_version=category.schema_version,
             )
         except CategoryField.DoesNotExist as exc:
-            raise GraphQLError("Category field not found.") from exc
+            raise not_found_error(
+                "Category field", code="CATEGORY_FIELD_NOT_FOUND"
+            ) from exc
 
     @strawberry.mutation
     def set_category_active(
@@ -296,7 +305,7 @@ class CategoryMutation:
         try:
             category = _category_qs().get(slug=category_id)
         except Category.DoesNotExist as exc:
-            raise GraphQLError("Category not found.") from exc
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         category.active = active
         category.save(update_fields=("active", "updated_at"))
         record_audit_event(
@@ -318,7 +327,7 @@ class CategoryMutation:
         try:
             category = Category.objects.get(slug=category_id)
         except Category.DoesNotExist as exc:
-            raise GraphQLError("Category not found.") from exc
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         affected, slug, name = category.listings.count(), category.slug, category.name
         record_audit_event(
             actor=actor,

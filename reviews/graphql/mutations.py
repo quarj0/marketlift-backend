@@ -1,9 +1,12 @@
 import strawberry
 from django.core.exceptions import PermissionDenied, ValidationError
-from graphql import GraphQLError
 from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_user
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import (
+    not_found_error,
+    permission_error,
+    validation_error,
+)
 from reviews.models import SellerReview
 from reviews.services import create_review, delete_own_review, reply_to_review
 from sellers.models import SellerProfile
@@ -37,12 +40,12 @@ class ReviewMutation:
                 )
             )
         except (SellerProfile.DoesNotExist, Listing.DoesNotExist):
-            raise GraphQLError("Seller or listing not found.")
+            raise not_found_error("Seller or listing", code="REVIEW_TARGET_NOT_FOUND")
         except (ValidationError, PermissionDenied) as exc:
             raise (
-                validation_error(exc)
+                validation_error(exc, code="REVIEW_VALIDATION_ERROR")
                 if isinstance(exc, ValidationError)
-                else GraphQLError(str(exc))
+                else permission_error(exc, code="REVIEW_PERMISSION_DENIED")
             )
 
     @strawberry.mutation
@@ -61,12 +64,12 @@ class ReviewMutation:
                 )
             )
         except SellerReview.DoesNotExist:
-            raise GraphQLError("Review not found.")
+            raise not_found_error("Review", code="REVIEW_NOT_FOUND")
         except (ValidationError, PermissionDenied) as exc:
             raise (
-                validation_error(exc)
+                validation_error(exc, code="REVIEW_VALIDATION_ERROR")
                 if isinstance(exc, ValidationError)
-                else GraphQLError(str(exc))
+                else permission_error(exc, code="REVIEW_PERMISSION_DENIED")
             )
 
     @strawberry.mutation
@@ -82,4 +85,4 @@ class ReviewMutation:
         except SellerReview.DoesNotExist:
             return True
         except PermissionDenied as exc:
-            raise GraphQLError(str(exc))
+            raise permission_error(exc, code="REVIEW_PERMISSION_DENIED")

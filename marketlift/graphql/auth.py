@@ -1,8 +1,8 @@
 import strawberry
-from graphql import GraphQLError
-
 from accounts.models import User
 from sellers.models import SellerProfile
+
+from .errors import authentication_error, forbidden_error
 
 
 def request_from_info(info: strawberry.Info):
@@ -16,7 +16,7 @@ def request_user(info: strawberry.Info):
 def require_user(info: strawberry.Info):
     user = request_user(info)
     if not user or not user.is_authenticated:
-        raise GraphQLError("Authentication required.")
+        raise authentication_error()
     return user
 
 
@@ -35,12 +35,17 @@ def require_staff(
 ):
     user = require_user(info)
     if not user.is_staff:
-        raise GraphQLError("Admin permission required.")
+        raise forbidden_error(
+            "Admin permission required.", code="ADMIN_PERMISSION_REQUIRED"
+        )
     if roles is not None:
         role = effective_admin_role(user)
         allowed = set(roles) | {User.AdminRole.SUPER_ADMIN}
         if role not in allowed:
-            raise GraphQLError("You do not have permission for this admin action.")
+            raise forbidden_error(
+                "You do not have permission for this admin action.",
+                code="ADMIN_ROLE_FORBIDDEN",
+            )
     return user
 
 
@@ -49,4 +54,6 @@ def require_seller(info: strawberry.Info):
     try:
         return user.seller_profile
     except SellerProfile.DoesNotExist as exc:
-        raise GraphQLError("Activate selling before using seller actions.") from exc
+        raise forbidden_error(
+            "Activate selling before using seller actions.", code="SELLER_REQUIRED"
+        ) from exc

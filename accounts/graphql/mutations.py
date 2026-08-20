@@ -1,6 +1,5 @@
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 
 from accounts.models import AdminInvitation, User
 from accounts.services import (
@@ -13,7 +12,12 @@ from accounts.services import (
 )
 from marketlift.graphql.auth import request_from_info, require_staff, require_user
 from accounts.auth_services import create_admin_invitation, revoke_admin_invitation
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import (
+    conflict_error,
+    domain_error,
+    not_found_error,
+    validation_error,
+)
 from uploads.models import UploadAsset
 
 from .mappers import (
@@ -70,9 +74,9 @@ class AccountMutation:
                 )
             )
         except UploadAsset.DoesNotExist as exc:
-            raise GraphQLError("Upload not found.") from exc
+            raise not_found_error("Upload", code="UPLOAD_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR")
 
     @strawberry.mutation
     def update_my_account_settings(
@@ -99,7 +103,7 @@ class AccountMutation:
             settings_obj.full_clean()
             settings_obj.save()
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR")
         return settings_to_type(settings_obj)
 
     @strawberry.mutation
@@ -118,7 +122,7 @@ class AccountMutation:
                 new_password=new_password,
             )
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR")
 
     @strawberry.mutation
     def deactivate_my_account(self, info: strawberry.Info, reason: str = "") -> bool:
@@ -129,7 +133,7 @@ class AccountMutation:
                 request=request_from_info(info),
             )
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR")
 
     @strawberry.mutation
     def suspend_account(
@@ -149,9 +153,9 @@ class AccountMutation:
             )
             return admin_user_to_type(target)
         except User.DoesNotExist as exc:
-            raise GraphQLError("User not found.") from exc
+            raise not_found_error("User", code="USER_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR")
 
     @strawberry.mutation
     def reactivate_account(
@@ -171,9 +175,9 @@ class AccountMutation:
             )
             return admin_user_to_type(target)
         except User.DoesNotExist as exc:
-            raise GraphQLError("User not found.") from exc
+            raise not_found_error("User", code="USER_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc)
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR")
 
     @strawberry.mutation
     def set_admin_role(
@@ -185,14 +189,17 @@ class AccountMutation:
     ) -> AdminUserType:
         actor = require_staff(info, roles={User.AdminRole.SUPER_ADMIN})
         if role not in User.AdminRole.values:
-            raise GraphQLError("Invalid administrator role.")
+            raise domain_error(
+                "Invalid administrator role.", code="INVALID_ADMIN_ROLE", status=422
+            )
         try:
             target = User.objects.get(pk=str(user_id))
         except User.DoesNotExist as exc:
-            raise GraphQLError("User not found.") from exc
+            raise not_found_error("User", code="USER_NOT_FOUND") from exc
         if target.is_superuser and not enabled:
-            raise GraphQLError(
-                "Superuser access cannot be disabled through this action."
+            raise conflict_error(
+                "Superuser access cannot be disabled through this action.",
+                code="SUPERUSER_ACCESS_PROTECTED",
             )
         target.is_staff = enabled
         target.admin_role = role if enabled else ""
@@ -224,7 +231,7 @@ class AccountMutation:
             )
             return admin_invitation_to_type(invitation)
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR") from exc
 
     @strawberry.mutation
     def revoke_admin_invitation(
@@ -241,6 +248,8 @@ class AccountMutation:
                 )
             )
         except AdminInvitation.DoesNotExist as exc:
-            raise GraphQLError("Administrator invitation not found.") from exc
+            raise not_found_error(
+                "Administrator invitation", code="ADMIN_INVITATION_NOT_FOUND"
+            ) from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR") from exc

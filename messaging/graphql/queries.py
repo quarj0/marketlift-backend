@@ -2,9 +2,9 @@ from datetime import datetime
 
 import strawberry
 from django.db.models import Count, Exists, F, OuterRef, Q
-from graphql import GraphQLError
 
 from marketlift.graphql.auth import require_user
+from marketlift.graphql.errors import not_found_error
 from marketlift.realtime.counts import unread_message_count
 from messaging.models import Conversation, Message, UserBlock
 from messaging.services import get_conversation_for_user
@@ -75,7 +75,9 @@ class MessagingQuery:
             if not item.includes_user(user):
                 raise Conversation.DoesNotExist
         except (Conversation.DoesNotExist, ValueError) as exc:
-            raise GraphQLError("Conversation not found.") from exc
+            raise not_found_error(
+                "Conversation", code="CONVERSATION_NOT_FOUND"
+            ) from exc
         return conversation_to_type(item, user)
 
     @strawberry.field

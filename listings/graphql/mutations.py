@@ -1,7 +1,6 @@
 from decimal import Decimal
 import strawberry
 from django.core.exceptions import ValidationError
-from graphql import GraphQLError
 
 from categories.models import Category
 from listings.models import Listing, SavedListing
@@ -20,7 +19,7 @@ from marketlift.graphql.auth import (
     require_seller,
     require_user,
 )
-from marketlift.graphql.errors import validation_error
+from marketlift.graphql.errors import not_found_error, validation_error
 from .inputs import ListingInput
 from .mappers import listing_queryset, listing_to_type
 from .types import ListingType
@@ -35,7 +34,7 @@ def _owned(info, listing_id):
     try:
         return listing_queryset().get(pk=str(listing_id), seller=seller)
     except (Listing.DoesNotExist, ValueError) as exc:
-        raise GraphQLError("Listing not found.") from exc
+        raise not_found_error("Listing", code="LISTING_NOT_FOUND") from exc
 
 
 @strawberry.type
@@ -64,9 +63,9 @@ class ListingMutation:
                 image_upload_ids=input.image_upload_ids,
             )
         except Category.DoesNotExist as exc:
-            raise GraphQLError("Category not found.") from exc
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 
     @strawberry.mutation
@@ -95,9 +94,9 @@ class ListingMutation:
                 image_upload_ids=input.image_upload_ids,
             )
         except Category.DoesNotExist as exc:
-            raise GraphQLError("Category not found.") from exc
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 
     @strawberry.mutation
@@ -107,7 +106,7 @@ class ListingMutation:
         try:
             listing = publish_listing(_owned(info, listing_id))
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 
     @strawberry.mutation
@@ -117,7 +116,7 @@ class ListingMutation:
         try:
             listing = pause_listing(_owned(info, listing_id))
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 
     @strawberry.mutation
@@ -127,7 +126,7 @@ class ListingMutation:
         try:
             listing = mark_listing_sold(_owned(info, listing_id))
         except ValidationError as exc:
-            raise validation_error(exc) from exc
+            raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 
     @strawberry.mutation
@@ -146,7 +145,7 @@ class ListingMutation:
         try:
             listing = Listing.objects.public().get(pk=str(listing_id))
         except (Listing.DoesNotExist, ValueError) as exc:
-            raise GraphQLError("Listing not found.") from exc
+            raise not_found_error("Listing", code="LISTING_NOT_FOUND") from exc
         SavedListing.objects.get_or_create(user=user, listing=listing)
         return True
 
@@ -163,7 +162,7 @@ class ListingMutation:
         try:
             listing = Listing.objects.public().get(pk=str(listing_id))
         except (Listing.DoesNotExist, ValueError) as exc:
-            raise GraphQLError("Listing not found.") from exc
+            raise not_found_error("Listing", code="LISTING_NOT_FOUND") from exc
         user = request_user(info)
         return record_listing_view(
             listing=listing, user=user if user and user.is_authenticated else None
