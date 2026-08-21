@@ -121,7 +121,10 @@ DATABASES = {
 }
 
 DB_SSLMODE = os.getenv("DB_SSLMODE", "").strip()
-if DB_SSLMODE and DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
+if DB_SSLMODE and DATABASES["default"]["ENGINE"] in {
+    "django.db.backends.postgresql",
+    "django.contrib.gis.db.backends.postgis",
+}:
     DATABASES["default"]["OPTIONS"] = {"sslmode": DB_SSLMODE}
 
 

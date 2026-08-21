@@ -52,6 +52,14 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+      - name: Install GeoDjango system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            binutils \
+            gdal-bin \
+            libgdal-dev \
+            libgeos-dev
       - run: uv sync --frozen
       - run: uv run python manage.py check
       - run: uv run python manage.py makemigrations --check --dry-run
