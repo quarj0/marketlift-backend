@@ -67,6 +67,11 @@ def conversation_to_type(conversation, user) -> ConversationType:
             ),
             primary_image=primary_image,
             status=listing.status if listing else None,
+            deleted=(
+                listing is None
+                or listing.seller_deleted_at is not None
+                or listing.status in {"removed", "rejected"}
+            ),
         ),
         last_message=last_message,
         last_message_at=conversation.last_message_at,

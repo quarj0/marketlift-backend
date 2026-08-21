@@ -14,7 +14,9 @@ from django.utils import timezone
 
 def _normalize(value):
     value = unicodedata.normalize("NFKD", str(value or ""))
-    value = "".join(char for char in value if not unicodedata.combining(char)).casefold()
+    value = "".join(
+        char for char in value if not unicodedata.combining(char)
+    ).casefold()
     value = value.replace("_", " ")
     value = re.sub(r"[^a-z0-9%+]+", " ", value)
     return re.sub(r"\s+", " ", value).strip()
@@ -81,7 +83,11 @@ def backfill_search_documents(apps, schema_editor):
                 for token in normalized.split():
                     if token not in tokens:
                         tokens.append(token)
-                    if token.endswith("+") and len(token) > 1 and token[:-1] not in tokens:
+                    if (
+                        token.endswith("+")
+                        and len(token) > 1
+                        and token[:-1] not in tokens
+                    ):
                         tokens.append(token[:-1])
 
             category_name = (

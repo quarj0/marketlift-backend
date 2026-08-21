@@ -6,6 +6,7 @@ from django.utils import timezone
 from audit.services import record_audit_event
 from uploads.models import UploadAsset
 from uploads.services import claim_upload
+from marketlift.locations import normalize_brazil_state_code
 
 from .models import AccountSettings, User
 
@@ -112,6 +113,12 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
                 raise ValidationError({"phone": "Phone number is already in use."})
             data["phone"] = phone
             user.phone_verified_at = None
+
+    if "state_code" in data and data["state_code"]:
+        try:
+            data["state_code"] = normalize_brazil_state_code(str(data["state_code"]))
+        except ValueError as exc:
+            raise ValidationError({"stateCode": str(exc)}) from exc
 
     if "full_name" in data:
         data["full_name"] = str(data["full_name"] or "").strip()

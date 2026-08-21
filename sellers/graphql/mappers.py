@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from marketlift.graphql.types import LocationType
 from .types import AdminSellerType, SellerType
 
@@ -11,10 +13,18 @@ def seller_to_type(seller) -> SellerType:
         if total_conversations
         else None
     )
+    try:
+        show_phone = seller.settings.show_phone
+    except ObjectDoesNotExist:
+        # SellerSettings.show_phone defaults to true when the settings row has
+        # not been materialized yet. Keep that model default without creating
+        # data as a side effect of a public query.
+        show_phone = True
     return SellerType(
         id=str(seller.id),
         name=seller.display_name or user.full_name or user.email,
         avatar_url=user.avatar_url or None,
+        phone=(user.phone or None) if show_phone else None,
         verified=seller.verified,
         seller_type=seller.seller_type,
         is_suspended=seller.is_suspended,

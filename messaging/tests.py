@@ -4,9 +4,11 @@ from PIL import Image
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from categories.models import Category
 from listings.models import Listing
+from messaging.graphql.mappers import conversation_to_type
 from messaging.models import Conversation, UserBlock
 from messaging.services import (
     block_conversation_user,
@@ -104,6 +106,22 @@ class MessagingServiceTests(TestCase):
         self.listing.save(update_fields=("status", "updated_at"))
         with self.assertRaisesMessage(Exception, "closed"):
             send_message(user=self.buyer, conversation=conversation, text="Hello")
+
+    def test_removed_listing_is_hidden_from_conversation_context(self):
+        conversation = start_conversation(buyer=self.buyer, listing=self.listing)
+        self.listing.status = Listing.Status.REMOVED
+        self.listing.save(update_fields=("status", "updated_at"))
+        conversation.refresh_from_db()
+        payload = conversation_to_type(conversation, self.buyer)
+        self.assertTrue(payload.listing.deleted)
+
+    def test_seller_deleted_listing_is_hidden_from_conversation_context(self):
+        conversation = start_conversation(buyer=self.buyer, listing=self.listing)
+        self.listing.seller_deleted_at = timezone.now()
+        self.listing.save(update_fields=("seller_deleted_at", "updated_at"))
+        conversation.refresh_from_db()
+        payload = conversation_to_type(conversation, self.buyer)
+        self.assertTrue(payload.listing.deleted)
 
     def test_received_message_can_be_reported(self):
         from reports.models import Report

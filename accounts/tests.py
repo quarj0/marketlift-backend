@@ -1,7 +1,9 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from accounts.models import AccountSettings, User
 from sellers.models import SellerProfile
+from accounts.services import update_profile
 
 
 class UserModelTests(TestCase):
@@ -36,3 +38,21 @@ class UserModelTests(TestCase):
 
         self.assertEqual(settings.language, AccountSettings.Language.PORTUGUESE_BRAZIL)
         self.assertEqual(settings.currency, "BRL")
+
+
+class AccountProfileLocationTests(TestCase):
+    def test_profile_rejects_non_brazilian_state_code(self):
+        user = User.objects.create_user(
+            email="location@example.com",
+            full_name="Location Example",
+            password="StrongPassword123!",
+        )
+        with self.assertRaises(ValidationError):
+            update_profile(
+                user=user,
+                data={
+                    "state": "Georgia",
+                    "state_code": "GA",
+                    "city": "Accra",
+                },
+            )

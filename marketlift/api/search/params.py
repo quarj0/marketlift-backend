@@ -72,25 +72,10 @@ def search_request_from_query_params(params) -> SearchRequest:
     return SearchRequest(
         q=(params.get("q") or "").strip(),
         category=(params.get("category") or "").strip() or None,
-        country_code=(params.get("country_code") or params.get("countryCode") or "").strip() or None,
+        region=(params.get("region") or "").strip().upper() or None,
         state=(params.get("state") or params.get("state_code") or "").strip() or None,
         city=(params.get("city") or "").strip() or None,
         district=(params.get("district") or "").strip() or None,
-        latitude=(
-            float(_decimal("latitude", params.get("latitude") or params.get("lat")))
-            if (params.get("latitude") or params.get("lat")) not in (None, "")
-            else None
-        ),
-        longitude=(
-            float(_decimal("longitude", params.get("longitude") or params.get("lng") or params.get("lon")))
-            if (params.get("longitude") or params.get("lng") or params.get("lon")) not in (None, "")
-            else None
-        ),
-        radius_km=(
-            float(_decimal("radius_km", params.get("radius_km") or params.get("radiusKm")))
-            if (params.get("radius_km") or params.get("radiusKm")) not in (None, "")
-            else None
-        ),
         min_price=_decimal(
             "min_price", params.get("min_price") or params.get("minPrice")
         ),

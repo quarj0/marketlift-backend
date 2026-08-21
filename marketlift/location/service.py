@@ -22,10 +22,14 @@ def _backend():
 def geocode_locations(query: str, *, limit: int = 5) -> list[LocationCandidate]:
     query = (query or "").strip()
     if len(query) < 2:
-        raise ValidationError({"q": "Location search must contain at least 2 characters."})
+        raise ValidationError(
+            {"q": "Location search must contain at least 2 characters."}
+        )
     max_length = int(getattr(settings, "MARKETLIFT_LOCATION_QUERY_MAX_LENGTH", 160))
     if len(query) > max_length:
-        raise ValidationError({"q": f"Location search cannot exceed {max_length} characters."})
+        raise ValidationError(
+            {"q": f"Location search cannot exceed {max_length} characters."}
+        )
     return _backend().geocode(query, limit=max(1, min(int(limit), 8)))
 
 

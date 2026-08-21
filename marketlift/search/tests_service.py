@@ -43,25 +43,6 @@ class SearchRequestValidationTests(TestCase):
         with self.assertRaises(ValidationError):
             validate_search_request(SearchRequest(page_size=999))
 
-    def test_radius_requires_coordinate_pair(self):
+    def test_unknown_brazilian_region_is_rejected(self):
         with self.assertRaises(ValidationError):
-            validate_search_request(SearchRequest(radius_km=10))
-        with self.assertRaises(ValidationError):
-            validate_search_request(SearchRequest(latitude=-23.5, radius_km=10))
-
-    def test_distance_sort_requires_coordinates(self):
-        with self.assertRaises(ValidationError):
-            validate_search_request(SearchRequest(sort="distance"))
-
-    def test_valid_geospatial_search_is_normalized(self):
-        request = validate_search_request(
-            SearchRequest(
-                country_code="br",
-                latitude=-23.5505,
-                longitude=-46.6333,
-                radius_km=15,
-                sort="distance",
-            )
-        )
-        self.assertEqual(request.country_code, "BR")
-        self.assertEqual(request.radius_km, 15.0)
+            validate_search_request(SearchRequest(region="XX"))

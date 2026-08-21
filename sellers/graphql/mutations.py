@@ -15,7 +15,13 @@ from sellers.services import (
     unfollow_seller,
 )
 from .mappers import admin_seller_to_type, seller_to_type
-from .types import AdminSellerType, SellerSettingsInput, SellerSettingsType, SellerType
+from .types import (
+    AdminSellerType,
+    SellerProfileInput,
+    SellerSettingsInput,
+    SellerSettingsType,
+    SellerType,
+)
 
 
 @strawberry.type
@@ -49,6 +55,34 @@ class SellerMutation:
             seller.display_name = display_name.strip() or seller.display_name
             seller.save(update_fields=("seller_type", "display_name", "updated_at"))
         SellerSettings.objects.get_or_create(user_profile=seller)
+        return seller_to_type(seller)
+
+    @strawberry.mutation
+    def update_my_seller_profile(
+        self, info: strawberry.Info, input: SellerProfileInput
+    ) -> SellerType:
+        seller = require_seller(info)
+        update_fields = []
+        if input.display_name is not None:
+            display_name = input.display_name.strip()
+            if not display_name:
+                raise validation_error(
+                    ValidationError({"displayName": "Display name cannot be empty."}),
+                    code="SELLER_VALIDATION_ERROR",
+                )
+            seller.display_name = display_name
+            update_fields.append("display_name")
+        if input.seller_type is not None:
+            if input.seller_type not in SellerProfile.SellerType.values:
+                raise validation_error(
+                    ValidationError({"sellerType": "Invalid seller type."}),
+                    code="SELLER_VALIDATION_ERROR",
+                )
+            seller.seller_type = input.seller_type
+            update_fields.append("seller_type")
+        if update_fields:
+            update_fields.append("updated_at")
+            seller.save(update_fields=tuple(update_fields))
         return seller_to_type(seller)
 
     @strawberry.mutation

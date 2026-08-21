@@ -141,7 +141,10 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 "GraphQL introspection is enabled in production.", id="marketlift.W006"
             )
         )
-    if settings.DATABASES["default"].get("ENGINE") != "django.contrib.gis.db.backends.postgis":
+    if (
+        settings.DATABASES["default"].get("ENGINE")
+        != "django.contrib.gis.db.backends.postgis"
+    ):
         issues.append(
             Error(
                 "Geospatial listing search requires the GeoDjango PostGIS database backend.",
@@ -155,7 +158,9 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 id="marketlift.W007",
             )
         )
-    if getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "").endswith("DisabledGeocoder"):
+    if getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "").endswith(
+        "DisabledGeocoder"
+    ):
         issues.append(
             Warning(
                 "No location geocoder is configured. Radius search still works with coordinates, but place lookup/reverse-geocoding is disabled.",
@@ -163,7 +168,9 @@ def marketlift_deploy_checks(app_configs, **kwargs):
             )
         )
     if (
-        getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "").endswith("NominatimGeocoder")
+        getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "").endswith(
+            "NominatimGeocoder"
+        )
         and getattr(settings, "MARKETLIFT_NOMINATIM_BASE_URL", "")
         == "https://nominatim.openstreetmap.org"
     ):

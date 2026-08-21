@@ -1,6 +1,5 @@
 from decimal import Decimal
 
-from django.contrib.gis.geos import Point
 from django.test import TransactionTestCase
 from django.utils import timezone
 
@@ -51,12 +50,7 @@ class MarketplaceSearchIntegrationTests(TransactionTestCase):
             unit="GB",
         )
 
-    def _phone(self, *, title, model, ram, price, latitude=None, longitude=None):
-        point = (
-            Point(longitude, latitude, srid=4326)
-            if latitude is not None and longitude is not None
-            else None
-        )
+    def _phone(self, *, title, model, ram, price):
         listing = Listing.objects.create(
             seller=self.seller,
             category=self.phones,
@@ -64,12 +58,10 @@ class MarketplaceSearchIntegrationTests(TransactionTestCase):
             description="Original smartphone in good condition.",
             price=Decimal(str(price)),
             condition=Listing.Condition.USED,
-            country_code="BR",
             state="São Paulo",
             state_code="SP",
             city="São Paulo",
             district="Centro",
-            location_point=point,
             status=Listing.Status.PUBLISHED,
             published_at=timezone.now(),
         )
@@ -241,62 +233,28 @@ class MarketplaceSearchIntegrationTests(TransactionTestCase):
             )
         )
         self.assertEqual([item.pk for item in page.items], [eight.pk])
-    def test_radius_filter_uses_postgis_distance(self):
-        near = self._phone(
-            title="Samsung Galaxy S21 Near",
-            model="Galaxy S21",
-            ram=8,
-            price=760,
-            latitude=-23.5550,
-            longitude=-46.6300,
-        )
-        self._phone(
-            title="Samsung Galaxy S21 Far",
-            model="Galaxy S21",
-            ram=8,
-            price=760,
-            latitude=-22.9056,
-            longitude=-47.0608,
-        )
 
-        page = search_listings(
-            SearchRequest(
-                q="samsung s21",
-                latitude=-23.5505,
-                longitude=-46.6333,
-                radius_km=10,
-                page_size=24,
-            )
+    def test_macro_region_filter_maps_to_brazilian_states(self):
+        southeast = self._phone(
+            title="Samsung Galaxy S21 São Paulo", model="Galaxy S21", ram=8, price=760
         )
-        self.assertEqual([item.pk for item in page.items], [near.pk])
-        self.assertLess(getattr(page.items[0], "search_distance_km"), 10)
+        northeast = Listing.objects.create(
+            seller=self.seller,
+            category=self.phones,
+            title="Samsung Galaxy S21 Salvador",
+            description="Original smartphone in good condition.",
+            price=Decimal("750"),
+            condition=Listing.Condition.USED,
+            state="Bahia",
+            state_code="BA",
+            city="Salvador",
+            district="Barra",
+            status=Listing.Status.PUBLISHED,
+            published_at=timezone.now(),
+        )
+        rebuild_listing_search_document(northeast.pk)
 
-    def test_distance_sort_orders_nearest_first(self):
-        farther = self._phone(
-            title="Samsung Galaxy S21 Farther",
-            model="Galaxy S21",
-            ram=8,
-            price=760,
-            latitude=-23.6000,
-            longitude=-46.6500,
-        )
-        nearer = self._phone(
-            title="Samsung Galaxy S21 Nearer",
-            model="Galaxy S21",
-            ram=8,
-            price=760,
-            latitude=-23.5510,
-            longitude=-46.6330,
-        )
-        page = search_listings(
-            SearchRequest(
-                q="samsung s21",
-                latitude=-23.5505,
-                longitude=-46.6333,
-                sort="distance",
-                page_size=24,
-            )
-        )
-        self.assertEqual([item.pk for item in page.items[:2]], [nearer.pk, farther.pk])
-        self.assertLess(page.items[0].search_distance_km, page.items[1].search_distance_km)
+        page = search_listings(SearchRequest(region="NE", page_size=24))
 
+        self.assertEqual([item.pk for item in page.items], [northeast.pk])
+        self.assertNotIn(southeast.pk, {item.pk for item in page.items})

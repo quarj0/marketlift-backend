@@ -1,12 +1,142 @@
 import logging
+import time
+from urllib.parse import urlsplit
 
 from django.conf import settings
+from django.contrib.sessions.backends.base import UpdateError
+from django.contrib.sessions.exceptions import SessionInterrupted
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.cache import cache
 from django.http import JsonResponse
+from django.utils.cache import patch_vary_headers
+from django.utils.http import http_date
 
 from .rate_limit import client_ip
 
 logger = logging.getLogger(__name__)
+
+
+def _origin(value: str | None) -> str:
+    if not value:
+        return ""
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return ""
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return ""
+    host = parsed.hostname.lower()
+    port = f":{parsed.port}" if parsed.port else ""
+    return f"{parsed.scheme.lower()}://{host}{port}"
+
+
+def _admin_session_origins() -> set[str]:
+    configured = getattr(settings, "MARKETLIFT_ADMIN_SESSION_ORIGINS", [])
+    return {_origin(item) for item in configured if _origin(item)}
+
+
+def _session_surface(request) -> str:
+    # Browser Origin is authoritative because JavaScript cannot spoof it. This
+    # prevents marketplace code from opting itself into an administrator session
+    # merely by sending a custom request header.
+    request_origin = _origin(request.headers.get("Origin"))
+    if request_origin:
+        return "admin" if request_origin in _admin_session_origins() else "marketplace"
+
+    # Non-browser clients and automated tests can opt into the admin surface.
+    # Admin login endpoints are also admin-scoped when no Origin header exists.
+    if (
+        request.path.startswith("/api/v1/auth/admin-login/")
+        or request.path.rstrip("/") == "/api/v1/auth/admin-login"
+    ):
+        return "admin"
+    if request.headers.get("X-Marketlift-Surface", "").strip().lower() == "admin":
+        return "admin"
+    return "marketplace"
+
+
+class ClientScopedSessionMiddleware(SessionMiddleware):
+    """Use independent Django sessions for marketplace and admin surfaces.
+
+    Cookies are scoped by name rather than browser port (cookies do not have a
+    port boundary). The trusted request Origin chooses which cookie backs
+    ``request.session``. Both surfaces still authenticate against the same user
+    model and session store.
+    """
+
+    def __init__(self, get_response):
+        # Subclass Django's SessionMiddleware so Django's admin/system checks and
+        # middleware ordering semantics continue to recognize this as the normal
+        # session layer. Only the cookie name selection is customized.
+        super().__init__(get_response)
+
+    @staticmethod
+    def cookie_name_for(request) -> str:
+        if _session_surface(request) == "admin":
+            return settings.MARKETLIFT_ADMIN_SESSION_COOKIE_NAME
+        return settings.SESSION_COOKIE_NAME
+
+    def process_request(self, request):
+        cookie_name = self.cookie_name_for(request)
+        request.marketlift_session_surface = _session_surface(request)
+        request.marketlift_session_cookie_name = cookie_name
+        session_key = request.COOKIES.get(cookie_name)
+        request.session = self.SessionStore(session_key)
+
+    def process_response(self, request, response):
+        try:
+            accessed = request.session.accessed
+            modified = request.session.modified
+            empty = request.session.is_empty()
+        except AttributeError:
+            return response
+
+        cookie_name = getattr(
+            request,
+            "marketlift_session_cookie_name",
+            settings.SESSION_COOKIE_NAME,
+        )
+
+        if cookie_name in request.COOKIES and empty:
+            response.delete_cookie(
+                cookie_name,
+                path=settings.SESSION_COOKIE_PATH,
+                domain=settings.SESSION_COOKIE_DOMAIN,
+                samesite=settings.SESSION_COOKIE_SAMESITE,
+            )
+            patch_vary_headers(response, ("Cookie",))
+            return response
+
+        if accessed:
+            patch_vary_headers(response, ("Cookie",))
+
+        if (modified or settings.SESSION_SAVE_EVERY_REQUEST) and not empty:
+            if request.session.get_expire_at_browser_close():
+                max_age = None
+                expires = None
+            else:
+                max_age = request.session.get_expiry_age()
+                expires = http_date(time.time() + max_age)
+
+            if response.status_code < 500:
+                try:
+                    request.session.save()
+                except UpdateError as exc:
+                    raise SessionInterrupted(
+                        "The request's session was deleted before the request completed."
+                    ) from exc
+                response.set_cookie(
+                    cookie_name,
+                    request.session.session_key,
+                    max_age=max_age,
+                    expires=expires,
+                    domain=settings.SESSION_COOKIE_DOMAIN,
+                    path=settings.SESSION_COOKIE_PATH,
+                    secure=settings.SESSION_COOKIE_SECURE or None,
+                    httponly=settings.SESSION_COOKIE_HTTPONLY or None,
+                    samesite=settings.SESSION_COOKIE_SAMESITE,
+                )
+        return response
 
 
 class SecurityRateLimitMiddleware:

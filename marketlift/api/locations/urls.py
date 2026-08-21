@@ -1,8 +1,11 @@
 from django.urls import path
 
-from .views import LocationReverseView, LocationSearchView
+from .views import NeighborhoodSuggestionsView
 
 urlpatterns = [
-    path("search/", LocationSearchView.as_view(), name="location-search"),
-    path("reverse/", LocationReverseView.as_view(), name="location-reverse"),
+    path(
+        "neighborhoods/",
+        NeighborhoodSuggestionsView.as_view(),
+        name="location-neighborhoods",
+    ),
 ]

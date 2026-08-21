@@ -3,6 +3,8 @@ type AccountOverviewType {
   unreadMessages: Int!
   reviewsCount: Int!
   recentlyViewedCount: Int!
+  recentlyViewed: [ListingType!]!
+  savedListings: [ListingType!]!
 }
 
 input AccountProfileInput {
@@ -76,6 +78,17 @@ type AdminDashboardType {
   revenue: RevenueSummaryType!
 }
 
+type AdminInvitationType {
+  id: ID!
+  email: String!
+  role: String!
+  active: Boolean!
+  invitedBy: String
+  expiresAt: DateTime!
+  acceptedAt: DateTime
+  revokedAt: DateTime
+}
+
 type AdminSellerType {
   id: ID!
   userId: ID!
@@ -101,6 +114,7 @@ type AdminUserType {
   joinedAt: DateTime!
   location: LocationType!
   sellerId: ID
+  adminRole: String
 }
 
 type AuditEventType {
@@ -123,9 +137,41 @@ input CardPaymentInput {
   installments: Int! = 1
 }
 
+input CategoryAdminInput {
+  name: String!
+  slug: String = null
+  icon: String = null
+  description: String = null
+  parentId: String = null
+  active: Boolean! = true
+  sortOrder: Int! = 0
+  pricingMode: String! = "required"
+  pricingLabel: String! = "Price (R$)"
+  pricingPlaceholder: String = null
+  conditionEnabled: Boolean! = true
+  conditionRequired: Boolean! = true
+}
+
 type CategoryConditionType {
   enabled: Boolean!
   required: Boolean!
+}
+
+input CategoryFieldAdminInput {
+  key: String!
+  label: String!
+  type: String!
+  required: Boolean! = false
+  filterable: Boolean! = false
+  allowCustomValue: Boolean! = false
+  placeholder: String = null
+  helpText: String = null
+  unit: String = null
+  min: Float = null
+  max: Float = null
+  step: Float = null
+  sortOrder: Int! = 0
+  options: [CategoryFieldOptionAdminInput!] = null
 }
 
 type CategoryFieldDefinitionType {
@@ -134,6 +180,7 @@ type CategoryFieldDefinitionType {
   type: String!
   required: Boolean!
   filterable: Boolean!
+  allowCustomValue: Boolean!
   placeholder: String
   helpText: String
   unit: String
@@ -141,6 +188,12 @@ type CategoryFieldDefinitionType {
   max: Float
   step: Float
   options: [CategoryFieldOptionType!]!
+}
+
+input CategoryFieldOptionAdminInput {
+  label: String!
+  value: String = null
+  sortOrder: Int = null
 }
 
 type CategoryFieldOptionType {
@@ -181,6 +234,7 @@ type ConversationListingType {
   price: Float
   primaryImage: String
   status: String
+  deleted: Boolean!
 }
 
 type ConversationType {
@@ -240,6 +294,13 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+type DeleteCategoryFieldPayload {
+  categoryId: String!
+  fieldId: String!
+  historicalValues: Int!
+  schemaVersion: Int!
+}
+
 type DeleteCategoryPayload {
   slug: String!
   affectedListings: Int!
@@ -266,6 +327,7 @@ input ListingFilterInput {
   maxPrice: Float = null
   condition: String = null
   sellerType: String = null
+  sellerId: ID = null
   verifiedOnly: Boolean! = false
   dateListed: String = null
   attributeFilters: JSON = null
@@ -325,6 +387,8 @@ type ListingType {
   featured: Boolean!
   urgent: Boolean!
   favorites: Int!
+  inquiries: Int!
+  sellerDeletedAt: DateTime
 }
 
 type LocationType {
@@ -384,10 +448,21 @@ type Mutation {
   deactivateMyAccount(reason: String! = ""): Boolean!
   suspendAccount(userId: ID!, reason: String!): AdminUserType!
   reactivateAccount(userId: ID!, reason: String!): AdminUserType!
+  setAdminRole(userId: ID!, role: String!, enabled: Boolean! = true): AdminUserType!
+  inviteAdministrator(email: String!, role: String!): AdminInvitationType!
+  revokeAdminInvitation(invitationId: ID!): AdminInvitationType!
   activateSelling(sellerType: String! = "individual", displayName: String! = ""): SellerType!
+  updateMySellerProfile(input: SellerProfileInput!): SellerType!
   updateMySellerSettings(input: SellerSettingsInput!): SellerSettingsType!
+  followSeller(sellerId: ID!): SellerType!
+  unfollowSeller(sellerId: ID!): SellerType!
   suspendSeller(sellerId: ID!, reason: String!): AdminSellerType!
   restoreSeller(sellerId: ID!, reason: String!): AdminSellerType!
+  createCategory(input: CategoryAdminInput!): CategoryType!
+  updateCategory(categoryId: String!, input: CategoryAdminInput!): CategoryType!
+  createCategoryField(categoryId: String!, input: CategoryFieldAdminInput!): CategoryFieldDefinitionType!
+  updateCategoryField(categoryId: String!, fieldId: String!, input: CategoryFieldAdminInput!): CategoryFieldDefinitionType!
+  deleteCategoryField(categoryId: String!, fieldId: String!): DeleteCategoryFieldPayload!
   setCategoryActive(categoryId: String!, active: Boolean!): CategoryType!
   deleteCategory(categoryId: String!): DeleteCategoryPayload!
   createListing(input: ListingInput!): ListingType!
@@ -395,6 +470,7 @@ type Mutation {
   publishListing(listingId: ID!): ListingType!
   pauseListing(listingId: ID!): ListingType!
   markListingSold(listingId: ID!): ListingType!
+  deleteMyListing(listingId: ID!, reason: String! = ""): Boolean!
   saveListing(listingId: ID!): Boolean!
   unsaveListing(listingId: ID!): Boolean!
   recordListingView(listingId: ID!): Boolean!
@@ -435,6 +511,7 @@ type Mutation {
   createSupportTicket(input: CreateSupportTicketInput!): SupportTicketType!
   replySupportTicket(ticketId: ID!, message: String!, uploadId: ID = null): SupportMessageType!
   adminReplySupportTicket(ticketId: ID!, message: String!, internal: Boolean! = false, status: String = null): SupportTicketType!
+  adminUpdateSupportTicket(ticketId: ID!, status: String = null, priority: String = null, assignedToUserId: ID = null): SupportTicketType!
   updatePlatformConfiguration(input: PlatformConfigurationInput!): PlatformConfigurationType!
   invalidateAllSessions(reason: String!): Int!
 }
@@ -545,19 +622,33 @@ type Query {
   me: AccountUserType!
   myAccountSettings: AccountSettingsType!
   myAccountOverview: AccountOverviewType!
-  adminUsers(q: String = null, limit: Int! = 100): [AdminUserType!]!
+  adminUsers(q: String = null, limit: Int! = 100, offset: Int! = 0): [AdminUserType!]!
+  adminUser(id: ID!): AdminUserType
+  adminStaff(limit: Int! = 100): [AdminUserType!]!
+  adminInvitations(includeInactive: Boolean! = false, limit: Int! = 100): [AdminInvitationType!]!
   seller(id: ID!): SellerType
+  sellers(search: String = null, verifiedOnly: Boolean! = false, limit: Int! = 50, offset: Int! = 0): [SellerType!]!
+  verifiedSellers(limit: Int! = 20): [SellerType!]!
+  myFollowedSellers(limit: Int! = 100): [SellerType!]!
   mySellerSettings: SellerSettingsType!
+  mySellingDashboard: SellingDashboardType!
   adminSellers(search: String = null, suspended: Boolean = null, limit: Int! = 50, offset: Int! = 0): [AdminSellerType!]!
+  adminSeller(id: ID!): AdminSellerType
   categories(activeOnly: Boolean! = true): [CategoryType!]!
   category(id: String!): CategoryType
+  adminCategories: [CategoryType!]!
   listings(filters: ListingFilterInput = null, limit: Int! = 50, offset: Int! = 0): [ListingType!]!
   listingSearch(filters: ListingFilterInput = null, first: Int! = 24, after: String = null): ListingConnectionType!
   listing(id: String!): ListingType
   featuredListings(limit: Int! = 8): [ListingType!]!
+  recentListings(limit: Int! = 12): [ListingType!]!
+  nearbyListings(stateCode: String!, city: String = null, limit: Int! = 12): [ListingType!]!
+  similarListings(listingId: String!, limit: Int! = 8): [ListingType!]!
   myListings: [ListingType!]!
   mySavedListings: [ListingType!]!
   myRecentlyViewedListings(limit: Int! = 20): [ListingType!]!
+  adminListings(search: String = null, status: String = null, includeSellerDeleted: Boolean! = true, limit: Int! = 100, offset: Int! = 0): [ListingType!]!
+  adminListing(id: String!): ListingType
   sellerPlans: [SellerPlanType!]!
   mySellerPlan: SellerPlanType
   mySubscription: SellerSubscriptionType
@@ -591,6 +682,7 @@ type Query {
   mySavedSearches: [SavedSearchType!]!
   mySupportTickets: [SupportTicketType!]!
   supportTickets(status: String = null, limit: Int! = 100): [SupportTicketType!]!
+  supportTicket(id: ID!): SupportTicketType
   platformConfiguration: PlatformConfigurationType!
   adminDashboard: AdminDashboardType!
   adminAnalytics(days: Int! = 30): AdminAnalyticsType!
@@ -669,6 +761,22 @@ type SellerCapabilityType {
   suspended: Boolean!
 }
 
+type SellerDashboardListingType {
+  id: ID!
+  title: String!
+  status: String!
+  views: Int!
+  inquiries: Int!
+  createdAt: DateTime!
+}
+
+type SellerDashboardPlanType {
+  name: String!
+  code: String!
+  used: Int!
+  limit: Int!
+}
+
 type SellerPlanType {
   id: String!
   name: String!
@@ -681,6 +789,11 @@ type SellerPlanType {
   recommended: Boolean!
   active: Boolean!
   sortOrder: Int!
+}
+
+input SellerProfileInput {
+  displayName: String = null
+  sellerType: String = null
 }
 
 type SellerReputationType {
@@ -728,13 +841,30 @@ type SellerSubscriptionType {
 type SellerType {
   id: ID!
   name: String!
+  avatarUrl: String
+  phone: String
   verified: Boolean!
   sellerType: String!
   isSuspended: Boolean!
   rating: Float!
   reviews: Int!
   positiveReviewPercent: Float!
+  responseRate: Float
+  activeListings: Int!
+  followerCount: Int!
+  isFollowed: Boolean!
+  memberSince: DateTime!
   location: LocationType!
+}
+
+type SellingDashboardType {
+  active: Int!
+  drafts: Int!
+  underReview: Int!
+  views: Int!
+  messages: Int!
+  plan: SellerDashboardPlanType!
+  recentListings: [SellerDashboardListingType!]!
 }
 
 input SendMessageInput {

@@ -8,7 +8,8 @@ from listings.models import Listing
 from listings.services import delete_listing_by_seller
 from messaging.models import Conversation
 from messaging.services import send_message
-from sellers.models import SellerFollow, SellerProfile
+from sellers.graphql.mappers import seller_to_type
+from sellers.models import SellerFollow, SellerProfile, SellerSettings
 from sellers.services import follow_seller
 
 
@@ -79,3 +80,13 @@ class SellerCompletionTests(TestCase):
         delete_listing_by_seller(listing=listing)
         with self.assertRaisesMessage(ValidationError, "closed"):
             send_message(user=self.buyer, conversation=conversation, text="Hello")
+
+    def test_public_seller_phone_respects_seller_visibility_setting(self):
+        self.seller_user.phone = "+5511999999999"
+        self.seller_user.save(update_fields=("phone", "updated_at"))
+        visible = seller_to_type(self.seller)
+        self.assertEqual(visible.phone, "+5511999999999")
+
+        SellerSettings.objects.create(user_profile=self.seller, show_phone=False)
+        hidden = seller_to_type(self.seller)
+        self.assertIsNone(hidden.phone)

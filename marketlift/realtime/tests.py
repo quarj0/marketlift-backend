@@ -114,7 +114,6 @@ class RealtimeWebSocketTests(TransactionTestCase):
         )
         await socket.disconnect()
 
-
     async def test_command_error_echoes_request_id(self):
         socket = self._communicator(self.buyer_cookie)
         connected, _ = await socket.connect()

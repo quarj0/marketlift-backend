@@ -10,6 +10,7 @@ class SellerType:
     id: strawberry.ID
     name: str
     avatar_url: str | None
+    phone: str | None
     verified: bool
     seller_type: str
     is_suspended: bool
@@ -37,6 +38,12 @@ class AdminSellerType:
     suspended_at: datetime | None
     suspension_reason: str | None
     listing_count: int
+
+
+@strawberry.input
+class SellerProfileInput:
+    display_name: str | None = None
+    seller_type: str | None = None
 
 
 @strawberry.type

@@ -76,11 +76,16 @@ def apply_listing_filters(qs, filters):
         qs = qs.filter(seller_id=seller_id)
     if _get(filters, "verified_only", False):
         qs = qs.filter(seller__verified_at__isnull=False)
-    lat, lng = validate_coordinates(_get(filters, "latitude"), _get(filters, "longitude"))
+    lat, lng = validate_coordinates(
+        _get(filters, "latitude"), _get(filters, "longitude")
+    )
     radius = validate_radius_km(_get(filters, "radius_km"))
     if radius is not None and lat is None:
         from django.core.exceptions import ValidationError
-        raise ValidationError({"radius_km": "Radius search requires latitude and longitude."})
+
+        raise ValidationError(
+            {"radius_km": "Radius search requires latitude and longitude."}
+        )
     if lat is not None:
         origin = Point(lng, lat, srid=4326)
         qs = qs.exclude(location_point__isnull=True).annotate(

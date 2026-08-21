@@ -1,11 +1,17 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.http import JsonResponse
 from django.test import RequestFactory, TestCase, override_settings
 from rest_framework.test import APIRequestFactory
 
 from marketlift.api.auth.serializers import RegisterSerializer
 from marketlift.security.checks import marketlift_deploy_checks
-from marketlift.security.middleware import MaintenanceModeMiddleware
+from marketlift.security.middleware import (
+    ClientScopedSessionMiddleware,
+    MaintenanceModeMiddleware,
+)
 from marketlift.security.rate_limit import client_ip
 from accounts.auth_services import request_password_reset
 
@@ -158,3 +164,86 @@ class SecurityHardeningTests(TestCase):
         for path in ("/api/v1/auth/admin-login/", "/api/v1/webhooks/mercado-pago/"):
             response = middleware(self.factory.post(path))
             self.assertEqual(response.status_code, 200)
+
+    @override_settings(
+        SESSION_ENGINE="django.contrib.sessions.backends.signed_cookies",
+        SESSION_COOKIE_NAME="marketlift_sessionid",
+        MARKETLIFT_ADMIN_SESSION_COOKIE_NAME="marketlift_admin_sessionid",
+        MARKETLIFT_ADMIN_SESSION_ORIGINS=["http://localhost:3001"],
+        SESSION_COOKIE_SECURE=False,
+        SESSION_COOKIE_SAMESITE="Lax",
+    )
+    def test_marketplace_and_admin_sessions_are_isolated_by_origin(self):
+        def endpoint(request):
+            if request.path == "/set/":
+                request.session["surface"] = request.marketlift_session_surface
+            elif request.path == "/logout/":
+                request.session.flush()
+            return JsonResponse({"surface": request.session.get("surface")})
+
+        middleware = ClientScopedSessionMiddleware(endpoint)
+
+        market_response = middleware(
+            self.factory.get("/set/", HTTP_ORIGIN="http://localhost:3000")
+        )
+        market_cookie = market_response.cookies["marketlift_sessionid"].value
+        self.assertNotIn("marketlift_admin_sessionid", market_response.cookies)
+
+        admin_request = self.factory.get("/set/", HTTP_ORIGIN="http://localhost:3001")
+        admin_request.COOKIES["marketlift_sessionid"] = market_cookie
+        admin_response = middleware(admin_request)
+        admin_cookie = admin_response.cookies["marketlift_admin_sessionid"].value
+        self.assertNotEqual(admin_cookie, market_cookie)
+
+        market_request = self.factory.get("/", HTTP_ORIGIN="http://localhost:3000")
+        market_request.COOKIES.update(
+            marketlift_sessionid=market_cookie,
+            marketlift_admin_sessionid=admin_cookie,
+        )
+        self.assertEqual(
+            json.loads(middleware(market_request).content)["surface"], "marketplace"
+        )
+
+        admin_request = self.factory.get("/", HTTP_ORIGIN="http://localhost:3001")
+        admin_request.COOKIES.update(
+            marketlift_sessionid=market_cookie,
+            marketlift_admin_sessionid=admin_cookie,
+        )
+        self.assertEqual(
+            json.loads(middleware(admin_request).content)["surface"], "admin"
+        )
+
+        logout_request = self.factory.post(
+            "/logout/", HTTP_ORIGIN="http://localhost:3000"
+        )
+        logout_request.COOKIES.update(
+            marketlift_sessionid=market_cookie,
+            marketlift_admin_sessionid=admin_cookie,
+        )
+        logout_response = middleware(logout_request)
+        self.assertEqual(
+            logout_response.cookies["marketlift_sessionid"]["max-age"], "0"
+        )
+        self.assertNotIn("marketlift_admin_sessionid", logout_response.cookies)
+
+        admin_after_logout = self.factory.get("/", HTTP_ORIGIN="http://localhost:3001")
+        admin_after_logout.COOKIES["marketlift_admin_sessionid"] = admin_cookie
+        self.assertEqual(
+            json.loads(middleware(admin_after_logout).content)["surface"], "admin"
+        )
+
+    @override_settings(
+        SESSION_COOKIE_NAME="marketlift_sessionid",
+        MARKETLIFT_ADMIN_SESSION_COOKIE_NAME="marketlift_admin_sessionid",
+        MARKETLIFT_ADMIN_SESSION_ORIGINS=["http://localhost:3001"],
+    )
+    def test_browser_origin_cannot_be_overridden_by_surface_header(self):
+        request = self.factory.get(
+            "/",
+            HTTP_ORIGIN="http://localhost:3000",
+            HTTP_X_MARKETLIFT_SURFACE="admin",
+        )
+        self.assertEqual(
+            ClientScopedSessionMiddleware.cookie_name_for(request),
+            "marketlift_sessionid",
+        )

@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.postgres",
-    "django.contrib.gis",
     "corsheaders",
     "rest_framework",
     "strawberry_django",
@@ -71,7 +70,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "marketlift.security.middleware.ClientScopedSessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -106,7 +105,7 @@ DATABASES = {
         # Provider-neutral database configuration. Supabase, Neon, a local
         # Docker PostgreSQL server, or any other compatible host can supply
         # these values without changing application code.
-        "ENGINE": os.getenv("DB_ENGINE", "django.contrib.gis.db.backends.postgis"),
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
         "NAME": os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "marketlift")),
         "USER": os.getenv("DB_USER", os.getenv("POSTGRES_USER", "marketlift")),
         "PASSWORD": os.getenv(
@@ -122,10 +121,7 @@ DATABASES = {
 }
 
 DB_SSLMODE = os.getenv("DB_SSLMODE", "").strip()
-if DB_SSLMODE and DATABASES["default"]["ENGINE"] in {
-    "django.db.backends.postgresql",
-    "django.contrib.gis.db.backends.postgis",
-}:
+if DB_SSLMODE and DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
     DATABASES["default"]["OPTIONS"] = {"sslmode": DB_SSLMODE}
 
 
@@ -201,6 +197,9 @@ CACHES = {
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_COOKIE_NAME = os.getenv("SESSION_COOKIE_NAME", "marketlift_sessionid")
+MARKETLIFT_ADMIN_SESSION_COOKIE_NAME = os.getenv(
+    "MARKETLIFT_ADMIN_SESSION_COOKIE_NAME", "marketlift_admin_sessionid"
+)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", IS_PRODUCTION)
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
@@ -266,6 +265,22 @@ MARKETLIFT_FRONTEND_URL = os.getenv("MARKETLIFT_FRONTEND_URL", "http://localhost
 MARKETLIFT_ADMIN_FRONTEND_URL = os.getenv(
     "MARKETLIFT_ADMIN_FRONTEND_URL", "http://localhost:3001"
 )
+MARKETLIFT_ADMIN_SESSION_ORIGINS = env_list(
+    "MARKETLIFT_ADMIN_SESSION_ORIGINS", MARKETLIFT_ADMIN_FRONTEND_URL
+)
+# Keep localhost and 127.0.0.1 equivalent during local development without
+# broadening the trusted origin to the marketplace port.
+if not IS_PRODUCTION:
+    for origin in list(MARKETLIFT_ADMIN_SESSION_ORIGINS):
+        if "//localhost:" in origin:
+            MARKETLIFT_ADMIN_SESSION_ORIGINS.append(
+                origin.replace("//localhost:", "//127.0.0.1:")
+            )
+        elif "//127.0.0.1:" in origin:
+            MARKETLIFT_ADMIN_SESSION_ORIGINS.append(
+                origin.replace("//127.0.0.1:", "//localhost:")
+            )
+MARKETLIFT_ADMIN_SESSION_ORIGINS = list(dict.fromkeys(MARKETLIFT_ADMIN_SESSION_ORIGINS))
 MARKETLIFT_ADMIN_MFA_REQUIRED = env_bool("MARKETLIFT_ADMIN_MFA_REQUIRED", IS_PRODUCTION)
 MARKETLIFT_ADMIN_MFA_TTL_SECONDS = int(
     os.getenv("MARKETLIFT_ADMIN_MFA_TTL_SECONDS", "600")
@@ -313,47 +328,6 @@ MARKETLIFT_SEARCH_MAX_PAGE_SIZE = int(
 MARKETLIFT_SEARCH_MAX_WINDOW = int(os.getenv("MARKETLIFT_SEARCH_MAX_WINDOW", "5000"))
 MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS = int(
     os.getenv("MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS", "1500")
-)
-
-# Geospatial location. PostGIS is the authoritative radius/distance engine; the
-# geocoder is a replaceable adapter used only to resolve human-readable places.
-MARKETLIFT_LOCATION_MAX_RADIUS_KM = float(
-    os.getenv("MARKETLIFT_LOCATION_MAX_RADIUS_KM", "200")
-)
-MARKETLIFT_LOCATION_RATE_LIMIT_PER_MINUTE = int(
-    os.getenv("MARKETLIFT_LOCATION_RATE_LIMIT_PER_MINUTE", "30")
-)
-MARKETLIFT_LOCATION_QUERY_MAX_LENGTH = int(
-    os.getenv("MARKETLIFT_LOCATION_QUERY_MAX_LENGTH", "160")
-)
-MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS = int(
-    os.getenv("MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS", "86400")
-)
-MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION = env_bool(
-    "MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION", IS_PRODUCTION
-)
-MARKETLIFT_GEOCODER_BACKEND = os.getenv(
-    "MARKETLIFT_GEOCODER_BACKEND",
-    (
-        "marketlift.location.providers.disabled.DisabledGeocoder"
-        if IS_PRODUCTION
-        else "marketlift.location.providers.nominatim.NominatimGeocoder"
-    ),
-)
-MARKETLIFT_NOMINATIM_BASE_URL = os.getenv(
-    "MARKETLIFT_NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org"
-)
-MARKETLIFT_GEOCODER_TIMEOUT_SECONDS = float(
-    os.getenv("MARKETLIFT_GEOCODER_TIMEOUT_SECONDS", "4")
-)
-MARKETLIFT_GEOCODER_CACHE_SECONDS = int(
-    os.getenv("MARKETLIFT_GEOCODER_CACHE_SECONDS", "86400")
-)
-MARKETLIFT_GEOCODER_LANGUAGE = os.getenv(
-    "MARKETLIFT_GEOCODER_LANGUAGE", "pt-BR,en"
-)
-MARKETLIFT_GEOCODER_USER_AGENT = os.getenv(
-    "MARKETLIFT_GEOCODER_USER_AGENT", "Marketlift/0.1 development"
 )
 if env_bool("SECURE_PROXY_SSL_HEADER_ENABLED", False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

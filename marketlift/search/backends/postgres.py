@@ -11,9 +11,6 @@ from django.contrib.postgres.search import (
     SearchRank,
     TrigramWordSimilarity,
 )
-from django.contrib.gis.db.models.functions import Distance
-from django.contrib.gis.geos import Point
-from django.contrib.gis.measure import D
 from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
@@ -25,6 +22,7 @@ from listings.querysets import with_listing_card_data
 from listings.models import Listing, ListingAttribute
 from listings.search import apply_listing_sort
 from marketlift.search.backends.base import ListingSearchBackend
+from marketlift.search.regions import BRAZIL_REGION_STATES
 from marketlift.search.contracts import (
     ParsedMarketplaceQuery,
     RelaxedConstraint,
@@ -111,13 +109,10 @@ def _fingerprint(request: SearchRequest, parsed: ParsedMarketplaceQuery) -> str:
         (
             parsed.normalized,
             request.category,
-            request.country_code,
+            request.region,
             request.state,
             request.city,
             request.district,
-            request.latitude,
-            request.longitude,
-            request.radius_km,
             str(request.min_price),
             str(request.max_price),
             str(parsed.min_price),
@@ -179,15 +174,15 @@ def _apply_structured_filters(
     qs, request: SearchRequest, parsed: ParsedMarketplaceQuery
 ):
     category = (request.category or "").strip()
-    country_code = (request.country_code or "").strip()
+    region = (request.region or "").strip().upper()
     state = (request.state or "").strip()
     city = (request.city or "").strip()
     district = (request.district or "").strip()
 
     if category:
         qs = qs.filter(category__slug=category)
-    if country_code:
-        qs = qs.filter(country_code__iexact=country_code)
+    if region:
+        qs = qs.filter(state_code__in=BRAZIL_REGION_STATES.get(region, ()))
     if state:
         qs = qs.filter(state_code__iexact=state)
     if city:
@@ -206,14 +201,6 @@ def _apply_structured_filters(
         qs = qs.exclude(seller__user_id=request.exclude_user_id)
     if request.created_after is not None:
         qs = qs.filter(created_at__gt=request.created_after)
-
-    if request.latitude is not None and request.longitude is not None:
-        origin = Point(request.longitude, request.latitude, srid=4326)
-        qs = qs.exclude(location_point__isnull=True).annotate(
-            distance=Distance("location_point", origin)
-        )
-        if request.radius_km is not None:
-            qs = qs.filter(location_point__distance_lte=(origin, D(km=request.radius_km)))
 
     min_candidates = [
         value for value in (request.min_price, parsed.min_price) if value is not None
@@ -417,10 +404,7 @@ class PostgresListingSearchBackend(ListingSearchBackend):
         else:
             qs = exact
 
-        if request.sort == "distance":
-            qs = qs.order_by("distance", "-published_at", "-id")
-        else:
-            qs = apply_listing_sort(qs, request.sort)
+        qs = apply_listing_sort(qs, request.sort)
         total = qs.count()
         fingerprint = _fingerprint(request, parsed)
         cursor_offset = _decode_cursor(request.cursor, fingerprint=fingerprint)
@@ -442,11 +426,6 @@ class PostgresListingSearchBackend(ListingSearchBackend):
         has_next = len(id_rows) > page_size
         id_rows = id_rows[:page_size]
         ordered_ids = [row.pk for row in id_rows]
-        distance_by_id = {}
-        for row in id_rows:
-            distance = getattr(row, "distance", None)
-            if distance is not None:
-                distance_by_id[row.pk] = round(float(distance.km), 3)
 
         # Search/count queries stay lean. Card aggregates, media and promotions are
         # hydrated only for the small result page instead of joining them across
@@ -458,9 +437,6 @@ class PostgresListingSearchBackend(ListingSearchBackend):
             )
         }
         rows = [hydrated[pk] for pk in ordered_ids if pk in hydrated]
-        for row in rows:
-            if row.pk in distance_by_id:
-                row.search_distance_km = distance_by_id[row.pk]
 
         next_cursor = None
         next_offset = offset + len(id_rows)

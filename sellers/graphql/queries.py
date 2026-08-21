@@ -20,7 +20,7 @@ from .types import (
 
 
 def seller_queryset(*, viewer=None, admin=False):
-    qs = SellerProfile.objects.select_related("user")
+    qs = SellerProfile.objects.select_related("user", "settings")
     if not admin:
         qs = qs.filter(is_suspended=False, user__is_active=True)
     qs = qs.annotate(

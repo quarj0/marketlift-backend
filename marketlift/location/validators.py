@@ -22,11 +22,15 @@ def _float(name: str, value) -> float | None:
     return number
 
 
-def validate_coordinates(latitude, longitude, *, required: bool = False) -> tuple[float | None, float | None]:
+def validate_coordinates(
+    latitude, longitude, *, required: bool = False
+) -> tuple[float | None, float | None]:
     lat = _float("latitude", latitude)
     lng = _float("longitude", longitude)
     if (lat is None) != (lng is None):
-        raise ValidationError({"location": "Latitude and longitude must be supplied together."})
+        raise ValidationError(
+            {"location": "Latitude and longitude must be supplied together."}
+        )
     if required and lat is None:
         raise ValidationError({"location": "Latitude and longitude are required."})
     if lat is None:
@@ -55,11 +59,20 @@ def normalize_country_code(value: str | None) -> str:
     if not code:
         return ""
     if not _COUNTRY_RE.fullmatch(code):
-        raise ValidationError({"country_code": "Country code must be a two-letter ISO code."})
+        raise ValidationError(
+            {"country_code": "Country code must be a two-letter ISO code."}
+        )
     return code
 
 
-def validate_location_strings(*, state: str, state_code: str, city: str, district: str = "", country_code: str = "") -> dict[str, str]:
+def validate_location_strings(
+    *,
+    state: str,
+    state_code: str,
+    city: str,
+    district: str = "",
+    country_code: str = "",
+) -> dict[str, str]:
     values = {
         "state": (state or "").strip(),
         "state_code": (state_code or "").strip().upper(),

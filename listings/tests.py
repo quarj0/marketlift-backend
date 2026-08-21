@@ -111,3 +111,9 @@ class MarketplaceDomainTests(TestCase):
 
         with self.assertRaises(ValidationError):
             publish_listing(listing)
+
+    def test_listing_rejects_non_brazilian_state_code(self):
+        payload = self.listing_payload()
+        payload.update(state="Georgia", state_code="GA", city="Accra")
+        with self.assertRaises(ValidationError):
+            create_listing(**payload)

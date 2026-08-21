@@ -30,13 +30,19 @@ def decode_location_token(token: str) -> dict:
         payload = signing.loads(
             token,
             salt=_SALT,
-            max_age=int(getattr(settings, "MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS", 86400)),
+            max_age=int(
+                getattr(settings, "MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS", 86400)
+            ),
         )
     except signing.BadSignature as exc:
-        raise ValidationError({"location_token": "Location selection is invalid or expired."}) from exc
+        raise ValidationError(
+            {"location_token": "Location selection is invalid or expired."}
+        ) from exc
     if not isinstance(payload, dict):
         raise ValidationError({"location_token": "Location selection is invalid."})
-    lat, lng = validate_coordinates(payload.get("lat"), payload.get("lng"), required=True)
+    lat, lng = validate_coordinates(
+        payload.get("lat"), payload.get("lng"), required=True
+    )
     return {
         "latitude": lat,
         "longitude": lng,

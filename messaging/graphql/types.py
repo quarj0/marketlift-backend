@@ -20,6 +20,7 @@ class ConversationListingType:
     price: float | None
     primary_image: str | None
     status: str | None
+    deleted: bool
 
 
 @strawberry.type
