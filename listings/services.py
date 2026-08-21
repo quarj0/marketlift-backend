@@ -551,13 +551,30 @@ def delete_listing_by_seller(*, listing: Listing, reason: str = "", request=None
     )
     from audit.services import record_audit_event
 
+    from moderation.models import ModerationCase
+
+    moderation_case_id = None
+    moderation_decision = None
+    try:
+        moderation_case = listing.moderation_case
+    except ModerationCase.DoesNotExist:
+        moderation_case = None
+    if moderation_case is not None and moderation_case.final:
+        moderation_case_id = str(moderation_case.id)
+        moderation_decision = moderation_case.status
+
     record_audit_event(
         actor=listing.seller.user,
         action="listing.deleted_by_seller",
         target=listing,
         target_type="listing",
         target_label=listing.title,
-        metadata={"reason": listing.seller_delete_reason},
+        metadata={
+            "reason": listing.seller_delete_reason,
+            "listing_status_at_delete": listing.status,
+            "prior_moderation_case_id": moderation_case_id,
+            "prior_moderation_decision": moderation_decision,
+        },
         request=request,
     )
     return listing

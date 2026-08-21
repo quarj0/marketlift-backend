@@ -154,8 +154,10 @@ def remove_listing(*, listing, actor, reason: str, request=None):
         return listing
     if listing.status == Listing.Status.REJECTED:
         raise ValidationError(
-            "A rejected listing cannot be replaced with another final moderation outcome."
+            "A rejected listing is already unavailable and its final moderation decision cannot be replaced."
         )
+    final_case = _final_case(listing)
+    prior_status = listing.status
     listing.status = Listing.Status.REMOVED
     listing.save(update_fields=("status", "updated_at"))
     record_audit_event(
@@ -164,7 +166,12 @@ def remove_listing(*, listing, actor, reason: str, request=None):
         target=listing,
         target_type="listing",
         target_label=listing.title,
-        metadata={"reason": reason},
+        metadata={
+            "reason": reason,
+            "prior_listing_status": prior_status,
+            "prior_moderation_case_id": str(final_case.id) if final_case else None,
+            "prior_moderation_decision": final_case.status if final_case else None,
+        },
         request=request,
     )
     create_notification(
