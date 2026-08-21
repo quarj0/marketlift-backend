@@ -225,8 +225,10 @@ CELERY_BEAT_SCHEDULE = {
 MEDIA_ROOT = Path(os.getenv("MARKETLIFT_MEDIA_ROOT", BASE_DIR / "media"))
 MEDIA_URL = "/media/"
 
-# Domain code talks to a logical storage alias only. Swap this dotted class
-# path later without changing listings, messaging, verification, or reports.
+# Domain code talks only to logical storage aliases. Local development keeps
+# the historical `default` alias so existing local uploads remain readable.
+# When R2/S3-compatible credentials are present, new uploads stage in `temp` and
+# are promoted to public/private/evidence after validation.
 MARKETLIFT_STORAGE_BACKENDS = {
     "default": os.getenv(
         "MARKETLIFT_STORAGE_BACKEND",
@@ -236,6 +238,81 @@ MARKETLIFT_STORAGE_BACKENDS = {
 MARKETLIFT_LOCAL_UPLOAD_ROOT = Path(
     os.getenv("MARKETLIFT_LOCAL_UPLOAD_ROOT", BASE_DIR / ".marketlift-uploads")
 )
+
+R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID", "").strip()
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "").strip()
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "").strip()
+R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL", "").strip()
+if not R2_ENDPOINT_URL and R2_ACCOUNT_ID:
+    R2_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+R2_PUBLIC_BUCKET = os.getenv("R2_PUBLIC_BUCKET", "").strip()
+# R2_MEDIA_BUCKET remains accepted as a compatibility alias for deployments that
+# adopted the earlier env name before `R2_PRIVATE_BUCKET` was standardized.
+R2_PRIVATE_BUCKET = os.getenv(
+    "R2_PRIVATE_BUCKET", os.getenv("R2_MEDIA_BUCKET", "")
+).strip()
+R2_EVIDENCE_BUCKET = os.getenv("R2_EVIDENCE_BUCKET", "").strip()
+R2_TEMP_BUCKET = os.getenv("R2_TEMP_BUCKET", "").strip()
+R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "").strip()
+
+MARKETLIFT_S3_ENDPOINT_URL = R2_ENDPOINT_URL
+MARKETLIFT_S3_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
+MARKETLIFT_S3_SECRET_ACCESS_KEY = R2_SECRET_ACCESS_KEY
+MARKETLIFT_S3_REGION = os.getenv("R2_REGION", "auto").strip() or "auto"
+MARKETLIFT_PUBLIC_ASSET_BASE_URL = os.getenv(
+    "MARKETLIFT_PUBLIC_ASSET_BASE_URL", R2_PUBLIC_BASE_URL
+).strip()
+MARKETLIFT_PUBLIC_STORAGE_ALIAS = "public"
+MARKETLIFT_PRESIGNED_UPLOAD_TTL_SECONDS = int(
+    os.getenv("MARKETLIFT_PRESIGNED_UPLOAD_TTL_SECONDS", "900")
+)
+MARKETLIFT_PRESIGNED_DOWNLOAD_TTL_SECONDS = int(
+    os.getenv("MARKETLIFT_PRESIGNED_DOWNLOAD_TTL_SECONDS", "300")
+)
+
+_r2_buckets = {
+    "public": R2_PUBLIC_BUCKET,
+    "private": R2_PRIVATE_BUCKET,
+    "evidence": R2_EVIDENCE_BUCKET,
+    "temp": R2_TEMP_BUCKET,
+}
+_r2_required_values = [
+    R2_ACCESS_KEY_ID,
+    R2_SECRET_ACCESS_KEY,
+    R2_ENDPOINT_URL,
+    *_r2_buckets.values(),
+]
+MARKETLIFT_R2_ANY_CONFIGURED = any(_r2_required_values)
+MARKETLIFT_R2_CONFIGURED = all(_r2_required_values)
+if MARKETLIFT_R2_CONFIGURED:
+    _s3_backend = "uploads.storage.s3.S3CompatibleStorageBackend"
+    MARKETLIFT_STORAGE_BACKENDS.update({alias: _s3_backend for alias in _r2_buckets})
+    MARKETLIFT_STORAGE_BUCKETS = dict(_r2_buckets)
+    MARKETLIFT_UPLOAD_STAGING_ALIAS = "temp"
+    MARKETLIFT_UPLOAD_PURPOSE_ALIASES = {
+        "listing_image": "public",
+        "avatar": "public",
+        "message_image": "private",
+        "support_attachment": "private",
+        "verification_document": "evidence",
+        "verification_selfie": "evidence",
+        "report_evidence": "evidence",
+    }
+else:
+    MARKETLIFT_STORAGE_BUCKETS = {}
+    MARKETLIFT_UPLOAD_STAGING_ALIAS = "default"
+    MARKETLIFT_UPLOAD_PURPOSE_ALIASES = {
+        purpose: "default"
+        for purpose in (
+            "listing_image",
+            "avatar",
+            "message_image",
+            "support_attachment",
+            "verification_document",
+            "verification_selfie",
+            "report_evidence",
+        )
+    }
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -329,6 +406,52 @@ MARKETLIFT_SEARCH_MAX_WINDOW = int(os.getenv("MARKETLIFT_SEARCH_MAX_WINDOW", "50
 MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS = int(
     os.getenv("MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS", "1500")
 )
+
+# Brazil location/autocomplete/geocoding. The reference catalog and geocoder are
+# replaceable infrastructure services; listing/search domain logic stays provider-neutral.
+MARKETLIFT_LOCATION_MAX_RADIUS_KM = float(
+    os.getenv("MARKETLIFT_LOCATION_MAX_RADIUS_KM", "200")
+)
+MARKETLIFT_LOCATION_RATE_LIMIT_PER_MINUTE = int(
+    os.getenv("MARKETLIFT_LOCATION_RATE_LIMIT_PER_MINUTE", "60")
+)
+MARKETLIFT_LOCATION_QUERY_MAX_LENGTH = int(
+    os.getenv("MARKETLIFT_LOCATION_QUERY_MAX_LENGTH", "160")
+)
+MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS = int(
+    os.getenv("MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS", "86400")
+)
+MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION = env_bool(
+    "MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION", False
+)
+MARKETLIFT_GEOCODER_BACKEND = os.getenv(
+    "MARKETLIFT_GEOCODER_BACKEND",
+    "marketlift.location.providers.nominatim.NominatimGeocoder",
+)
+MARKETLIFT_NOMINATIM_BASE_URL = os.getenv(
+    "MARKETLIFT_NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org"
+)
+MARKETLIFT_GEOCODER_TIMEOUT_SECONDS = float(
+    os.getenv("MARKETLIFT_GEOCODER_TIMEOUT_SECONDS", "4")
+)
+MARKETLIFT_GEOCODER_CACHE_SECONDS = int(
+    os.getenv("MARKETLIFT_GEOCODER_CACHE_SECONDS", "86400")
+)
+MARKETLIFT_GEOCODER_LANGUAGE = os.getenv("MARKETLIFT_GEOCODER_LANGUAGE", "pt-BR,en")
+MARKETLIFT_GEOCODER_USER_AGENT = os.getenv(
+    "MARKETLIFT_GEOCODER_USER_AGENT", "Marketlift/0.1 development"
+)
+MARKETLIFT_IBGE_LOCATIONS_BASE_URL = os.getenv(
+    "MARKETLIFT_IBGE_LOCATIONS_BASE_URL",
+    "https://servicodados.ibge.gov.br/api/v1/localidades",
+)
+MARKETLIFT_LOCATION_CATALOG_CACHE_SECONDS = int(
+    os.getenv("MARKETLIFT_LOCATION_CATALOG_CACHE_SECONDS", "604800")
+)
+MARKETLIFT_LOCATION_CATALOG_TIMEOUT_SECONDS = float(
+    os.getenv("MARKETLIFT_LOCATION_CATALOG_TIMEOUT_SECONDS", "5")
+)
+
 if env_bool("SECURE_PROXY_SSL_HEADER_ENABLED", False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(

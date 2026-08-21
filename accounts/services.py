@@ -6,7 +6,7 @@ from django.utils import timezone
 from audit.services import record_audit_event
 from uploads.models import UploadAsset
 from uploads.services import claim_upload
-from marketlift.locations import normalize_brazil_state_code
+from marketlift.locations import BRAZIL_STATES, normalize_brazil_state_code
 
 from .models import AccountSettings, User
 
@@ -114,11 +114,23 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
             data["phone"] = phone
             user.phone_verified_at = None
 
-    if "state_code" in data and data["state_code"]:
-        try:
-            data["state_code"] = normalize_brazil_state_code(str(data["state_code"]))
-        except ValueError as exc:
-            raise ValidationError({"stateCode": str(exc)}) from exc
+    if "state_code" in data:
+        raw_state_code = str(data["state_code"] or "").strip()
+        if raw_state_code:
+            try:
+                state_code = normalize_brazil_state_code(raw_state_code)
+            except ValueError as exc:
+                raise ValidationError({"stateCode": str(exc)}) from exc
+            data["state_code"] = state_code
+            data["state"] = BRAZIL_STATES[state_code]
+        else:
+            data["state_code"] = ""
+            data["state"] = ""
+
+    if "city" in data and data["city"] is not None:
+        data["city"] = str(data["city"]).strip()
+    if "district" in data and data["district"] is not None:
+        data["district"] = str(data["district"]).strip()
 
     if "full_name" in data:
         data["full_name"] = str(data["full_name"] or "").strip()

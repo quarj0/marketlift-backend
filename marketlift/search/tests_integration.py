@@ -195,10 +195,10 @@ class MarketplaceSearchIntegrationTests(TransactionTestCase):
             description="Clean student accommodation available now.",
             price=Decimal("1200"),
             condition="",
-            state="Ashanti",
-            state_code="AH",
-            city="Kumasi",
-            district="KNUST",
+            state="Minas Gerais",
+            state_code="MG",
+            city="Belo Horizonte",
+            district="Pampulha",
             status=Listing.Status.PUBLISHED,
             published_at=timezone.now(),
         )
@@ -212,7 +212,7 @@ class MarketplaceSearchIntegrationTests(TransactionTestCase):
         )
         rebuild_listing_search_document(room.pk)
 
-        page = search_listings(SearchRequest(q="single room at knust", page_size=24))
+        page = search_listings(SearchRequest(q="single room at pampulha", page_size=24))
 
         self.assertEqual([item.pk for item in page.items], [room.pk])
         self.assertEqual(page.relaxed, [])
@@ -258,3 +258,40 @@ class MarketplaceSearchIntegrationTests(TransactionTestCase):
 
         self.assertEqual([item.pk for item in page.items], [northeast.pk])
         self.assertNotIn(southeast.pk, {item.pk for item in page.items})
+
+    def test_state_city_and_neighborhood_filters_are_applied_together(self):
+        sao_paulo = self._phone(
+            title="Samsung Galaxy S21 Pinheiros", model="Galaxy S21", ram=8, price=760
+        )
+        sao_paulo.district = "Pinheiros"
+        sao_paulo.save(update_fields=("district", "updated_at"))
+        rebuild_listing_search_document(sao_paulo.pk)
+
+        salvador = Listing.objects.create(
+            seller=self.seller,
+            category=self.phones,
+            title="Samsung Galaxy S21 Barra",
+            description="Original smartphone in good condition.",
+            price=Decimal("750"),
+            condition=Listing.Condition.USED,
+            state="Bahia",
+            state_code="BA",
+            city="Salvador",
+            district="Barra",
+            status=Listing.Status.PUBLISHED,
+            published_at=timezone.now(),
+        )
+        rebuild_listing_search_document(salvador.pk)
+
+        page = search_listings(
+            SearchRequest(
+                region="SE",
+                state="SP",
+                city="São Paulo",
+                district="Pin",
+                page_size=24,
+            )
+        )
+
+        self.assertEqual([item.pk for item in page.items], [sao_paulo.pk])
+        self.assertNotIn(salvador.pk, {item.pk for item in page.items})

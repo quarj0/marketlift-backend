@@ -123,7 +123,7 @@ class NominatimGeocoder(GeocoderBackend):
             return [LocationCandidate(**item) for item in cached]
         payload = self._request(
             "/search",
-            {"q": query, "format": "jsonv2", "addressdetails": 1, "limit": limit},
+            {"q": query, "format": "jsonv2", "addressdetails": 1, "limit": limit, "countrycodes": "br"},
         )
         rows = payload if isinstance(payload, list) else []
         candidates = [

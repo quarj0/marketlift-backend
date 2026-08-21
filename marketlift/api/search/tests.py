@@ -2,6 +2,7 @@ from django.test import SimpleTestCase
 from rest_framework.exceptions import ValidationError
 
 from marketlift.api.search.params import search_request_from_query_params
+from marketlift.search.service import validate_search_request
 
 
 class SearchQueryParamTests(SimpleTestCase):
@@ -36,3 +37,23 @@ class SearchQueryParamTests(SimpleTestCase):
         self.assertEqual(request.longitude, -46.6333)
         self.assertEqual(request.radius_km, 10.0)
         self.assertEqual(request.country_code, "BR")
+
+    def test_brazil_location_hierarchy_is_parsed(self):
+        request = search_request_from_query_params(
+            {
+                "region": "se",
+                "state": "sp",
+                "city": "São Paulo",
+                "neighborhood": "Pinheiros",
+            }
+        )
+        self.assertEqual(request.country_code, "BR")
+        self.assertEqual(request.region, "SE")
+        self.assertEqual(request.state, "SP")
+        self.assertEqual(request.city, "São Paulo")
+        self.assertEqual(request.district, "Pinheiros")
+
+    def test_state_must_belong_to_selected_region(self):
+        request = search_request_from_query_params({"region": "NE", "state": "SP"})
+        with self.assertRaises(ValidationError):
+            validate_search_request(request)

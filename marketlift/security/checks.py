@@ -2,6 +2,39 @@ from django.conf import settings
 from django.core.checks import Error, Tags, Warning, register
 
 
+@register(Tags.files)
+def marketlift_storage_checks(app_configs, **kwargs):
+    """Catch incomplete object-storage configuration in every environment."""
+    issues = []
+    r2_any = getattr(settings, "MARKETLIFT_R2_ANY_CONFIGURED", False)
+    r2_ready = getattr(settings, "MARKETLIFT_R2_CONFIGURED", False)
+    if r2_any and not r2_ready:
+        issues.append(
+            Error(
+                "R2/S3-compatible object storage is only partially configured.",
+                hint=(
+                    "Set the access key, secret, endpoint and all four logical "
+                    "bucket names, or remove the partial R2 configuration."
+                ),
+                id="marketlift.E014",
+            )
+        )
+    if r2_ready:
+        buckets = getattr(settings, "MARKETLIFT_STORAGE_BUCKETS", {})
+        configured_names = [
+            buckets.get(alias, "")
+            for alias in ("public", "private", "evidence", "temp")
+        ]
+        if len(set(configured_names)) != 4:
+            issues.append(
+                Error(
+                    "Public, private, evidence and temporary uploads must use distinct buckets.",
+                    id="marketlift.E015",
+                )
+            )
+    return issues
+
+
 @register(Tags.security, deploy=True)
 def marketlift_deploy_checks(app_configs, **kwargs):
     if not getattr(settings, "IS_PRODUCTION", False):
@@ -103,14 +136,27 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 id="marketlift.E012",
             )
         )
-    storage = getattr(settings, "MARKETLIFT_STORAGE_BACKENDS", {}).get("default", "")
-    if storage.endswith("LocalStorageBackend"):
-        issues.append(
-            Warning(
-                "Local upload storage is configured. Ensure the production filesystem is durable or select a remote adapter.",
-                id="marketlift.W002",
+    r2_ready = getattr(settings, "MARKETLIFT_R2_CONFIGURED", False)
+    if r2_ready:
+        endpoint = str(getattr(settings, "MARKETLIFT_S3_ENDPOINT_URL", ""))
+        if not endpoint.startswith("https://"):
+            issues.append(
+                Error(
+                    "Production S3-compatible object storage must use an HTTPS endpoint.",
+                    id="marketlift.E016",
+                )
             )
+    else:
+        storage = getattr(settings, "MARKETLIFT_STORAGE_BACKENDS", {}).get(
+            "default", ""
         )
+        if storage.endswith("LocalStorageBackend"):
+            issues.append(
+                Warning(
+                    "Local upload storage is configured. Ensure the production filesystem is durable or select a remote adapter.",
+                    id="marketlift.W002",
+                )
+            )
     if settings.DATABASES["default"].get("ENGINE") in {
         "django.db.backends.postgresql",
         "django.contrib.gis.db.backends.postgis",

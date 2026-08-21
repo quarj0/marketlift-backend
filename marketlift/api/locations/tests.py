@@ -45,3 +45,22 @@ class LocationSuggestionTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["suggestions"], ["Vila Madalena"])
+
+
+class LocationReferenceTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_regions_and_region_filtered_states_are_available(self):
+        regions = self.client.get("/api/v1/locations/regions/")
+        self.assertEqual(regions.status_code, 200)
+        self.assertEqual(len(regions.json()["regions"]), 5)
+
+        states = self.client.get("/api/v1/locations/states/", {"region": "SE"})
+        self.assertEqual(states.status_code, 200)
+        codes = {row["code"] for row in states.json()["states"]}
+        self.assertEqual(codes, {"ES", "MG", "RJ", "SP"})
+
+    def test_invalid_state_is_rejected_by_city_catalog(self):
+        response = self.client.get("/api/v1/locations/cities/", {"state": "XX"})
+        self.assertEqual(response.status_code, 400)

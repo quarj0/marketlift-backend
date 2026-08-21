@@ -31,6 +31,16 @@ def _asset(asset_id):
         return None
 
 
+def _redirect_to_storage(url: str, *, public: bool):
+    response = HttpResponseRedirect(url)
+    if public:
+        response["Cache-Control"] = "public, max-age=240"
+    else:
+        response["Cache-Control"] = "private, no-store"
+        response["Referrer-Policy"] = "no-referrer"
+    return response
+
+
 class PrepareUploadView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -116,7 +126,10 @@ class UploadContentView(APIView):
         backend = get_storage_backend(asset.storage_alias)
         redirect_url = backend.access_url(asset, request=request)
         if redirect_url:
-            return HttpResponseRedirect(redirect_url)
+            return _redirect_to_storage(
+                redirect_url,
+                public=asset.visibility == UploadAsset.Visibility.PUBLIC,
+            )
         try:
             stream = backend.open(asset)
         except FileNotFoundError:
@@ -178,8 +191,11 @@ class UploadVariantView(APIView):
         from uploads.models import UploadVariant
 
         asset = _asset(asset_id)
-        if asset is None or not can_access_upload(
-            asset=asset, user=getattr(request, "user", None)
+        if (
+            asset is None
+            or asset.status
+            not in {UploadAsset.Status.READY, UploadAsset.Status.ATTACHED}
+            or not can_access_upload(asset=asset, user=getattr(request, "user", None))
         ):
             return Response(
                 {"detail": "Upload not found."}, status=status.HTTP_404_NOT_FOUND
@@ -193,7 +209,10 @@ class UploadVariantView(APIView):
         backend = get_storage_backend(variant.storage_alias)
         redirect_url = backend.access_url(variant, request=request)
         if redirect_url:
-            return HttpResponseRedirect(redirect_url)
+            return _redirect_to_storage(
+                redirect_url,
+                public=asset.visibility == UploadAsset.Visibility.PUBLIC,
+            )
         try:
             stream = backend.open(variant)
         except FileNotFoundError:

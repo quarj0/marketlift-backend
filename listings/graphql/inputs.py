@@ -7,6 +7,7 @@ class ListingFilterInput:
     q: str | None = None
     category: str | None = None
     country_code: str | None = None
+    region: str | None = None
     state: str | None = None
     city: str | None = None
     district: str | None = None

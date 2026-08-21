@@ -82,6 +82,7 @@ class ListingQuery:
                     q=filters.q or "",
                     category=filters.category,
                     country_code=filters.country_code,
+                    region=filters.region,
                     state=filters.state,
                     city=filters.city,
                     district=filters.district,

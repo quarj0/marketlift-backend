@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import mimetypes
 import uuid
+from copy import copy
 from datetime import timedelta
 from pathlib import Path
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -52,6 +54,78 @@ PURPOSE_RULES = {
         UploadAsset.Visibility.PRIVATE,
     ),
 }
+
+
+def _staging_storage_alias() -> str:
+    return str(
+        getattr(settings, "MARKETLIFT_UPLOAD_STAGING_ALIAS", "default") or "default"
+    )
+
+
+def _final_storage_alias(purpose: str) -> str:
+    aliases = getattr(settings, "MARKETLIFT_UPLOAD_PURPOSE_ALIASES", {})
+    return str(aliases.get(purpose) or "default")
+
+
+def _promote_upload_storage(asset: UploadAsset) -> UploadAsset:
+    """Copy a validated staging object into its purpose-specific logical store."""
+    destination_alias = _final_storage_alias(asset.purpose)
+    if destination_alias == asset.storage_alias:
+        return asset
+
+    source_backend = get_storage_backend(asset.storage_alias)
+    destination_backend = get_storage_backend(destination_alias)
+    destination_asset = copy(asset)
+    destination_asset.storage_alias = destination_alias
+
+    try:
+        with source_backend.open(asset) as stream:
+            info = destination_backend.store(
+                destination_asset,
+                stream,
+                content_length=asset.actual_size or asset.expected_size,
+            )
+    except FileNotFoundError as exc:
+        raise ValidationError("The uploaded object could not be found.") from exc
+
+    if info.size != asset.expected_size:
+        destination_backend.delete(destination_asset)
+        raise ValidationError(
+            {"size": "Stored file size changed while finalizing upload."}
+        )
+
+    previous_alias = asset.storage_alias
+    asset.storage_alias = destination_alias
+    asset.actual_size = info.size
+    asset.checksum_sha256 = info.checksum_sha256 or asset.checksum_sha256
+    asset.save(
+        update_fields=("storage_alias", "actual_size", "checksum_sha256", "updated_at")
+    )
+    try:
+        source_copy = copy(asset)
+        source_copy.storage_alias = previous_alias
+        source_backend.delete(source_copy)
+    except Exception:
+        # The destination is already durable. Abandoned staging objects are also
+        # removed by Marketlift cleanup and should have a provider lifecycle rule.
+        pass
+    return asset
+
+
+def _delete_stored_objects(asset: UploadAsset) -> None:
+    """Delete an upload and all generated variants from their logical stores."""
+    variants = list(asset.variants.all())
+    for variant in variants:
+        try:
+            get_storage_backend(variant.storage_alias).delete(variant)
+        except FileNotFoundError:
+            pass
+        variant.delete()
+    try:
+        get_storage_backend(asset.storage_alias).delete(asset)
+    except FileNotFoundError:
+        pass
+
 
 MIME_EXTENSIONS = {
     "image/jpeg": ".jpg",
@@ -106,7 +180,7 @@ def prepare_upload(
         owner=user,
         purpose=purpose,
         visibility=visibility,
-        storage_alias="default",
+        storage_alias=_staging_storage_alias(),
         object_key=object_key,
         original_name=_safe_name(original_name),
         mime_type=mime_type,
@@ -173,8 +247,6 @@ def complete_upload(*, asset, user):
         raise ValidationError(
             {"size": "Stored file size does not match the prepared upload."}
         )
-    from django.conf import settings
-
     if getattr(settings, "MARKETLIFT_STRICT_UPLOAD_VALIDATION", True):
         try:
             if asset.mime_type.startswith("image/"):
@@ -186,8 +258,14 @@ def complete_upload(*, asset, user):
 
                 validate_pdf_asset(asset)
         except ValueError as exc:
-            get_storage_backend(asset.storage_alias).delete(asset)
+            _delete_stored_objects(asset)
             raise ValidationError(str(exc)) from exc
+
+    asset.actual_size = info.size
+    asset.checksum_sha256 = info.checksum_sha256 or asset.checksum_sha256
+    asset.save(update_fields=("actual_size", "checksum_sha256", "updated_at"))
+    asset = _promote_upload_storage(asset)
+    info = get_storage_backend(asset.storage_alias).stat(asset)
     asset.actual_size = info.size
     asset.checksum_sha256 = info.checksum_sha256 or asset.checksum_sha256
     asset.status = UploadAsset.Status.READY
@@ -202,8 +280,6 @@ def complete_upload(*, asset, user):
         )
     )
     if asset.mime_type.startswith("image/"):
-        from django.conf import settings
-
         if getattr(settings, "MARKETLIFT_PROCESS_UPLOADS_ASYNC", False):
             from .tasks import process_upload_image
 
@@ -239,7 +315,7 @@ def delete_unattached_upload(*, asset, user):
         raise ValidationError(
             "Attached uploads are removed through their owning domain object."
         )
-    get_storage_backend(asset.storage_alias).delete(asset)
+    _delete_stored_objects(asset)
     asset.status = UploadAsset.Status.DELETED
     asset.deleted_at = timezone.now()
     asset.save(update_fields=("status", "deleted_at", "updated_at"))
@@ -250,7 +326,7 @@ def retire_upload(*, asset):
     """Remove an attachment's stored object when its domain owner replaces it."""
     if asset.status == UploadAsset.Status.DELETED:
         return asset
-    get_storage_backend(asset.storage_alias).delete(asset)
+    _delete_stored_objects(asset)
     asset.status = UploadAsset.Status.DELETED
     asset.deleted_at = timezone.now()
     asset.save(update_fields=("status", "deleted_at", "updated_at"))
@@ -258,6 +334,13 @@ def retire_upload(*, asset):
 
 
 def can_access_upload(*, asset, user=None) -> bool:
+    if (
+        asset.purpose == UploadAsset.Purpose.AVATAR
+        and asset.visibility == UploadAsset.Visibility.PUBLIC
+        and asset.status == UploadAsset.Status.ATTACHED
+    ):
+        return True
+
     if user is not None and getattr(user, "is_authenticated", False):
         if user.is_staff or asset.owner_id == user.pk:
             return True
@@ -297,7 +380,7 @@ def expire_abandoned_uploads(*, now=None) -> int:
         )[:500]
     )
     for asset in assets:
-        get_storage_backend(asset.storage_alias).delete(asset)
+        _delete_stored_objects(asset)
         asset.status = UploadAsset.Status.EXPIRED
         asset.deleted_at = now
         asset.save(update_fields=("status", "deleted_at", "updated_at"))

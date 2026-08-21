@@ -62,7 +62,9 @@ class Listing(UUIDTimeStampedModel):
     # Human-readable location snapshots remain on the listing for display, SEO,
     # and lexical marketplace search. `location_point` is private/internal and
     # powers PostGIS radius and distance calculations.
-    country_code = models.CharField(max_length=2, blank=True, db_index=True)
+    country_code = models.CharField(
+        max_length=2, blank=True, default="BR", db_index=True
+    )
     state = models.CharField(max_length=100, blank=True)
     state_code = models.CharField(max_length=8, blank=True)
     city = models.CharField(max_length=100)

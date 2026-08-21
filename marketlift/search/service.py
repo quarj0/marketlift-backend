@@ -14,10 +14,15 @@ from sellers.models import SellerProfile
 
 from .contracts import SearchPage, SearchRequest
 from .parser import parse_marketplace_query
-from .regions import BRAZIL_REGION_STATES
+from .regions import BRAZIL_REGION_STATES, BRAZIL_STATE_CODES
+from marketlift.location.validators import (
+    normalize_country_code,
+    validate_coordinates,
+    validate_radius_km,
+)
 
 _ATTR_KEY_RE = re.compile(r"^[a-z0-9_]{1,80}$")
-ALLOWED_SORTS = {"relevant", "newest", "price_asc", "price_desc"}
+ALLOWED_SORTS = {"relevant", "newest", "price_asc", "price_desc", "distance"}
 ALLOWED_DATE_FILTERS = {None, "", "today", "week", "month"}
 
 
@@ -151,6 +156,7 @@ def _validate_attribute_filters(filters: dict, *, category: str | None) -> dict:
 def validate_search_request(request: SearchRequest) -> SearchRequest:
     limits = {
         "category": 80,
+        "country_code": 2,
         "region": 8,
         "state": 8,
         "city": 100,
@@ -164,8 +170,35 @@ def validate_search_request(request: SearchRequest) -> SearchRequest:
         if value is not None and len(str(value)) > limit:
             raise ValidationError({field: f"Value cannot exceed {limit} characters."})
 
-    if request.region and request.region not in BRAZIL_REGION_STATES:
+    region = (request.region or "").strip().upper() or None
+    state = (request.state or "").strip().upper() or None
+    country_code = (
+        normalize_country_code(request.country_code) if request.country_code else "BR"
+    )
+    if country_code != "BR":
+        raise ValidationError(
+            {"country_code": "Marketlift currently supports Brazil only."}
+        )
+    if region and region not in BRAZIL_REGION_STATES:
         raise ValidationError({"region": "Unsupported Brazilian region."})
+    if state and state not in BRAZIL_STATE_CODES:
+        raise ValidationError({"state": "Unsupported Brazilian state."})
+    if region and state and state not in BRAZIL_REGION_STATES[region]:
+        raise ValidationError(
+            {"state": "Selected state does not belong to the selected region."}
+        )
+
+    lat, lng = validate_coordinates(request.latitude, request.longitude)
+    radius = validate_radius_km(request.radius_km)
+    if radius is not None and lat is None:
+        raise ValidationError(
+            {"radius_km": "Radius search requires latitude and longitude."}
+        )
+    if request.sort == "distance" and lat is None:
+        raise ValidationError(
+            {"sort": "Distance sorting requires latitude and longitude."}
+        )
+
     if request.sort not in ALLOWED_SORTS:
         raise ValidationError({"sort": "Unsupported search sort."})
     if request.date_listed not in ALLOWED_DATE_FILTERS:
@@ -221,6 +254,12 @@ def validate_search_request(request: SearchRequest) -> SearchRequest:
     return SearchRequest(
         **{
             **request.__dict__,
+            "country_code": country_code,
+            "region": region,
+            "state": state,
+            "latitude": lat,
+            "longitude": lng,
+            "radius_km": radius,
             "condition": canonical_condition,
             "seller_type": canonical_seller_type,
             "attribute_filters": attrs,

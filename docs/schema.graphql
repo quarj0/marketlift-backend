@@ -320,9 +320,14 @@ type ListingConnectionType {
 input ListingFilterInput {
   q: String = null
   category: String = null
+  countryCode: String = null
+  region: String = null
   state: String = null
   city: String = null
   district: String = null
+  latitude: Float = null
+  longitude: Float = null
+  radiusKm: Float = null
   minPrice: Float = null
   maxPrice: Float = null
   condition: String = null
@@ -338,9 +343,13 @@ input ListingInput {
   categoryId: String!
   title: String!
   description: String!
-  state: String!
-  stateCode: String!
-  city: String!
+  state: String! = ""
+  stateCode: String! = ""
+  city: String! = ""
+  countryCode: String! = ""
+  latitude: Float = null
+  longitude: Float = null
+  locationToken: String = null
   price: Float = null
   condition: String! = ""
   district: String! = ""
@@ -389,9 +398,11 @@ type ListingType {
   favorites: Int!
   inquiries: Int!
   sellerDeletedAt: DateTime
+  distanceKm: Float
 }
 
 type LocationType {
+  countryCode: String
   state: String!
   stateCode: String!
   city: String!
@@ -642,7 +653,7 @@ type Query {
   listing(id: String!): ListingType
   featuredListings(limit: Int! = 8): [ListingType!]!
   recentListings(limit: Int! = 12): [ListingType!]!
-  nearbyListings(stateCode: String!, city: String = null, limit: Int! = 12): [ListingType!]!
+  nearbyListings(latitude: Float!, longitude: Float!, radiusKm: Float! = 10, limit: Int! = 12): [ListingType!]!
   similarListings(listingId: String!, limit: Int! = 8): [ListingType!]!
   myListings: [ListingType!]!
   mySavedListings: [ListingType!]!

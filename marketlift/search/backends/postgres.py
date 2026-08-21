@@ -6,6 +6,9 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
 from django.contrib.postgres.search import (
     SearchQuery,
     SearchRank,
@@ -109,10 +112,14 @@ def _fingerprint(request: SearchRequest, parsed: ParsedMarketplaceQuery) -> str:
         (
             parsed.normalized,
             request.category,
+            request.country_code,
             request.region,
             request.state,
             request.city,
             request.district,
+            str(request.latitude),
+            str(request.longitude),
+            str(request.radius_km),
             str(request.min_price),
             str(request.max_price),
             str(parsed.min_price),
@@ -174,6 +181,7 @@ def _apply_structured_filters(
     qs, request: SearchRequest, parsed: ParsedMarketplaceQuery
 ):
     category = (request.category or "").strip()
+    country_code = (request.country_code or "").strip().upper()
     region = (request.region or "").strip().upper()
     state = (request.state or "").strip()
     city = (request.city or "").strip()
@@ -181,6 +189,8 @@ def _apply_structured_filters(
 
     if category:
         qs = qs.filter(category__slug=category)
+    if country_code:
+        qs = qs.filter(country_code__iexact=country_code)
     if region:
         qs = qs.filter(state_code__in=BRAZIL_REGION_STATES.get(region, ()))
     if state:
@@ -201,6 +211,16 @@ def _apply_structured_filters(
         qs = qs.exclude(seller__user_id=request.exclude_user_id)
     if request.created_after is not None:
         qs = qs.filter(created_at__gt=request.created_after)
+
+    if request.latitude is not None and request.longitude is not None:
+        origin = Point(request.longitude, request.latitude, srid=4326)
+        qs = qs.exclude(location_point__isnull=True).annotate(
+            distance=Distance("location_point", origin)
+        )
+        if request.radius_km is not None:
+            qs = qs.filter(
+                location_point__distance_lte=(origin, D(km=request.radius_km))
+            )
 
     min_candidates = [
         value for value in (request.min_price, parsed.min_price) if value is not None
@@ -426,6 +446,11 @@ class PostgresListingSearchBackend(ListingSearchBackend):
         has_next = len(id_rows) > page_size
         id_rows = id_rows[:page_size]
         ordered_ids = [row.pk for row in id_rows]
+        distance_by_id = {
+            row.pk: round(float(row.distance.km), 3)
+            for row in id_rows
+            if getattr(row, "distance", None) is not None
+        }
 
         # Search/count queries stay lean. Card aggregates, media and promotions are
         # hydrated only for the small result page instead of joining them across
@@ -437,6 +462,9 @@ class PostgresListingSearchBackend(ListingSearchBackend):
             )
         }
         rows = [hydrated[pk] for pk in ordered_ids if pk in hydrated]
+        for row in rows:
+            if row.pk in distance_by_id:
+                row.search_distance_km = distance_by_id[row.pk]
 
         next_cursor = None
         next_offset = offset + len(id_rows)

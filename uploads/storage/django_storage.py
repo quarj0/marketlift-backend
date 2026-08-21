@@ -6,7 +6,10 @@ from .base import StorageBackend, StoredObjectInfo, UploadTarget
 
 
 class DjangoStorageBackend(StorageBackend):
-    """Provider-neutral bridge to any Django STORAGES backend configured by deployment."""
+    """Provider-neutral bridge to a configured Django STORAGES backend."""
+
+    def __init__(self, alias: str = "default"):
+        self.alias = alias
 
     supports_proxy_upload = True
 

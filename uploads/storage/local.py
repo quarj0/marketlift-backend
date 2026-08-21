@@ -8,7 +8,10 @@ from .base import StorageBackend, StoredObjectInfo, UploadTarget
 
 
 class LocalStorageBackend(StorageBackend):
-    """Development backend. Production can swap this class through settings."""
+    """Development filesystem backend."""
+
+    def __init__(self, alias: str = "default"):
+        self.alias = alias
 
     supports_proxy_upload = True
 

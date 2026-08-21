@@ -35,10 +35,14 @@ class ParsedMarketplaceQuery:
 class SearchRequest:
     q: str = ""
     category: str | None = None
+    country_code: str | None = None
     region: str | None = None
     state: str | None = None
     city: str | None = None
     district: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    radius_km: float | None = None
     min_price: Decimal | None = None
     max_price: Decimal | None = None
     condition: str | None = None

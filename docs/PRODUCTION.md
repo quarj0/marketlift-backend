@@ -14,6 +14,8 @@ Before deploying:
 8. Configure logs/error monitoring, uptime checks for `/api/v1/health/` and `/api/v1/ready/`, and alerts for failed Celery jobs/payment reconciliation.
 9. Start HSTS only after HTTPS and subdomains are confirmed. Increase `SECURE_HSTS_SECONDS` deliberately.
 10. Disable mock payments. The production deploy check rejects `MARKETLIFT_PAYMENT_PROVIDER=mock` or auto-approved mock payments.
+11. Configure durable object storage. For the built-in S3-compatible/R2 adapter, use distinct public, private, evidence and temp buckets; scope credentials to those buckets only; keep private/evidence/temp non-public; and add an object-lifecycle rule to the temp bucket.
+12. Configure a production-appropriate geocoder/self-hosted endpoint before requiring resolved listing locations. The public Nominatim service is suitable only for low-volume development/testing under its usage policy.
 
 ## Release commands
 
@@ -25,6 +27,12 @@ uv run python manage.py makemigrations --check --dry-run
 uv run python manage.py test
 uv run python manage.py collectstatic --noinput
 ```
+
+## R2 / S3-compatible object storage
+
+Marketlift enables the generic S3-compatible adapter when `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT_URL` (or `R2_ACCOUNT_ID`), and all four bucket names are present. Use `R2_PRIVATE_BUCKET`; `R2_MEDIA_BUCKET` exists only as compatibility for older environment files. A custom public asset domain is optional and can be added later through `R2_PUBLIC_BASE_URL`.
+
+Run `python manage.py check --deploy` after setting the storage environment. Production checks reject partial R2 configuration, reused bucket names, an insecure object-storage endpoint, or a missing S3 client dependency.
 
 ## Provider changes
 

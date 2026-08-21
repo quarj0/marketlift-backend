@@ -8,6 +8,7 @@ from django.db import connection
 from django.db.models import Exists, OuterRef, Q, Value
 from django.utils import timezone
 from marketlift.location.validators import validate_coordinates, validate_radius_km
+from marketlift.locations import BRAZIL_REGION_STATES
 from .models import Listing
 
 
@@ -52,6 +53,7 @@ def apply_listing_filters(qs, filters):
             qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
     category = _get(filters, "category")
     country_code = _get(filters, "country_code")
+    region = (_get(filters, "region") or "").strip().upper()
     state = _get(filters, "state")
     city = _get(filters, "city")
     district = _get(filters, "district")
@@ -62,6 +64,8 @@ def apply_listing_filters(qs, filters):
         qs = qs.filter(category__slug=category)
     if country_code:
         qs = qs.filter(country_code__iexact=country_code)
+    if region:
+        qs = qs.filter(state_code__in=BRAZIL_REGION_STATES.get(region, ()))
     if state:
         qs = qs.filter(state_code__iexact=state)
     if city:

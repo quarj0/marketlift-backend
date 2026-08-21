@@ -7,6 +7,8 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+from marketlift.locations import BRAZIL_STATES, normalize_brazil_state_code
+
 _COUNTRY_RE = re.compile(r"^[A-Z]{2}$")
 
 
@@ -71,14 +73,24 @@ def validate_location_strings(
     state_code: str,
     city: str,
     district: str = "",
-    country_code: str = "",
+    country_code: str = "BR",
 ) -> dict[str, str]:
+    country = normalize_country_code(country_code) or "BR"
+    if country != "BR":
+        raise ValidationError(
+            {"country_code": "Marketlift currently supports Brazil locations only."}
+        )
+    try:
+        code = normalize_brazil_state_code(state_code)
+    except ValueError as exc:
+        raise ValidationError({"state_code": str(exc)}) from exc
+
     values = {
-        "state": (state or "").strip(),
-        "state_code": (state_code or "").strip().upper(),
+        "state": BRAZIL_STATES[code],
+        "state_code": code,
         "city": (city or "").strip(),
         "district": (district or "").strip(),
-        "country_code": normalize_country_code(country_code),
+        "country_code": "BR",
     }
     limits = {"state": 100, "state_code": 8, "city": 100, "district": 120}
     errors = {}
