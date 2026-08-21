@@ -85,12 +85,17 @@ class RealtimeConsumer(JsonWebsocketConsumer):
             return
         self.user = current_user
 
-        if self._rate_limited():
-            self._error("rate_limited", "Too many realtime actions. Try again shortly.")
-            return
-
         action = str(content.get("type") or "").strip()
         request_id = content.get("requestId")
+
+        if self._rate_limited():
+            self._error(
+                "rate_limited",
+                "Too many realtime actions. Try again shortly.",
+                action=action or None,
+                request_id=request_id,
+            )
+            return
 
         try:
             if action == "ping":
@@ -109,14 +114,25 @@ class RealtimeConsumer(JsonWebsocketConsumer):
                 self._mark_all_notifications_read(request_id=request_id)
                 return
             self._error(
-                "unsupported_action", "Unsupported realtime action.", action=action
+                "unsupported_action",
+                "Unsupported realtime action.",
+                action=action,
+                request_id=request_id,
             )
         except (ValidationError, PermissionDenied) as exc:
-            self._error("validation_error", self._exception_message(exc), action=action)
+            self._error(
+                "validation_error",
+                self._exception_message(exc),
+                action=action,
+                request_id=request_id,
+            )
         except Exception:
             logger.exception("Unhandled realtime action error: %s", action)
             self._error(
-                "internal_error", "Unable to process realtime action.", action=action
+                "internal_error",
+                "Unable to process realtime action.",
+                action=action,
+                request_id=request_id,
             )
 
     def realtime_event(self, event):
@@ -176,10 +192,12 @@ class RealtimeConsumer(JsonWebsocketConsumer):
             payload["requestId"] = request_id
         self.send_json({"type": "command.ack", "data": payload})
 
-    def _error(self, code, message, *, action=None):
+    def _error(self, code, message, *, action=None, request_id=None):
         data = {"code": code, "message": message}
         if action:
             data["action"] = action
+        if request_id is not None:
+            data["requestId"] = request_id
         self.send_json({"type": "error", "data": data})
 
     @staticmethod

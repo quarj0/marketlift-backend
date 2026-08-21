@@ -114,6 +114,26 @@ class RealtimeWebSocketTests(TransactionTestCase):
         )
         await socket.disconnect()
 
+
+    async def test_command_error_echoes_request_id(self):
+        socket = self._communicator(self.buyer_cookie)
+        connected, _ = await socket.connect()
+        self.assertTrue(connected)
+        await socket.receive_json_from(timeout=2)
+
+        await socket.send_json_to(
+            {
+                "type": "message.send",
+                "requestId": "invalid-message",
+                "text": "Missing conversation",
+            }
+        )
+        event = await socket.receive_json_from(timeout=2)
+        self.assertEqual(event["type"], "error")
+        self.assertEqual(event["data"]["requestId"], "invalid-message")
+        self.assertEqual(event["data"]["action"], "message.send")
+        await socket.disconnect()
+
     async def test_notification_read_all_is_realtime(self):
         socket = self._communicator(self.buyer_cookie)
         connected, _ = await socket.connect()
