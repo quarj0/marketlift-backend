@@ -483,7 +483,11 @@ def publish_listing(listing: Listing):
     from platform_settings.models import PlatformConfiguration
 
     config = PlatformConfiguration.load()
-    if config.seller_verification_required and not listing.seller.verified:
+    if (
+        settings.MARKETLIFT_CPF_VERIFICATION_ENABLED
+        and config.seller_verification_required
+        and not listing.seller.verified
+    ):
         raise ValidationError(
             "Seller verification is required before publishing listings."
         )

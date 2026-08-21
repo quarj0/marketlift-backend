@@ -1,4 +1,5 @@
 from celery import shared_task
+from django.conf import settings
 
 from payments.models import Payment
 from payments.providers import get_payment_provider
@@ -13,6 +14,8 @@ from payments.services import sync_payment_from_provider
     retry_kwargs={"max_retries": 5},
 )
 def sync_mercado_pago_order(self, order_id: str):
+    if not getattr(settings, "MARKETLIFT_PAYMENTS_ENABLED", False):
+        return {"ignored": True, "reason": "payments_disabled"}
     provider = get_payment_provider()
     if provider.name != "mercado_pago":
         return {"ignored": True, "reason": "provider_inactive"}
@@ -33,6 +36,8 @@ def sync_mercado_pago_order(self, order_id: str):
     retry_kwargs={"max_retries": 3},
 )
 def reconcile_pending_payments(self):
+    if not getattr(settings, "MARKETLIFT_PAYMENTS_ENABLED", False):
+        return {"checked": 0, "reason": "payments_disabled"}
     provider = get_payment_provider()
     if provider.name == "mock":
         return {"checked": 0}

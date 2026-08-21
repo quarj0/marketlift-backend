@@ -41,12 +41,12 @@ Marketlift has one customer account type. Selling is an optional capability repr
 ## Implemented domains
 
 - account registration, email verification, login, password reset and preferences
-- seller profile/settings, plans, subscriptions and reputation
+- seller profile/settings, dormant plans/subscriptions, and reputation
 - categories with versioned dynamic fields
 - listings, search/filtering/pagination, media, saved and recently viewed listings
 - saved searches and alerts
-- listing promotions and Marketlift service payments
-- seller identity verification
+- dormant listing promotions and Marketlift service payments (**Upcoming**)
+- dormant CPF/provider-backed seller identity verification (**Upcoming**)
 - moderation, reports and immutable audit events
 - notifications
 - provider-neutral uploads with image validation/variants
@@ -74,6 +74,7 @@ The seed is idempotent and mirrors the current frontend category/plan/promotion 
 - [Security](docs/SECURITY.md)
 - [Transactional email](docs/EMAIL.md)
 - [Operations](docs/OPERATIONS.md)
+- [Production release](docs/PRODUCTION.md)
 
 Export the exact GraphQL SDL with:
 

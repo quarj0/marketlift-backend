@@ -1,12 +1,25 @@
 from datetime import date
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from sellers.models import SellerProfile
 from .models import VerificationSubmission
-from .services import approve_verification, reject_verification, submit_verification
+from .services import (
+    approve_verification,
+    reject_verification,
+    require_cpf_verification_enabled,
+    submit_verification,
+)
 
 
+@override_settings(MARKETLIFT_CPF_VERIFICATION_ENABLED=False)
+class CpfVerificationReleaseGateTests(SimpleTestCase):
+    def test_cpf_verification_is_dormant_by_default(self):
+        with self.assertRaisesMessage(ValidationError, "not available yet"):
+            require_cpf_verification_enabled()
+
+
+@override_settings(MARKETLIFT_CPF_VERIFICATION_ENABLED=True)
 class VerificationTests(TestCase):
     def setUp(self):
         U = get_user_model()

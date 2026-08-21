@@ -1,21 +1,84 @@
-# Marketlift production checklist
+# Production release
 
-Marketlift is deliberately provider-neutral. Production can use any compatible PostgreSQL host, Redis-compatible cache/broker, and any storage adapter implementing the upload storage interface.
+The initial production surface is the marketplace, account/authentication,
+selling/listings, search/location, messaging, saved items, reviews, reports,
+support, moderation, notifications and the administrator console.
 
-Before deploying:
+Payments, paid subscriptions, listing promotions and CPF/provider-backed seller
+verification are intentionally dormant. Keep these values aligned across all
+three deployments:
 
-1. Set `MARKETLIFT_ENV=production`, a strong `DJANGO_SECRET_KEY`, explicit `DJANGO_ALLOWED_HOSTS`, production CORS/CSRF origins, database/cache credentials, email delivery, payment provider credentials, and a durable upload storage backend.
-2. Terminate HTTPS at a trusted proxy/load balancer and enable secure session/CSRF cookies. Set `MARKETLIFT_TRUST_PROXY_HEADERS=true` and `SECURE_PROXY_SSL_HEADER_ENABLED=true` only when requests can reach Django exclusively through a proxy you control.
-3. Run `python manage.py check --deploy` and treat Marketlift `E...` checks as release blockers. Review warnings rather than blindly suppressing them.
-4. Run `python manage.py migrate`, `python manage.py collectstatic --noinput`, and the full test suite before release.
-5. Do not use Django `runserver` in production. Run an ASGI/WSGI production server behind HTTPS.
-6. Back up PostgreSQL and retained user uploads. Test restoring those backups before launch.
-7. Keep Redis/cache/broker and PostgreSQL inaccessible from the public internet unless the provider requires a protected public endpoint with TLS/authentication.
-8. Configure logs/error monitoring, uptime checks for `/api/v1/health/` and `/api/v1/ready/`, and alerts for failed Celery jobs/payment reconciliation.
-9. Start HSTS only after HTTPS and subdomains are confirmed. Increase `SECURE_HSTS_SECONDS` deliberately.
-10. Disable mock payments. The production deploy check rejects `MARKETLIFT_PAYMENT_PROVIDER=mock` or auto-approved mock payments.
-11. Configure durable object storage. For the built-in S3-compatible/R2 adapter, use distinct public, private, evidence and temp buckets; scope credentials to those buckets only; keep private/evidence/temp non-public; and add an object-lifecycle rule to the temp bucket.
-12. Configure a production-appropriate geocoder/self-hosted endpoint before requiring resolved listing locations. The public Nominatim service is suitable only for low-volume development/testing under its usage policy.
+```dotenv
+MARKETLIFT_PAYMENTS_ENABLED=false
+MARKETLIFT_CPF_VERIFICATION_ENABLED=false
+NEXT_PUBLIC_MARKETLIFT_PAYMENTS_ENABLED=false
+NEXT_PUBLIC_MARKETLIFT_CPF_VERIFICATION_ENABLED=false
+```
+
+The backend flags are authoritative: payment creation, provider refresh/webhook
+processing, reconciliation and CPF verification mutations reject requests while
+disabled. Frontend flags remove those workflows and show **Upcoming** states.
+
+## Deployment surfaces
+
+- Marketplace: `https://marketlift.com.br`
+- Admin: `https://admin.marketlift.com.br`
+- API and WebSocket origin: `https://api.marketlift.com.br`
+
+Start with `.env.production.example`. Replace every `replace-me` value in the
+deployment secret store; never commit the resulting environment.
+
+## Required release gates
+
+1. Provision PostgreSQL 17 with PostGIS, a shared Redis-compatible service,
+   four distinct durable object-storage buckets, and a transactional SMTP
+   provider with SPF, DKIM and DMARC.
+2. Apply migrations and collect static assets before routing traffic:
+
+   ```bash
+   uv run python manage.py migrate --noinput
+   uv run python manage.py collectstatic --noinput
+   uv run python manage.py check --deploy
+   ```
+
+3. Run the ASGI web process with `daphne -b 0.0.0.0 -p "$PORT"
+   marketlift.asgi:application`; run separate Celery worker and beat processes.
+4. Configure health checks: `/api/v1/health/` for liveness and
+   `/api/v1/ready/` for readiness. Readiness must be healthy before traffic.
+5. Deploy marketplace and admin production builds with their respective
+   `.env.production.example` values.
+6. Verify registration, email verification, password reset, login/logout,
+   listing publication and image upload, search, messaging/WebSocket fallback,
+   report/support workflows, admin MFA, backups/restore, alerting and rollback
+   in the production environment.
+
+Only enable a dormant provider capability after its frontend and backend flags,
+webhooks, secrets, reconciliation/operations, security review and provider
+certification have passed together.
+
+## Infrastructure and security checklist
+
+Marketlift is provider-neutral. Production can use any compatible PostgreSQL
+host, Redis-compatible cache/broker, and storage adapter implementing the upload
+storage interface.
+
+1. Set `MARKETLIFT_ENV=production`, a strong `DJANGO_SECRET_KEY`, explicit
+   `DJANGO_ALLOWED_HOSTS`, exact production CORS/CSRF origins and all provider
+   credentials.
+2. Terminate HTTPS at a trusted proxy/load balancer. Enable proxy-header trust
+   only when requests can reach Django exclusively through a proxy you control.
+3. Treat every Marketlift `E...` deploy check as a release blocker and review
+   all framework warnings rather than suppressing them.
+4. Back up PostgreSQL and retained user uploads, then test restoring both.
+5. Keep Redis and PostgreSQL off the public internet unless a provider requires
+   a protected TLS/authenticated endpoint.
+6. Configure logs, error monitoring, uptime checks and failed Celery-job alerts.
+7. Enable HSTS/preload only after HTTPS works across the root domain and every
+   affected subdomain.
+8. Use distinct public, private, evidence and temporary storage buckets; keep
+   private/evidence/temp non-public and add a lifecycle rule to temporary data.
+9. Use a production-appropriate geocoder or self-hosted endpoint. The public
+   Nominatim endpoint is not the production SLA.
 
 ## Release commands
 
@@ -30,20 +93,29 @@ uv run python manage.py collectstatic --noinput
 
 ## R2 / S3-compatible object storage
 
-Marketlift enables the generic S3-compatible adapter when `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT_URL` (or `R2_ACCOUNT_ID`), and all four bucket names are present. Use `R2_PRIVATE_BUCKET`; `R2_MEDIA_BUCKET` exists only as compatibility for older environment files. A custom public asset domain is optional and can be added later through `R2_PUBLIC_BASE_URL`.
+The generic S3-compatible adapter is enabled when its access key, secret,
+endpoint (or account ID), and all four bucket names are present. Use
+`R2_PRIVATE_BUCKET`; `R2_MEDIA_BUCKET` is only a compatibility alias. A custom
+public asset domain can be configured through `R2_PUBLIC_BASE_URL`.
 
-Run `python manage.py check --deploy` after setting the storage environment. Production checks reject partial R2 configuration, reused bucket names, an insecure object-storage endpoint, or a missing S3 client dependency.
+Production checks reject partial R2 configuration, reused bucket names and an
+insecure object-storage endpoint.
 
 ## Provider changes
 
-Changing PostgreSQL hosts should require environment changes only (`DB_*`). Changing media/object storage should require selecting/configuring a storage adapter only. Domain apps must not import a vendor SDK directly.
+Changing PostgreSQL hosts should require `DB_*` environment changes only.
+Changing media/object storage should require selecting and configuring a storage
+adapter only. Domain applications must not import a vendor SDK directly.
 
 ## Realtime / WebSockets
 
-- Run the Django application with an ASGI server capable of WebSockets.
-- Configure `CHANNEL_REDIS_URL` to a durable shared Redis-compatible service when running more than one application process/instance.
-- Set `MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS` to the exact HTTPS marketplace/admin frontend origins.
-- Ensure the reverse proxy/load balancer forwards WebSocket upgrade headers and permits long-lived connections.
-- Keep GraphQL history/unread queries enabled as reconnect recovery; WebSocket delivery is not the durable source of truth.
+- Run Django with an ASGI server capable of WebSockets.
+- Configure `CHANNEL_REDIS_URL` to a durable shared service for multi-instance
+  deployments.
+- Set `MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS` to the exact HTTPS marketplace and
+  admin origins.
+- Forward WebSocket upgrade headers and permit long-lived connections.
+- Keep GraphQL history/unread queries as reconnect recovery; WebSocket delivery
+  is not the durable source of truth.
 
 See `docs/REALTIME.md`.

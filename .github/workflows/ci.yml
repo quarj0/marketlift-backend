@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5-alpine
+        env:
+          POSTGRES_DB: marketlift
+          POSTGRES_USER: marketlift
+          POSTGRES_PASSWORD: marketlift
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U marketlift -d marketlift"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DB_ENGINE: django.contrib.gis.db.backends.postgis
+      DB_NAME: marketlift
+      DB_USER: marketlift
+      DB_PASSWORD: marketlift
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      REDIS_URL: redis://127.0.0.1:6379/0
+      CHANNEL_REDIS_URL: redis://127.0.0.1:6379/3
+      CELERY_BROKER_URL: redis://127.0.0.1:6379/1
+      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
+      EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+      MARKETLIFT_PAYMENTS_ENABLED: "false"
+      MARKETLIFT_CPF_VERIFICATION_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run python manage.py check
+      - run: uv run python manage.py makemigrations --check --dry-run
+      - run: uv run python manage.py test

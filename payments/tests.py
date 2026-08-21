@@ -2,18 +2,26 @@ import hashlib
 import hmac
 import uuid
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
+from django.core.exceptions import ValidationError
+from django.test import SimpleTestCase, TestCase, override_settings
 from categories.models import Category
 from listings.models import Listing
 from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan, SellerSubscription
 from promotions.models import PromotionProduct, ListingPromotion
 from .models import Payment
-from .services import create_promotion_payment, create_subscription_payment
+from .services import create_promotion_payment, create_subscription_payment, require_payments_enabled
 from .webhooks import valid_mercado_pago_signature
 
 
-@override_settings(MARKETLIFT_PAYMENT_PROVIDER="mock", PAYMENT_MOCK_AUTO_APPROVE=True)
+@override_settings(MARKETLIFT_PAYMENTS_ENABLED=False)
+class PaymentsReleaseGateTests(SimpleTestCase):
+    def test_provider_backed_payments_are_dormant_by_default(self):
+        with self.assertRaisesMessage(ValidationError, "not available yet"):
+            require_payments_enabled()
+
+
+@override_settings(MARKETLIFT_PAYMENTS_ENABLED=True, MARKETLIFT_PAYMENT_PROVIDER="mock", PAYMENT_MOCK_AUTO_APPROVE=True)
 class PaymentTests(TestCase):
     def setUp(self):
         U = get_user_model()

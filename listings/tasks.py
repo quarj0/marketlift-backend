@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from celery import shared_task
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -45,7 +46,11 @@ def expire_due_listings():
                 and not listing.seller.is_suspended
                 and listing.category_id is not None
                 and listing.category.active
-                and (not config.seller_verification_required or listing.seller.verified)
+                and (
+                    not settings.MARKETLIFT_CPF_VERIFICATION_ENABLED
+                    or not config.seller_verification_required
+                    or listing.seller.verified
+                )
             )
 
             if can_renew:

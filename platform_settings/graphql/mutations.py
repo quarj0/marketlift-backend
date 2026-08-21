@@ -1,4 +1,5 @@
 import strawberry
+from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -45,6 +46,12 @@ class PlatformSettingsMutation:
             value = getattr(input, field)
             if value is not None:
                 setattr(config, field, value)
+
+        if not settings.MARKETLIFT_CPF_VERIFICATION_ENABLED:
+            config.seller_verification_required = False
+            config.admin_verification_queue_alerts = False
+        if not settings.MARKETLIFT_PAYMENTS_ENABLED:
+            config.admin_payment_failure_alerts = False
 
         try:
             if not 1 <= config.default_listing_duration_days <= 3650:

@@ -18,6 +18,7 @@ media/
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Tool/editor caches
 .pytest_cache/

@@ -15,6 +15,11 @@ from notifications.services import create_admin_notifications, create_notificati
 from .models import VerificationSubmission
 
 
+def require_cpf_verification_enabled():
+    if not getattr(settings, "MARKETLIFT_CPF_VERIFICATION_ENABLED", False):
+        raise ValidationError("CPF seller verification is not available yet.")
+
+
 def normalize_cpf(value: str) -> str:
     digits = re.sub(r"\D", "", value or "")
     if len(digits) != 11 or digits == digits[0] * 11:
@@ -53,6 +58,7 @@ def submit_verification(
     selfie_url: str = "",
     request=None,
 ):
+    require_cpf_verification_enabled()
     if seller.verified:
         raise ValidationError("This seller is already verified.")
     if seller.is_suspended:
@@ -132,6 +138,7 @@ def submit_verification(
 
 @transaction.atomic
 def move_to_review(*, verification, actor, note: str = "", request=None):
+    require_cpf_verification_enabled()
     if verification.is_final:
         raise ValidationError("A final verification decision cannot be reopened.")
     if verification.status == VerificationSubmission.Status.REVIEW:
@@ -157,6 +164,7 @@ def move_to_review(*, verification, actor, note: str = "", request=None):
 
 @transaction.atomic
 def approve_verification(*, verification, actor, note: str, request=None):
+    require_cpf_verification_enabled()
     note = (note or "").strip()
     if verification.is_final:
         if verification.status == VerificationSubmission.Status.VERIFIED:
@@ -204,6 +212,7 @@ def approve_verification(*, verification, actor, note: str, request=None):
 
 @transaction.atomic
 def reject_verification(*, verification, actor, note: str, request=None):
+    require_cpf_verification_enabled()
     note = (note or "").strip()
     if not note:
         raise ValidationError({"note": "A rejection reason is required."})
