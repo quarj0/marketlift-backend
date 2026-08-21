@@ -126,8 +126,12 @@ def apply_listing_sort(qs, sort="relevant"):
         ends_at__gt=now,
     )
     ranked = qs.annotate(is_promoted=Exists(featured))
+    ordering = ["-is_promoted"]
+    if "spec_match_count" in ranked.query.annotations:
+        ordering.append("-spec_match_count")
     if "search_rank" in ranked.query.annotations:
-        return ranked.order_by(
-            "-is_promoted", "-search_rank", "-views", "-created_at", "-id"
-        )
-    return ranked.order_by("-is_promoted", "-views", "-created_at", "-id")
+        ordering.append("-search_rank")
+    if "typo_score" in ranked.query.annotations:
+        ordering.append("-typo_score")
+    ordering.extend(["-views", "-created_at", "-id"])
+    return ranked.order_by(*ordering)

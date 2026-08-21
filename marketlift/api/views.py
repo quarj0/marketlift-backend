@@ -28,6 +28,18 @@ def readiness(request):
         checks["database"] = "unavailable"
 
     try:
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm')"
+                )
+                checks["search"] = "ok" if cursor.fetchone()[0] else "unavailable"
+        else:
+            checks["search"] = "unavailable"
+    except Exception:
+        checks["search"] = "unavailable"
+
+    try:
         cache.set("marketlift:readiness", "ok", timeout=10)
         checks["redis"] = (
             "ok" if cache.get("marketlift:readiness") == "ok" else "unavailable"

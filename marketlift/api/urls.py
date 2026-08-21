@@ -6,6 +6,7 @@ urlpatterns = [
     path("health/", health, name="health"),
     path("ready/", readiness, name="readiness"),
     path("auth/", include("marketlift.api.auth.urls")),
+    path("search/", include("marketlift.api.search.urls")),
     path("uploads/", include("uploads.api.urls")),
     path("webhooks/", include("payments.api.urls")),
 ]

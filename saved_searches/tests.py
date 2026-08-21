@@ -1,9 +1,31 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
+
 from accounts.models import User
+from categories.models import Category, CategoryField
 from saved_searches.services import create_saved_search
 
 
 class SavedSearchTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # Attribute-filter validation is intentionally schema-driven. The old
+        # camelCase compatibility test used ``brand`` without defining a
+        # filterable brand field, which no longer represents a valid marketplace
+        # taxonomy after the search hardening work.
+        category = Category.objects.create(
+            slug="phones",
+            name="Phones",
+            active=True,
+        )
+        CategoryField.objects.create(
+            category=category,
+            key="brand",
+            label="Brand",
+            field_type=CategoryField.FieldType.SELECT,
+            filterable=True,
+        )
+
     def test_normalizes_criteria(self):
         u = User.objects.create_user(email="s@example.com", password="x", full_name="S")
         x = create_saved_search(
@@ -34,3 +56,14 @@ class SavedSearchTests(TestCase):
                 "attribute_filters": {"brand": "Apple"},
             },
         )
+
+    def test_rejects_unknown_attribute_filter(self):
+        u = User.objects.create_user(
+            email="invalid-filter@example.com", password="x", full_name="I"
+        )
+        with self.assertRaises(ValidationError):
+            create_saved_search(
+                user=u,
+                name="invalid",
+                criteria={"attributeFilters": {"not_a_marketplace_field": "x"}},
+            )

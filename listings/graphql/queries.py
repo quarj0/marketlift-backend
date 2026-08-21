@@ -1,11 +1,15 @@
 import base64
+from decimal import Decimal
 from uuid import UUID
 import strawberry
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 from listings.models import Listing, RecentlyViewedListing
 from listings.search import apply_listing_filters, apply_listing_sort
 from marketlift.graphql.auth import require_seller, require_staff, require_user
+from marketlift.graphql.errors import validation_error
+from marketlift.search import SearchRequest, search_listings
 from promotions.models import PromotionProduct
 from .inputs import ListingFilterInput
 from .mappers import listing_queryset, listing_to_type
@@ -67,20 +71,46 @@ class ListingQuery:
         first: int = 24,
         after: str | None = None,
     ) -> ListingConnectionType:
-        first = max(1, min(first, 100))
-        offset = _decode_cursor(after)
-        qs = _filtered(filters)
-        total = qs.count()
-        rows = list(qs[offset : offset + first + 1])
-        has_next = len(rows) > first
-        rows = rows[:first]
+        filters = filters or ListingFilterInput()
+        try:
+            page = search_listings(
+                SearchRequest(
+                    q=filters.q or "",
+                    category=filters.category,
+                    state=filters.state,
+                    city=filters.city,
+                    district=filters.district,
+                    min_price=(
+                        Decimal(str(filters.min_price))
+                        if filters.min_price is not None
+                        else None
+                    ),
+                    max_price=(
+                        Decimal(str(filters.max_price))
+                        if filters.max_price is not None
+                        else None
+                    ),
+                    condition=filters.condition,
+                    seller_type=filters.seller_type,
+                    seller_id=str(filters.seller_id) if filters.seller_id else None,
+                    verified_only=filters.verified_only,
+                    date_listed=filters.date_listed,
+                    attribute_filters=dict(filters.attribute_filters or {}),
+                    sort=filters.sort,
+                    page_size=max(1, min(first, 50)),
+                    cursor=after,
+                )
+            )
+        except ValidationError as exc:
+            raise validation_error(exc, code="SEARCH_VALIDATION_ERROR") from exc
+
         return ListingConnectionType(
-            items=[listing_to_type(x) for x in rows],
+            items=[listing_to_type(x) for x in page.items],
             page_info=ListingPageInfoType(
-                has_next_page=has_next,
-                end_cursor=_encode_cursor(offset + len(rows)) if rows else None,
+                has_next_page=page.next_cursor is not None,
+                end_cursor=page.next_cursor,
             ),
-            total_count=total,
+            total_count=page.total_count,
         )
 
     @strawberry.field

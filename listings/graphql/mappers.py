@@ -1,9 +1,9 @@
 from decimal import Decimal
 from django.utils import timezone
-from django.db.models import Count
 from marketlift.graphql.types import LocationType
 from promotions.models import PromotionProduct
 from sellers.graphql.mappers import seller_to_type
+from listings.querysets import with_listing_card_data
 from .types import ListingType
 
 
@@ -29,16 +29,7 @@ def listing_queryset(queryset=None):
     from listings.models import Listing
 
     qs = queryset if queryset is not None else Listing.objects.all()
-    return (
-        qs.select_related("seller__user", "category")
-        .annotate(
-            favorite_count=Count("saved_by", distinct=True),
-            inquiry_count=Count("conversations", distinct=True),
-        )
-        .prefetch_related(
-            "media__upload__variants", "attribute_values", "promotions__product"
-        )
-    )
+    return with_listing_card_data(qs)
 
 
 def listing_to_type(listing) -> ListingType:

@@ -1,5 +1,7 @@
 from django.conf import settings
-from django.db import models
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -102,7 +104,27 @@ class Listing(UUIDTimeStampedModel):
             base = slugify(self.title)[:180] or "listing"
             self.slug = f"{base}-{str(self.id).split('-')[0]}"
 
+        update_fields = kwargs.get("update_fields")
         super().save(*args, **kwargs)
+
+        searchable_fields = {
+            "title",
+            "description",
+            "category",
+            "category_id",
+            "state",
+            "state_code",
+            "city",
+            "district",
+            "condition",
+        }
+        if update_fields is None or searchable_fields.intersection(update_fields):
+            # Services create/update attributes in the same transaction. on_commit
+            # therefore builds one coherent document after all listing data is saved.
+            from marketlift.search.document import rebuild_listing_search_document
+
+            listing_id = self.pk
+            transaction.on_commit(lambda: rebuild_listing_search_document(listing_id))
 
     @property
     def category_slug(self) -> str:
@@ -128,6 +150,35 @@ class Listing(UUIDTimeStampedModel):
 
     def __str__(self) -> str:
         return self.title
+
+
+class ListingSearchDocument(models.Model):
+    """PostgreSQL search projection kept separate from transactional listing rows."""
+
+    listing = models.OneToOneField(
+        Listing,
+        on_delete=models.CASCADE,
+        related_name="search_document",
+        primary_key=True,
+    )
+    search_text = models.TextField(blank=True, editable=False)
+    search_tokens = models.JSONField(default=list, blank=True, editable=False)
+    search_vector = SearchVectorField(null=True, blank=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            GinIndex(fields=("search_vector",), name="listingdoc_vector_gin"),
+            GinIndex(fields=("search_tokens",), name="listingdoc_tokens_gin"),
+            GinIndex(
+                fields=("search_text",),
+                name="listingdoc_text_trgm",
+                opclasses=("gin_trgm_ops",),
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Search document for {self.listing_id}"
 
 
 class ListingMedia(UUIDTimeStampedModel):

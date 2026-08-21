@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "corsheaders",
     "rest_framework",
     "strawberry_django",
@@ -288,6 +289,26 @@ MARKETLIFT_DISABLE_GRAPHQL_INTROSPECTION = env_bool(
 )
 MARKETLIFT_GRAPHQL_IDE_ENABLED = env_bool(
     "MARKETLIFT_GRAPHQL_IDE_ENABLED", not IS_PRODUCTION
+)
+
+# Public marketplace search. The API contract is backend-neutral so an
+# OpenSearch adapter can replace PostgreSQL later without changing clients.
+MARKETLIFT_SEARCH_BACKEND = os.getenv(
+    "MARKETLIFT_SEARCH_BACKEND",
+    "marketlift.search.backends.postgres.PostgresListingSearchBackend",
+)
+MARKETLIFT_SEARCH_RATE_LIMIT_PER_MINUTE = int(
+    os.getenv("MARKETLIFT_SEARCH_RATE_LIMIT_PER_MINUTE", "240")
+)
+MARKETLIFT_SEARCH_MAX_QUERY_LENGTH = int(
+    os.getenv("MARKETLIFT_SEARCH_MAX_QUERY_LENGTH", "160")
+)
+MARKETLIFT_SEARCH_MAX_PAGE_SIZE = int(
+    os.getenv("MARKETLIFT_SEARCH_MAX_PAGE_SIZE", "50")
+)
+MARKETLIFT_SEARCH_MAX_WINDOW = int(os.getenv("MARKETLIFT_SEARCH_MAX_WINDOW", "5000"))
+MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS = int(
+    os.getenv("MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS", "1500")
 )
 if env_bool("SECURE_PROXY_SSL_HEADER_ENABLED", False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
