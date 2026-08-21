@@ -1,5 +1,6 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.test import SimpleTestCase
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError as RestValidationError
 
 from marketlift.api.search.params import search_request_from_query_params
 from marketlift.search.service import validate_search_request
@@ -20,7 +21,7 @@ class SearchQueryParamTests(SimpleTestCase):
         self.assertEqual(request.attribute_filters["ram_gb"]["min"], "8")
 
     def test_bad_boolean_is_rejected(self):
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(RestValidationError):
             search_request_from_query_params({"verified_only": "maybe"})
 
     def test_geospatial_params_are_parsed(self):
@@ -55,5 +56,5 @@ class SearchQueryParamTests(SimpleTestCase):
 
     def test_state_must_belong_to_selected_region(self):
         request = search_request_from_query_params({"region": "NE", "state": "SP"})
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(DjangoValidationError):
             validate_search_request(request)

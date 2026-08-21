@@ -14,6 +14,17 @@ from uploads.services import (
 
 User = get_user_model()
 
+LOCAL_UPLOAD_SETTINGS = {
+    "MARKETLIFT_STORAGE_BACKENDS": {
+        "default": "uploads.storage.local.LocalStorageBackend"
+    },
+    "MARKETLIFT_UPLOAD_STAGING_ALIAS": "default",
+    "MARKETLIFT_UPLOAD_PURPOSE_ALIASES": {
+        "listing_image": "default",
+        "message_image": "default",
+    },
+}
+
 
 def jpeg_bytes():
     buf = io.BytesIO()
@@ -21,7 +32,10 @@ def jpeg_bytes():
     return buf.getvalue()
 
 
-@override_settings(MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-test-uploads")
+@override_settings(
+    **LOCAL_UPLOAD_SETTINGS,
+    MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-test-uploads",
+)
 class UploadServiceTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -77,7 +91,10 @@ class UploadServiceTests(TestCase):
             )
 
 
-@override_settings(MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-listing-test-uploads")
+@override_settings(
+    **LOCAL_UPLOAD_SETTINGS,
+    MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-listing-test-uploads",
+)
 class ListingUploadIntegrationTests(TestCase):
     def test_listing_can_claim_prepared_image_upload(self):
         from categories.models import Category
@@ -238,4 +255,3 @@ class S3CompatibleStorageBackendTests(SimpleTestCase):
             url,
             "https://assets.example.com/seller%20avatars/user%20one/avatar.jpg",
         )
-

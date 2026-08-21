@@ -76,15 +76,18 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 id="marketlift.E005",
             )
         )
+    payments_enabled = getattr(settings, "MARKETLIFT_PAYMENTS_ENABLED", False)
     provider = getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "mock")
-    if provider == "mock" or getattr(settings, "PAYMENT_MOCK_AUTO_APPROVE", False):
+    if payments_enabled and (
+        provider == "mock" or getattr(settings, "PAYMENT_MOCK_AUTO_APPROVE", False)
+    ):
         issues.append(
             Error(
                 "Mock/auto-approved payments must not be enabled in production.",
                 id="marketlift.E006",
             )
         )
-    if provider == "mercado_pago" and (
+    if payments_enabled and provider == "mercado_pago" and (
         not getattr(settings, "MERCADO_PAGO_ACCESS_TOKEN", "")
         or not getattr(settings, "MERCADO_PAGO_WEBHOOK_SECRET", "")
     ):
@@ -92,6 +95,15 @@ def marketlift_deploy_checks(app_configs, **kwargs):
             Error(
                 "Mercado Pago production credentials/webhook secret are incomplete.",
                 id="marketlift.E007",
+            )
+        )
+    if getattr(settings, "MARKETLIFT_CPF_VERIFICATION_ENABLED", False) and getattr(
+        settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled"
+    ) in {"", "disabled", "internal"}:
+        issues.append(
+            Error(
+                "CPF verification requires a certified external identity provider in production.",
+                id="marketlift.E019",
             )
         )
     if not str(getattr(settings, "MARKETLIFT_FRONTEND_URL", "")).startswith("https://"):

@@ -23,7 +23,14 @@ from uploads.services import complete_upload, prepare_upload, store_proxy_upload
 User = get_user_model()
 
 
-@override_settings(MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-message-test-uploads")
+@override_settings(
+    MARKETLIFT_STORAGE_BACKENDS={
+        "default": "uploads.storage.local.LocalStorageBackend"
+    },
+    MARKETLIFT_UPLOAD_STAGING_ALIAS="default",
+    MARKETLIFT_UPLOAD_PURPOSE_ALIASES={"message_image": "default"},
+    MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-message-test-uploads",
+)
 class MessagingServiceTests(TestCase):
     def setUp(self):
         self.buyer = User.objects.create_user(

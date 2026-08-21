@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -13,6 +14,11 @@ from subscriptions.services import activate_paid_subscription
 from .models import Payment
 from .providers import get_payment_provider
 from .providers.base import PaymentProviderError, ProviderResult
+
+
+def require_payments_enabled():
+    if not getattr(settings, "MARKETLIFT_PAYMENTS_ENABLED", False):
+        raise ValidationError("Payments and paid seller tools are not available yet.")
 
 
 def _reference():
@@ -102,6 +108,7 @@ def create_subscription_payment(
     card=None,
     request=None,
 ):
+    require_payments_enabled()
     from subscriptions.models import SellerSubscription
 
     if seller.is_suspended:
@@ -162,6 +169,7 @@ def create_promotion_payment(
     card=None,
     request=None,
 ):
+    require_payments_enabled()
     if seller.is_suspended:
         raise ValidationError("Selling access is suspended.")
     if listing.seller_id != seller.id:
@@ -230,6 +238,7 @@ def _send_to_provider(*, payment, payer, card, request=None):
 def sync_payment_from_provider(
     *, payment: Payment, result: ProviderResult, request=None
 ):
+    require_payments_enabled()
     old = payment.status
     payment.provider_order_id = result.order_id or payment.provider_order_id
     payment.provider_payment_id = result.payment_id or payment.provider_payment_id
@@ -334,6 +343,7 @@ def _fulfil_paid_payment(*, payment: Payment, request=None):
 
 
 def refresh_payment(*, payment, request=None):
+    require_payments_enabled()
     if not payment.provider_order_id:
         return payment
     provider = get_payment_provider()

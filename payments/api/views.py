@@ -12,6 +12,8 @@ class MercadoPagoWebhookView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        if not getattr(settings, "MARKETLIFT_PAYMENTS_ENABLED", False):
+            return Response({"detail": "Payments are not available yet."}, status=503)
         data_id = str(
             request.query_params.get("data.id")
             or (

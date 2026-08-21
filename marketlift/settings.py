@@ -121,7 +121,10 @@ DATABASES = {
 }
 
 DB_SSLMODE = os.getenv("DB_SSLMODE", "").strip()
-if DB_SSLMODE and DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
+if DB_SSLMODE and DATABASES["default"]["ENGINE"] in {
+    "django.db.backends.postgresql",
+    "django.contrib.gis.db.backends.postgis",
+}:
     DATABASES["default"]["OPTIONS"] = {"sslmode": DB_SSLMODE}
 
 
@@ -323,7 +326,7 @@ REST_FRAMEWORK = {
 
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend",
+    "django.core.mail.backends.smtp.EmailBackend",
 )
 EMAIL_HOST = os.getenv("EMAIL_HOST", "").strip()
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
@@ -332,6 +335,17 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "15"))
+
+# Provider-backed capabilities are disabled for the initial production release.
+# The frontend flags must only be enabled after these server-side flags and the
+# corresponding provider certification are enabled together.
+MARKETLIFT_PAYMENTS_ENABLED = env_bool("MARKETLIFT_PAYMENTS_ENABLED", False)
+MARKETLIFT_CPF_VERIFICATION_ENABLED = env_bool(
+    "MARKETLIFT_CPF_VERIFICATION_ENABLED", False
+)
+MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER = os.getenv(
+    "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled"
+).strip().lower()
 
 # Marketlift service-payment integration. Product-sale payments remain outside Marketlift V1.
 MARKETLIFT_PAYMENT_PROVIDER = os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "mock")

@@ -84,6 +84,7 @@ class SecurityHardeningTests(TestCase):
         SESSION_COOKIE_SECURE=False,
         CSRF_COOKIE_SECURE=False,
         SECURE_SSL_REDIRECT=False,
+        MARKETLIFT_PAYMENTS_ENABLED=True,
         MARKETLIFT_PAYMENT_PROVIDER="mock",
         PAYMENT_MOCK_AUTO_APPROVE=True,
         EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend",
@@ -241,7 +242,7 @@ class SecurityHardeningTests(TestCase):
         )
         logout_response = middleware(logout_request)
         self.assertEqual(
-            logout_response.cookies["marketlift_sessionid"]["max-age"], "0"
+            str(logout_response.cookies["marketlift_sessionid"]["max-age"]), "0"
         )
         self.assertNotIn("marketlift_admin_sessionid", logout_response.cookies)
 
