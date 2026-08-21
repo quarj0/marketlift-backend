@@ -108,13 +108,38 @@ def marketlift_deploy_checks(app_configs, **kwargs):
         issues.append(
             Error("Production CORS/CSRF origins must use HTTPS.", id="marketlift.E009")
         )
-    if "console.EmailBackend" in getattr(settings, "EMAIL_BACKEND", ""):
+    email_backend = getattr(settings, "EMAIL_BACKEND", "")
+    if "console.EmailBackend" in email_backend:
         issues.append(
             Error(
                 "Configure a real EMAIL_BACKEND before production account verification/password reset.",
                 id="marketlift.E010",
             )
         )
+    if "smtp.EmailBackend" in email_backend:
+        missing_email_settings = [
+            name
+            for name in ("EMAIL_HOST", "EMAIL_HOST_USER", "EMAIL_HOST_PASSWORD")
+            if not getattr(settings, name, "")
+        ]
+        if missing_email_settings:
+            issues.append(
+                Error(
+                    "SMTP email delivery is missing required credentials.",
+                    hint=f"Set {', '.join(missing_email_settings)}.",
+                    id="marketlift.E017",
+                )
+            )
+        if getattr(settings, "EMAIL_USE_TLS", False) == getattr(
+            settings, "EMAIL_USE_SSL", False
+        ):
+            issues.append(
+                Error(
+                    "SMTP must enable exactly one transport-security mode.",
+                    hint="Use EMAIL_USE_TLS=true for port 587 or EMAIL_USE_SSL=true for port 465.",
+                    id="marketlift.E018",
+                )
+            )
     channel_layer = getattr(settings, "CHANNEL_LAYERS", {}).get("default", {})
     channel_backend = channel_layer.get("BACKEND", "")
     if not channel_backend or channel_backend == "channels.layers.InMemoryChannelLayer":

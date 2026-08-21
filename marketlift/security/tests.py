@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.test import RequestFactory, TestCase, override_settings
@@ -56,6 +57,24 @@ class SecurityHardeningTests(TestCase):
         unknown = request_password_reset(identifier="adam@example.com")
         self.assertEqual(known["maskedDestination"], "a***@example.com")
         self.assertEqual(unknown["maskedDestination"], "a***@example.com")
+        message = mail.outbox[-1]
+        self.assertIn("/reset-password?token=", message.body)
+        self.assertNotIn("/reset--password", message.body)
+        self.assertEqual(message.alternatives[0].mimetype, "text/html")
+        self.assertIn("Reset password", message.alternatives[0].content)
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="",
+        EMAIL_HOST_USER="",
+        EMAIL_HOST_PASSWORD="",
+        EMAIL_USE_TLS=True,
+        EMAIL_USE_SSL=False,
+    )
+    def test_production_check_rejects_incomplete_smtp_configuration(self):
+        ids = {issue.id for issue in marketlift_deploy_checks(None)}
+        self.assertIn("marketlift.E017", ids)
 
     @override_settings(
         IS_PRODUCTION=True,

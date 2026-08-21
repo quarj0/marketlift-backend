@@ -1,4 +1,5 @@
 import hashlib, hmac, secrets
+from html import escape
 from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -99,10 +100,24 @@ def request_password_reset(*, identifier, request=None):
     )
     send_mail(
         "Reset your Marketlift password",
-        f"Use this link to reset your Marketlift password: {url}",
+        (
+            "Use the link below to reset your Marketlift password.\n\n"
+            f"{url}\n\n"
+            "If you did not request this change, you can ignore this email."
+        ),
         settings.DEFAULT_FROM_EMAIL,
         [user.email],
         fail_silently=False,
+        html_message=(
+            '<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">'
+            '<h1 style="font-size:24px">Reset your Marketlift password</h1>'
+            "<p>Use the button below to choose a new password.</p>"
+            f'<p><a href="{escape(url, quote=True)}" style="display:inline-block;'
+            "padding:12px 18px;border-radius:10px;background:#0b63f6;color:#fff;"
+            'font-weight:700;text-decoration:none">Reset password</a></p>'
+            '<p style="font-size:13px;color:#475569">If you did not request this '
+            "change, you can ignore this email.</p></div>"
+        ),
     )
     return {"success": True, "maskedDestination": masked_destination}
 

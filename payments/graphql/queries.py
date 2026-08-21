@@ -33,6 +33,17 @@ class PaymentQuery:
         return payment_to_type(p)
 
     @strawberry.field
+    def admin_payment(self, info: strawberry.Info, id: strawberry.ID) -> PaymentType | None:
+        require_staff(info, roles={"admin", "finance"})
+        try:
+            payment = Payment.objects.select_related(
+                "seller", "seller__user", "seller_plan", "listing", "promotion_product"
+            ).get(pk=str(id))
+        except (Payment.DoesNotExist, ValueError):
+            return None
+        return payment_to_type(payment)
+
+    @strawberry.field
     def admin_payments(
         self,
         info: strawberry.Info,

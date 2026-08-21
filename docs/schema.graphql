@@ -669,6 +669,7 @@ type Query {
   myListingPromotions(listingId: ID = null): [ListingPromotionType!]!
   myPayments(limit: Int! = 50, offset: Int! = 0): [PaymentType!]!
   payment(id: ID!): PaymentType
+  adminPayment(id: ID!): PaymentType
   adminPayments(search: String = null, status: String = null, purpose: String = null, method: String = null, limit: Int! = 50, offset: Int! = 0): [PaymentType!]!
   paymentSummary: PaymentSummaryType!
   mySellerVerification: VerificationType

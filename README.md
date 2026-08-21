@@ -72,6 +72,7 @@ The seed is idempotent and mirrors the current frontend category/plan/promotion 
 - [Uploads/media](docs/UPLOADS.md)
 - [State transitions](docs/STATE_TRANSITIONS.md)
 - [Security](docs/SECURITY.md)
+- [Transactional email](docs/EMAIL.md)
 - [Operations](docs/OPERATIONS.md)
 
 Export the exact GraphQL SDL with:
