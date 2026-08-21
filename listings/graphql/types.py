@@ -30,6 +30,7 @@ class ListingType:
     favorites: int
     inquiries: int
     seller_deleted_at: datetime | None
+    distance_km: float | None = None
 
 
 @strawberry.type

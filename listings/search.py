@@ -1,9 +1,13 @@
 from __future__ import annotations
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
 from django.db import connection
 from django.db.models import Exists, OuterRef, Q, Value
 from django.utils import timezone
+from marketlift.location.validators import validate_coordinates, validate_radius_km
 from .models import Listing
 
 
@@ -47,6 +51,7 @@ def apply_listing_filters(qs, filters):
         else:
             qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
     category = _get(filters, "category")
+    country_code = _get(filters, "country_code")
     state = _get(filters, "state")
     city = _get(filters, "city")
     district = _get(filters, "district")
@@ -55,6 +60,8 @@ def apply_listing_filters(qs, filters):
     seller_id = _get(filters, "seller_id")
     if category:
         qs = qs.filter(category__slug=category)
+    if country_code:
+        qs = qs.filter(country_code__iexact=country_code)
     if state:
         qs = qs.filter(state_code__iexact=state)
     if city:
@@ -69,6 +76,18 @@ def apply_listing_filters(qs, filters):
         qs = qs.filter(seller_id=seller_id)
     if _get(filters, "verified_only", False):
         qs = qs.filter(seller__verified_at__isnull=False)
+    lat, lng = validate_coordinates(_get(filters, "latitude"), _get(filters, "longitude"))
+    radius = validate_radius_km(_get(filters, "radius_km"))
+    if radius is not None and lat is None:
+        from django.core.exceptions import ValidationError
+        raise ValidationError({"radius_km": "Radius search requires latitude and longitude."})
+    if lat is not None:
+        origin = Point(lng, lat, srid=4326)
+        qs = qs.exclude(location_point__isnull=True).annotate(
+            distance=Distance("location_point", origin)
+        )
+        if radius is not None:
+            qs = qs.filter(location_point__distance_lte=(origin, D(km=radius)))
     mn = _decimal(_get(filters, "min_price"))
     mx = _decimal(_get(filters, "max_price"))
     if mn is not None:
@@ -108,6 +127,10 @@ def apply_listing_filters(qs, filters):
 def apply_listing_sort(qs, sort="relevant"):
     from promotions.models import ListingPromotion, PromotionProduct
 
+    if sort == "distance":
+        if "distance" not in qs.query.annotations:
+            return qs.order_by("-created_at", "-id")
+        return qs.order_by("distance", "-created_at", "-id")
     if sort == "price_asc":
         return qs.order_by("price", "-created_at", "-id")
     if sort == "price_desc":

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.db import transaction, models
 from django.utils import timezone
@@ -10,6 +12,8 @@ from categories.models import Category, CategoryField
 from subscriptions.services import get_effective_plan
 from uploads.models import UploadAsset
 from uploads.services import claim_upload, retire_upload
+from marketlift.location.tokens import decode_location_token
+from marketlift.location.validators import validate_coordinates, validate_location_strings
 
 from .models import Listing, ListingAttribute, ListingMedia
 
@@ -20,6 +24,64 @@ PUBLISHABLE_STATUSES = {
     Listing.Status.EXPIRED,
 }
 ACTIVE_LIMIT_STATUSES = {Listing.Status.PUBLISHED, Listing.Status.UNDER_REVIEW}
+
+
+def _resolve_listing_location(
+    *,
+    state: str = "",
+    state_code: str = "",
+    city: str = "",
+    district: str = "",
+    country_code: str = "",
+    latitude=None,
+    longitude=None,
+    location_token: str | None = None,
+) -> dict:
+    """Resolve one canonical listing location without trusting provider fields from clients.
+
+    A signed token is produced by Marketlift's geocoder endpoints. When present it
+    is authoritative for both human-readable location snapshots and coordinates.
+    Development can still accept legacy/manual strings; production can require a
+    resolver token with MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION.
+    """
+    if location_token:
+        resolved = decode_location_token(location_token)
+        strings = validate_location_strings(
+            state=resolved["state"],
+            state_code=resolved["state_code"],
+            city=resolved["city"],
+            district=resolved["district"],
+            country_code=resolved["country_code"],
+        )
+        lat, lng = validate_coordinates(
+            resolved["latitude"], resolved["longitude"], required=True
+        )
+        return {
+            **strings,
+            "location_point": Point(lng, lat, srid=4326),
+            "location_provider": resolved["provider"],
+            "location_provider_id": resolved["provider_id"],
+        }
+
+    if getattr(settings, "MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION", False):
+        raise ValidationError(
+            {"location_token": "Select a resolved location for this listing."}
+        )
+
+    strings = validate_location_strings(
+        state=state,
+        state_code=state_code,
+        city=city,
+        district=district,
+        country_code=country_code,
+    )
+    lat, lng = validate_coordinates(latitude, longitude)
+    return {
+        **strings,
+        "location_point": Point(lng, lat, srid=4326) if lat is not None else None,
+        "location_provider": "",
+        "location_provider_id": "",
+    }
 
 
 def _validate_scalar(field: CategoryField, value):
@@ -252,10 +314,14 @@ def create_listing(
     price=None,
     condition: str = "",
     negotiable: bool = False,
-    state: str,
-    state_code: str,
-    city: str,
+    state: str = "",
+    state_code: str = "",
+    city: str = "",
     district: str = "",
+    country_code: str = "",
+    latitude=None,
+    longitude=None,
+    location_token: str | None = None,
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
@@ -271,6 +337,16 @@ def create_listing(
         condition=condition,
         attributes=attributes,
     )
+    location = _resolve_listing_location(
+        state=state,
+        state_code=state_code,
+        city=city,
+        district=district,
+        country_code=country_code,
+        latitude=latitude,
+        longitude=longitude,
+        location_token=location_token,
+    )
     listing = Listing.objects.create(
         seller=seller,
         category=category,
@@ -279,10 +355,14 @@ def create_listing(
         price=price,
         condition=condition,
         negotiable=negotiable,
-        state=state.strip(),
-        state_code=state_code.strip().upper(),
-        city=city.strip(),
-        district=district.strip(),
+        state=location["state"],
+        state_code=location["state_code"],
+        city=location["city"],
+        district=location["district"],
+        country_code=location["country_code"],
+        location_point=location["location_point"],
+        location_provider=location["location_provider"],
+        location_provider_id=location["location_provider_id"],
     )
     _write_attributes(listing, normalized)
     _write_media(
@@ -304,10 +384,14 @@ def update_listing(
     price=None,
     condition: str = "",
     negotiable: bool = False,
-    state: str,
-    state_code: str,
-    city: str,
+    state: str = "",
+    state_code: str = "",
+    city: str = "",
     district: str = "",
+    country_code: str = "",
+    latitude=None,
+    longitude=None,
+    location_token: str | None = None,
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
@@ -327,16 +411,30 @@ def update_listing(
         condition=condition,
         attributes=attributes,
     )
+    location = _resolve_listing_location(
+        state=state,
+        state_code=state_code,
+        city=city,
+        district=district,
+        country_code=country_code,
+        latitude=latitude,
+        longitude=longitude,
+        location_token=location_token,
+    )
     listing.category = category
     listing.title = title.strip()
     listing.description = description.strip()
     listing.price = price
     listing.condition = condition
     listing.negotiable = negotiable
-    listing.state = state.strip()
-    listing.state_code = state_code.strip().upper()
-    listing.city = city.strip()
-    listing.district = district.strip()
+    listing.state = location["state"]
+    listing.state_code = location["state_code"]
+    listing.city = location["city"]
+    listing.district = location["district"]
+    listing.country_code = location["country_code"]
+    listing.location_point = location["location_point"]
+    listing.location_provider = location["location_provider"]
+    listing.location_provider_id = location["location_provider_id"]
     listing.save()
     _write_attributes(listing, normalized)
     _write_media(
@@ -376,6 +474,11 @@ def publish_listing(listing: Listing):
         )
     if not listing.category_id or not listing.category.active:
         raise ValidationError("The listing category is unavailable.")
+    if (
+        getattr(settings, "MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION", False)
+        and listing.location_point is None
+    ):
+        raise ValidationError("A resolved map location is required before publishing.")
 
     # Re-validate persisted category-specific values before making the listing public.
     attributes = {item.key: item.value for item in listing.attribute_values.all()}

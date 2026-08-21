@@ -11,12 +11,17 @@ from django.core.exceptions import ValidationError
 from categories.models import CategoryField
 from listings.models import Listing
 from sellers.models import SellerProfile
+from marketlift.location.validators import (
+    normalize_country_code,
+    validate_coordinates,
+    validate_radius_km,
+)
 
 from .contracts import SearchPage, SearchRequest
 from .parser import parse_marketplace_query
 
 _ATTR_KEY_RE = re.compile(r"^[a-z0-9_]{1,80}$")
-ALLOWED_SORTS = {"relevant", "newest", "price_asc", "price_desc"}
+ALLOWED_SORTS = {"relevant", "newest", "price_asc", "price_desc", "distance"}
 ALLOWED_DATE_FILTERS = {None, "", "today", "week", "month"}
 
 
@@ -150,6 +155,7 @@ def _validate_attribute_filters(filters: dict, *, category: str | None) -> dict:
 def validate_search_request(request: SearchRequest) -> SearchRequest:
     limits = {
         "category": 80,
+        "country_code": 2,
         "state": 8,
         "city": 100,
         "district": 120,
@@ -164,6 +170,15 @@ def validate_search_request(request: SearchRequest) -> SearchRequest:
 
     if request.sort not in ALLOWED_SORTS:
         raise ValidationError({"sort": "Unsupported search sort."})
+
+    country_code = normalize_country_code(request.country_code)
+    latitude, longitude = validate_coordinates(request.latitude, request.longitude)
+    radius_km = validate_radius_km(request.radius_km)
+    if radius_km is not None and latitude is None:
+        raise ValidationError({"radius_km": "Radius search requires latitude and longitude."})
+    if request.sort == "distance" and latitude is None:
+        raise ValidationError({"sort": "Distance sorting requires latitude and longitude."})
+
     if request.date_listed not in ALLOWED_DATE_FILTERS:
         raise ValidationError({"date_listed": "Unsupported date filter."})
 
@@ -219,6 +234,10 @@ def validate_search_request(request: SearchRequest) -> SearchRequest:
             **request.__dict__,
             "condition": canonical_condition,
             "seller_type": canonical_seller_type,
+            "country_code": country_code or None,
+            "latitude": latitude,
+            "longitude": longitude,
+            "radius_km": radius_km,
             "attribute_filters": attrs,
         }
     )

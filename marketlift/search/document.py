@@ -38,6 +38,7 @@ def build_listing_search_document(
         (listing.description or "")[:4000],
         listing.category_name,
         listing.category_slug,
+        listing.country_code,
         listing.state,
         listing.state_code,
         listing.city,

@@ -38,6 +38,7 @@ def serialize_search_listing(listing) -> dict:
         "categoryName": listing.category_name,
         "condition": listing.condition or None,
         "location": {
+            "countryCode": listing.country_code or None,
             "state": listing.state,
             "stateCode": listing.state_code,
             "city": listing.city,
@@ -60,4 +61,5 @@ def serialize_search_listing(listing) -> dict:
         "featured": "featured" in codes,
         "topSearch": "top_search" in codes,
         "urgent": "urgent" in codes,
+        "distanceKm": getattr(listing, "search_distance_km", None),
     }

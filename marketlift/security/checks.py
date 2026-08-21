@@ -111,9 +111,10 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 id="marketlift.W002",
             )
         )
-    if settings.DATABASES["default"].get(
-        "ENGINE"
-    ) == "django.db.backends.postgresql" and not getattr(settings, "DB_SSLMODE", ""):
+    if settings.DATABASES["default"].get("ENGINE") in {
+        "django.db.backends.postgresql",
+        "django.contrib.gis.db.backends.postgis",
+    } and not getattr(settings, "DB_SSLMODE", ""):
         issues.append(
             Warning(
                 "DB_SSLMODE is empty. Confirm transport encryption requirements with the selected PostgreSQL host.",
@@ -138,6 +139,38 @@ def marketlift_deploy_checks(app_configs, **kwargs):
         issues.append(
             Warning(
                 "GraphQL introspection is enabled in production.", id="marketlift.W006"
+            )
+        )
+    if settings.DATABASES["default"].get("ENGINE") != "django.contrib.gis.db.backends.postgis":
+        issues.append(
+            Error(
+                "Geospatial listing search requires the GeoDjango PostGIS database backend.",
+                id="marketlift.E013",
+            )
+        )
+    if not getattr(settings, "MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION", False):
+        issues.append(
+            Warning(
+                "Resolved listing locations are not required in production; enable MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION for canonical geocoded locations.",
+                id="marketlift.W007",
+            )
+        )
+    if getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "").endswith("DisabledGeocoder"):
+        issues.append(
+            Warning(
+                "No location geocoder is configured. Radius search still works with coordinates, but place lookup/reverse-geocoding is disabled.",
+                id="marketlift.W008",
+            )
+        )
+    if (
+        getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "").endswith("NominatimGeocoder")
+        and getattr(settings, "MARKETLIFT_NOMINATIM_BASE_URL", "")
+        == "https://nominatim.openstreetmap.org"
+    ):
+        issues.append(
+            Warning(
+                "The public Nominatim endpoint is configured in production. Select a geocoding service/self-hosted endpoint appropriate for production traffic and SLA requirements.",
+                id="marketlift.W009",
             )
         )
     return issues

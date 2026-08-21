@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
+from django.contrib.gis.db import models as gis_models
 from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
@@ -58,10 +59,19 @@ class Listing(UUIDTimeStampedModel):
     condition = models.CharField(max_length=16, choices=Condition.choices, blank=True)
     negotiable = models.BooleanField(default=False)
 
-    state = models.CharField(max_length=100)
-    state_code = models.CharField(max_length=8)
+    # Human-readable location snapshots remain on the listing for display, SEO,
+    # and lexical marketplace search. `location_point` is private/internal and
+    # powers PostGIS radius and distance calculations.
+    country_code = models.CharField(max_length=2, blank=True, db_index=True)
+    state = models.CharField(max_length=100, blank=True)
+    state_code = models.CharField(max_length=8, blank=True)
     city = models.CharField(max_length=100)
     district = models.CharField(max_length=120, blank=True)
+    location_point = gis_models.PointField(
+        geography=True, srid=4326, null=True, blank=True, spatial_index=True
+    )
+    location_provider = models.CharField(max_length=40, blank=True)
+    location_provider_id = models.CharField(max_length=120, blank=True)
 
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.DRAFT
@@ -83,6 +93,10 @@ class Listing(UUIDTimeStampedModel):
             models.Index(fields=("status", "-created_at")),
             models.Index(fields=("category", "status", "-created_at")),
             models.Index(fields=("state_code", "city", "status")),
+            models.Index(
+                fields=("country_code", "state_code", "city", "status"),
+                name="listings_country_loc_idx",
+            ),
             models.Index(fields=("seller", "status")),
             models.Index(fields=("price",)),
             models.Index(
@@ -112,6 +126,7 @@ class Listing(UUIDTimeStampedModel):
             "description",
             "category",
             "category_id",
+            "country_code",
             "state",
             "state_code",
             "city",
@@ -136,7 +151,8 @@ class Listing(UUIDTimeStampedModel):
 
     @property
     def location_text(self) -> str:
-        return f"{self.city}, {self.state_code}"
+        parts = [self.city, self.state_code, self.country_code]
+        return ", ".join(part for part in parts if part)
 
     @property
     def is_publicly_visible(self) -> bool:

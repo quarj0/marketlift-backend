@@ -49,6 +49,7 @@ def listing_to_type(listing) -> ListingType:
         category_schema_version=listing.category_schema_version,
         condition=listing.condition or None,
         location=LocationType(
+            country_code=listing.country_code or None,
             state=listing.state,
             state_code=listing.state_code,
             city=listing.city,
@@ -67,4 +68,5 @@ def listing_to_type(listing) -> ListingType:
         favorites=int(getattr(listing, "favorite_count", 0)),
         inquiries=int(getattr(listing, "inquiry_count", 0)),
         seller_deleted_at=listing.seller_deleted_at,
+        distance_km=getattr(listing, "search_distance_km", None),
     )

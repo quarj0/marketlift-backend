@@ -2,6 +2,9 @@ import base64
 from decimal import Decimal
 from uuid import UUID
 import strawberry
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
@@ -10,6 +13,7 @@ from listings.search import apply_listing_filters, apply_listing_sort
 from marketlift.graphql.auth import require_seller, require_staff, require_user
 from marketlift.graphql.errors import validation_error
 from marketlift.search import SearchRequest, search_listings
+from marketlift.location.validators import validate_coordinates, validate_radius_km
 from promotions.models import PromotionProduct
 from .inputs import ListingFilterInput
 from .mappers import listing_queryset, listing_to_type
@@ -77,9 +81,13 @@ class ListingQuery:
                 SearchRequest(
                     q=filters.q or "",
                     category=filters.category,
+                    country_code=filters.country_code,
                     state=filters.state,
                     city=filters.city,
                     district=filters.district,
+                    latitude=filters.latitude,
+                    longitude=filters.longitude,
+                    radius_km=filters.radius_km,
                     min_price=(
                         Decimal(str(filters.min_price))
                         if filters.min_price is not None
@@ -145,19 +153,29 @@ class ListingQuery:
 
     @strawberry.field
     def nearby_listings(
-        self, state_code: str, city: str | None = None, limit: int = 12
+        self,
+        latitude: float,
+        longitude: float,
+        radius_km: float = 10.0,
+        limit: int = 12,
     ) -> list[ListingType]:
-        qs = listing_queryset(Listing.objects.public()).filter(
-            state_code__iexact=state_code.strip()
+        try:
+            lat, lng = validate_coordinates(latitude, longitude, required=True)
+            radius = validate_radius_km(radius_km)
+        except ValidationError as exc:
+            raise validation_error(exc, code="SEARCH_VALIDATION_ERROR") from exc
+        origin = Point(lng, lat, srid=4326)
+        qs = (
+            listing_queryset(Listing.objects.public())
+            .exclude(location_point__isnull=True)
+            .filter(location_point__distance_lte=(origin, D(km=radius)))
+            .annotate(distance=Distance("location_point", origin))
+            .order_by("distance", "-published_at", "-id")
         )
-        if city:
-            qs = qs.filter(city__iexact=city.strip())
-        return [
-            listing_to_type(x)
-            for x in qs.order_by("-published_at", "-created_at")[
-                : max(1, min(limit, 50))
-            ]
-        ]
+        rows = list(qs[: max(1, min(limit, 50))])
+        for row in rows:
+            row.search_distance_km = round(float(row.distance.km), 3)
+        return [listing_to_type(x) for x in rows]
 
     @strawberry.field
     def similar_listings(self, listing_id: str, limit: int = 8) -> list[ListingType]:

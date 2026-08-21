@@ -15,9 +15,13 @@ from .models import SavedSearch, SavedSearchMatch
 ALLOWED_CRITERIA = {
     "q",
     "category",
+    "country_code",
     "state",
     "city",
     "district",
+    "latitude",
+    "longitude",
+    "radius_km",
     "min_price",
     "max_price",
     "condition",
@@ -28,6 +32,8 @@ ALLOWED_CRITERIA = {
     "sort",
 }
 CRITERIA_ALIASES = {
+    "countryCode": "country_code",
+    "radiusKm": "radius_km",
     "minPrice": "min_price",
     "maxPrice": "max_price",
     "sellerType": "seller_type",
@@ -72,9 +78,13 @@ def _request_from_criteria(
     return SearchRequest(
         q=str(criteria.get("q") or ""),
         category=criteria.get("category"),
+        country_code=criteria.get("country_code"),
         state=criteria.get("state"),
         city=criteria.get("city"),
         district=criteria.get("district"),
+        latitude=criteria.get("latitude"),
+        longitude=criteria.get("longitude"),
+        radius_km=criteria.get("radius_km"),
         min_price=_decimal(criteria.get("min_price")),
         max_price=_decimal(criteria.get("max_price")),
         condition=criteria.get("condition"),

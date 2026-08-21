@@ -48,7 +48,11 @@ class ListingSearchView(APIView):
                 "results": [serialize_search_listing(item) for item in page.items],
             }
         )
-        # Public search cards are identical for logged-in and anonymous users.
-        # Keep the edge TTL short because listing availability changes frequently.
-        response["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+        # Text/filter searches are safe for short shared-edge caching. Exact user
+        # coordinates are treated as private request data and must not enter a
+        # shared CDN cache even though the result cards themselves are public.
+        if search_request.latitude is not None:
+            response["Cache-Control"] = "private, no-store"
+        else:
+            response["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
         return response

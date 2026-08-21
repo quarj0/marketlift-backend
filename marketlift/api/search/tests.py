@@ -21,3 +21,18 @@ class SearchQueryParamTests(SimpleTestCase):
     def test_bad_boolean_is_rejected(self):
         with self.assertRaises(ValidationError):
             search_request_from_query_params({"verified_only": "maybe"})
+
+    def test_geospatial_params_are_parsed(self):
+        request = search_request_from_query_params(
+            {
+                "lat": "-23.5505",
+                "lng": "-46.6333",
+                "radius_km": "10",
+                "country_code": "BR",
+                "sort": "distance",
+            }
+        )
+        self.assertEqual(request.latitude, -23.5505)
+        self.assertEqual(request.longitude, -46.6333)
+        self.assertEqual(request.radius_km, 10.0)
+        self.assertEqual(request.country_code, "BR")
