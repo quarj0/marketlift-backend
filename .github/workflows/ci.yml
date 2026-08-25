@@ -40,6 +40,17 @@ jobs:
       DB_PASSWORD: marketlift
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
+      # GitHub Actions exposes the PostGIS service on 5432. Tests must use
+      # that service rather than the developer Docker host port (5433).
+      MARKETLIFT_TEST_DATABASE_MODE: local
+      MARKETLIFT_TEST_KEEPDB: "false"
+      TEST_DB_ENGINE: django.contrib.gis.db.backends.postgis
+      TEST_DB_NAME: marketlift_test
+      TEST_DB_USER: marketlift
+      TEST_DB_PASSWORD: marketlift
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_PORT: 5432
+      TEST_DB_SSLMODE: ""
       REDIS_URL: redis://127.0.0.1:6379/0
       CHANNEL_REDIS_URL: redis://127.0.0.1:6379/3
       CELERY_BROKER_URL: redis://127.0.0.1:6379/1

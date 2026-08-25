@@ -189,13 +189,35 @@ if RUNNING_TESTS:
             )
     else:
         if _mode == "local":
+            # Reuse the runtime connection coordinates when runtime Postgres is
+            # already local (for example GitHub Actions on 127.0.0.1:5432).
+            # When runtime points to remote Neon, tests still fall back to the
+            # developer PostGIS service on 127.0.0.1:5433.
+            _primary_host = str(_primary_db.get("HOST") or "").strip().lower()
+            _primary_is_local = _primary_host in {"127.0.0.1", "localhost", "::1"}
             _test_defaults = {
                 "ENGINE": "django.contrib.gis.db.backends.postgis",
                 "NAME": "marketlift_test",
-                "USER": "marketlift",
-                "PASSWORD": "marketlift",
-                "HOST": "127.0.0.1",
-                "PORT": "5433",
+                "USER": (
+                    str(_primary_db.get("USER") or "marketlift")
+                    if _primary_is_local
+                    else "marketlift"
+                ),
+                "PASSWORD": (
+                    str(_primary_db.get("PASSWORD") or "marketlift")
+                    if _primary_is_local
+                    else "marketlift"
+                ),
+                "HOST": (
+                    str(_primary_db.get("HOST") or "127.0.0.1")
+                    if _primary_is_local
+                    else "127.0.0.1"
+                ),
+                "PORT": (
+                    str(_primary_db.get("PORT") or "5433")
+                    if _primary_is_local
+                    else "5433"
+                ),
                 "SSLMODE": "",
             }
         else:
