@@ -1,4 +1,8 @@
 import strawberry
+from django.core.exceptions import ValidationError
+
+from marketlift.markets.pricing import promotion_price
+from marketlift.markets.service import active_market_profile, profile_for_country_code
 from promotions.models import PromotionProduct
 from .types import PromotionOptionType, ListingPromotionType
 
@@ -6,17 +10,32 @@ from .types import PromotionOptionType, ListingPromotionType
 @strawberry.type
 class PromotionQuery:
     @strawberry.field
-    def promotion_options(self) -> list[PromotionOptionType]:
-        return [
-            PromotionOptionType(
-                id=p.code,
-                name=p.name,
-                description=p.description,
-                duration_days=p.duration_days,
-                price=float(p.price),
+    def promotion_options(
+        self, country_code: str | None = None
+    ) -> list[PromotionOptionType]:
+        profile = profile_for_country_code(
+            country_code or active_market_profile().country_code
+        )
+        rows: list[PromotionOptionType] = []
+        for product in PromotionProduct.objects.filter(active=True):
+            try:
+                price = promotion_price(
+                    product=product, country_code=profile.country_code
+                )
+            except ValidationError:
+                continue
+            rows.append(
+                PromotionOptionType(
+                    id=product.code,
+                    name=product.name,
+                    description=product.description,
+                    duration_days=product.duration_days,
+                    price=float(price),
+                    country_code=profile.country_code,
+                    currency=profile.currency,
+                )
             )
-            for p in PromotionProduct.objects.filter(active=True)
-        ]
+        return rows
 
     @strawberry.field
     def my_listing_promotions(

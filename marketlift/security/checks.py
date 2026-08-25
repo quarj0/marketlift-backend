@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.core.checks import Error, Tags, Warning, register
 
+from marketlift.markets.service import enabled_market_profiles
+
 
 @register(Tags.files)
 def marketlift_storage_checks(app_configs, **kwargs):
@@ -77,11 +79,12 @@ def marketlift_deploy_checks(app_configs, **kwargs):
             )
         )
     payments_enabled = getattr(settings, "MARKETLIFT_PAYMENTS_ENABLED", False)
-    provider = str(getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "mock")).strip().lower()
+    provider = (
+        str(getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "auto")).strip().lower()
+    )
     if provider in {"auto", "market", "market_default"}:
         providers = {
-            profile.default_payment_provider
-            for profile in getattr(settings, "MARKETLIFT_ENABLED_MARKETS", ())
+            profile.default_payment_provider for profile in enabled_market_profiles()
         }
     else:
         providers = {provider}
@@ -119,15 +122,31 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 id="marketlift.E020",
             )
         )
-    if getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False) and getattr(
-        settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled"
-    ) in {"", "disabled", "internal"}:
-        issues.append(
-            Error(
-                "Identity verification requires a certified external identity provider in production.",
-                id="marketlift.E019",
+    if getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False):
+        try:
+            from platform_settings.models import Market
+
+            identity_providers = set(
+                Market.objects.filter(is_enabled=True).values_list(
+                    "identity_provider", flat=True
+                )
             )
-        )
+        except Exception:
+            identity_providers = {
+                getattr(
+                    settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled"
+                )
+            }
+        if not identity_providers or any(
+            (provider or "").strip().lower() in {"", "disabled", "internal"}
+            for provider in identity_providers
+        ):
+            issues.append(
+                Error(
+                    "Every enabled market requires a certified external identity provider when identity verification is enabled.",
+                    id="marketlift.E019",
+                )
+            )
     if not str(getattr(settings, "MARKETLIFT_FRONTEND_URL", "")).startswith("https://"):
         issues.append(
             Error(

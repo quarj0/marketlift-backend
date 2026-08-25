@@ -9,6 +9,8 @@ class PromotionOptionType:
     description: str
     duration_days: int
     price: float
+    country_code: str = ""
+    currency: str = ""
 
 
 @strawberry.type

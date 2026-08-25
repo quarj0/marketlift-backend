@@ -10,6 +10,7 @@ from django.utils import timezone
 from audit.services import record_audit_event
 from notifications.services import create_admin_notifications, create_notification
 from marketlift.markets.service import profile_for_country_code
+from marketlift.markets.pricing import promotion_price, seller_plan_price
 from promotions.models import ListingPromotion
 from subscriptions.services import activate_paid_subscription
 from .models import Payment
@@ -50,12 +51,7 @@ def _market_for_seller(seller):
 
 def _validate_payment_method(*, seller, method: str):
     profile = _market_for_seller(seller)
-    configured = set(getattr(settings, "MARKETLIFT_PAYMENT_METHODS", ()))
     allowed = set(profile.payment_methods)
-    # The explicit env override can disable channels for a deployment, but never
-    # enables a channel the country profile does not support.
-    if configured and profile.code == settings.MARKETLIFT_MARKET_CODE:
-        allowed &= configured
     if method not in Payment.Method.values or method not in allowed:
         raise ValidationError(
             {
@@ -154,9 +150,11 @@ def create_subscription_payment(
             raise ValidationError("This idempotency key belongs to another payment.")
         return existing
     amount = _money(
-        plan.yearly_price
-        if billing_cycle == SellerSubscription.BillingCycle.YEARLY
-        else plan.monthly_price
+        seller_plan_price(
+            plan=plan,
+            country_code=profile.country_code,
+            billing_cycle=billing_cycle,
+        )
     )
     payment = Payment(
         user=seller.user,
@@ -218,7 +216,9 @@ def create_promotion_payment(
         seller=seller,
         purpose=Payment.Purpose.PROMOTION,
         method=method,
-        amount=_money(product.price),
+        amount=_money(
+            promotion_price(product=product, country_code=profile.country_code)
+        ),
         country_code=profile.country_code,
         currency=profile.currency,
         reference=_reference(),

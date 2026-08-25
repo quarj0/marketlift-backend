@@ -6,7 +6,8 @@ def verification_to_type(item):
         id=str(item.id),
         seller_id=str(item.seller_id),
         seller_name=str(item.seller),
-        identity_country_code=item.identity_country_code or getattr(item.seller, "country_code", ""),
+        identity_country_code=item.identity_country_code
+        or getattr(item.seller, "country_code", ""),
         identity_type=item.identity_type or ("cpf" if item.cpf_masked else ""),
         identity_masked=item.identity_masked or item.cpf_masked or "",
         cpf_masked=item.cpf_masked or None,

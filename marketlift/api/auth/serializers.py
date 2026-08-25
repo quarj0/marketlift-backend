@@ -18,6 +18,7 @@ class RegisterSerializer(serializers.Serializer):
     fullName = serializers.CharField(max_length=160)
     email = serializers.EmailField()
     phone = serializers.CharField(max_length=32)
+    countryCode = serializers.CharField(max_length=2, required=False)
     password = serializers.CharField(write_only=True, min_length=8)
     terms = serializers.BooleanField()
 
@@ -36,6 +37,15 @@ class RegisterSerializer(serializers.Serializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError({"password": list(exc.messages)}) from exc
         return data
+
+    def validate_countryCode(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from marketlift.markets.service import normalize_enabled_country_code
+
+        try:
+            return normalize_enabled_country_code(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages) from exc
 
     def validate_fullName(self, value):
         value = value.strip()
@@ -78,6 +88,7 @@ def serialize_session_user(user):
         "name": user.full_name or user.email,
         "email": user.email,
         "phone": user.phone,
+        "countryCode": user.country_code,
         "isStaff": user.is_staff,
         "isSuperuser": user.is_superuser,
         "adminRole": (

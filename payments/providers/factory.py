@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from django.conf import settings
 
-from marketlift.markets.service import profile_for_country_code
+from marketlift.markets.service import enabled_market_profiles, profile_for_country_code
 
 from .base import PaymentProviderError
 from .mercado_pago import MercadoPagoProvider
@@ -10,11 +10,21 @@ from .mock import MockPaymentProvider
 from .paystack import PaystackProvider
 
 
-def _configured_name(*, name: str | None = None, country_code: str | None = None) -> str:
-    configured = (name or getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "mock"))
-    configured = str(configured).strip().lower()
-    if configured in {"auto", "market", "market_default"}:
+def _configured_name(
+    *, name: str | None = None, country_code: str | None = None
+) -> str:
+    if name is not None:
+        return str(name).strip().lower()
+    # Once markets are database-managed, provider selection is a market business
+    # setting. The global environment value remains only a bootstrap/diagnostic
+    # fallback for pre-migration or provider-direct operations.
+    if country_code:
         return profile_for_country_code(country_code).default_payment_provider
+    configured = (
+        str(getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "auto")).strip().lower()
+    )
+    if configured in {"auto", "market", "market_default"}:
+        return profile_for_country_code(None).default_payment_provider
     return configured
 
 
@@ -32,14 +42,10 @@ def get_payment_provider(*, name: str | None = None, country_code: str | None = 
 
 
 def enabled_payment_provider_names() -> set[str]:
-    configured = str(
-        getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "mock")
-    ).strip().lower()
-    if configured not in {"auto", "market", "market_default"}:
-        return {_configured_name(name=configured)}
     return {
         profile.default_payment_provider
-        for profile in getattr(settings, "MARKETLIFT_ENABLED_MARKETS", ())
+        for profile in enabled_market_profiles()
+        if profile.default_payment_provider not in {"", "disabled", "none"}
     }
 
 

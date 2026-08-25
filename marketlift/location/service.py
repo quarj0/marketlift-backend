@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 
 from django.conf import settings
+from marketlift.markets.service import default_country_code
 from django.core.exceptions import ValidationError
 
 from .contracts import LocationCandidate
@@ -35,7 +36,7 @@ def geocode_locations(
     return _backend().geocode(
         query,
         limit=max(1, min(int(limit), 8)),
-        country_code=country_code or settings.MARKETLIFT_MARKET_COUNTRY_CODE,
+        country_code=country_code or default_country_code(),
     )
 
 

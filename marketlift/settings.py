@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -41,7 +42,9 @@ MARKETLIFT_MARKET = get_market_profile(MARKETLIFT_MARKET_CODE)
 MARKETLIFT_ENABLED_MARKET_CODES = env_list(
     "MARKETLIFT_ENABLED_MARKETS", MARKETLIFT_MARKET_CODE
 )
-if MARKETLIFT_MARKET_CODE not in {code.upper() for code in MARKETLIFT_ENABLED_MARKET_CODES}:
+if MARKETLIFT_MARKET_CODE not in {
+    code.upper() for code in MARKETLIFT_ENABLED_MARKET_CODES
+}:
     MARKETLIFT_ENABLED_MARKET_CODES.insert(0, MARKETLIFT_MARKET_CODE)
 MARKETLIFT_ENABLED_MARKETS = market_profiles_for_codes(
     [code.upper() for code in MARKETLIFT_ENABLED_MARKET_CODES]
@@ -133,9 +136,9 @@ ASGI_APPLICATION = "marketlift.asgi.application"
 
 DATABASES = {
     "default": {
-        # Provider-neutral database configuration. Supabase, Neon, a local
-        # Docker PostgreSQL server, or any other compatible host can supply
-        # these values without changing application code.
+        # Provider-neutral runtime database configuration. Production/staging
+        # may point to Neon; test runs are isolated below and never need to
+        # create/drop databases on the runtime endpoint.
         "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
         "NAME": os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "marketlift")),
         "USER": os.getenv("DB_USER", os.getenv("POSTGRES_USER", "marketlift")),
@@ -157,6 +160,91 @@ if DB_SSLMODE and DATABASES["default"]["ENGINE"] in {
     "django.contrib.gis.db.backends.postgis",
 }:
     DATABASES["default"]["OPTIONS"] = {"sslmode": DB_SSLMODE}
+
+# Django's default test lifecycle creates and drops a sibling database. That is
+# appropriate for local Postgres but is a poor fit for serverless/pooled remote
+# databases such as Neon. Tests therefore use local PostGIS by default. To test
+# against Neon, point TEST_DB_* at a dedicated Neon branch/database and choose
+# MARKETLIFT_TEST_DATABASE_MODE=remote. The custom test runner reuses it.
+RUNNING_TESTS = env_bool("MARKETLIFT_TESTING", False) or any(
+    arg == "test" for arg in sys.argv[1:]
+)
+MARKETLIFT_TEST_DATABASE_MODE = env_text(
+    "MARKETLIFT_TEST_DATABASE_MODE", "local"
+).lower()
+if RUNNING_TESTS:
+    _primary_db = dict(DATABASES["default"])
+    _mode = MARKETLIFT_TEST_DATABASE_MODE
+    if _mode not in {"local", "remote", "primary"}:
+        raise RuntimeError(
+            "MARKETLIFT_TEST_DATABASE_MODE must be local, remote, or primary."
+        )
+
+    if _mode == "primary":
+        if not env_bool("MARKETLIFT_ALLOW_PRIMARY_DATABASE_TESTS", False):
+            raise RuntimeError(
+                "Refusing to run tests against the primary database. Use local "
+                "PostGIS (default), a dedicated remote test branch, or explicitly "
+                "set MARKETLIFT_ALLOW_PRIMARY_DATABASE_TESTS=true."
+            )
+    else:
+        if _mode == "local":
+            _test_defaults = {
+                "ENGINE": "django.contrib.gis.db.backends.postgis",
+                "NAME": "marketlift_test",
+                "USER": "marketlift",
+                "PASSWORD": "marketlift",
+                "HOST": "127.0.0.1",
+                "PORT": "5433",
+                "SSLMODE": "",
+            }
+        else:
+            _test_defaults = {
+                "ENGINE": "django.contrib.gis.db.backends.postgis",
+                "NAME": "",
+                "USER": "",
+                "PASSWORD": "",
+                "HOST": "",
+                "PORT": "5432",
+                "SSLMODE": "require",
+            }
+
+        _test_db = {
+            "ENGINE": env_text("TEST_DB_ENGINE", _test_defaults["ENGINE"]),
+            "NAME": env_text("TEST_DB_NAME", _test_defaults["NAME"]),
+            "USER": env_text("TEST_DB_USER", _test_defaults["USER"]),
+            "PASSWORD": os.getenv("TEST_DB_PASSWORD", _test_defaults["PASSWORD"]),
+            "HOST": env_text("TEST_DB_HOST", _test_defaults["HOST"]),
+            "PORT": env_text("TEST_DB_PORT", _test_defaults["PORT"]),
+            "CONN_MAX_AGE": int(os.getenv("TEST_DB_CONN_MAX_AGE", "0")),
+            "CONN_HEALTH_CHECKS": True,
+        }
+        if _mode == "remote" and not all(
+            _test_db[key] for key in ("NAME", "USER", "PASSWORD", "HOST")
+        ):
+            raise RuntimeError(
+                "Remote test mode requires TEST_DB_NAME, TEST_DB_USER, "
+                "TEST_DB_PASSWORD, and TEST_DB_HOST for a dedicated test branch."
+            )
+        if (
+            _mode == "remote"
+            and _test_db["HOST"] == _primary_db.get("HOST")
+            and _test_db["NAME"] == _primary_db.get("NAME")
+            and not env_bool("MARKETLIFT_ALLOW_PRIMARY_DATABASE_TESTS", False)
+        ):
+            raise RuntimeError(
+                "TEST_DB_* points to the primary database. Use a dedicated Neon "
+                "branch/database or local PostGIS."
+            )
+        _sslmode = env_text("TEST_DB_SSLMODE", _test_defaults["SSLMODE"])
+        if _sslmode:
+            _test_db["OPTIONS"] = {"sslmode": _sslmode}
+        # TEST.NAME prevents Django from silently deriving test_neondb from a
+        # remote runtime name. The custom runner keeps/reuses this DB.
+        _test_db["TEST"] = {"NAME": _test_db["NAME"]}
+        DATABASES["default"] = _test_db
+
+TEST_RUNNER = "marketlift.test_runner.MarketliftTestRunner"
 
 
 AUTH_USER_MODEL = "accounts.User"
@@ -385,7 +473,9 @@ MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER = (
 # Marketlift service-payment integration. Buyer -> seller transactions remain outside
 # the platform. `mock` stays the safe default until a deployment explicitly enables
 # its country provider.
-MARKETLIFT_PAYMENT_PROVIDER = os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "mock").strip().lower()
+MARKETLIFT_PAYMENT_PROVIDER = (
+    os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "auto").strip().lower()
+)
 MARKETLIFT_PAYMENT_METHODS = tuple(
     item.strip().lower()
     for item in env_list(
@@ -398,7 +488,9 @@ MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY", "")
 MERCADO_PAGO_WEBHOOK_SECRET = os.getenv("MERCADO_PAGO_WEBHOOK_SECRET", "")
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY", "").strip()
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY", "").strip()
-PAYSTACK_API_BASE_URL = os.getenv("PAYSTACK_API_BASE_URL", "https://api.paystack.co").rstrip("/")
+PAYSTACK_API_BASE_URL = os.getenv(
+    "PAYSTACK_API_BASE_URL", "https://api.paystack.co"
+).rstrip("/")
 PAYSTACK_CALLBACK_URL = os.getenv("PAYSTACK_CALLBACK_URL", "").strip()
 
 

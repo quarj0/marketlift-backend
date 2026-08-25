@@ -4,6 +4,7 @@ import hashlib
 
 import httpx
 from django.conf import settings
+from marketlift.markets.service import default_country_code
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 
@@ -116,9 +117,11 @@ class NominatimGeocoder(GeocoderBackend):
     ) -> list[LocationCandidate]:
         query = (query or "").strip()
         limit = max(1, min(int(limit), 8))
-        country = (country_code or settings.MARKETLIFT_MARKET_COUNTRY_CODE).strip().lower()
+        country = (country_code or default_country_code()).strip().lower()
         if len(country) != 2:
-            raise ValidationError({"country_code": "Country code must be a two-letter ISO code."})
+            raise ValidationError(
+                {"country_code": "Country code must be a two-letter ISO code."}
+            )
         cache_key = (
             "marketlift:geocode:"
             + hashlib.sha256(

@@ -8,14 +8,22 @@ from marketlift.markets.defaults import (
     default_pricing_label,
 )
 from marketlift.markets.profiles import get_market_profile
-from marketlift.markets.service import profile_for_country_code
-
+from marketlift.markets.service import invalidate_market_cache, profile_for_country_code
 
 GH = get_market_profile("GH")
 BR = get_market_profile("BR")
 
 
 class MarketProfileTests(SimpleTestCase):
+    def setUp(self):
+        # These tests intentionally exercise the settings/bootstrap fallback
+        # without database access. Do not reuse DB-backed market rows cached by
+        # earlier TestCase classes in the same test process.
+        invalidate_market_cache()
+
+    def tearDown(self):
+        invalidate_market_cache()
+
     def test_ghana_profile(self):
         self.assertEqual(GH.currency, "GHS")
         self.assertEqual(GH.currency_symbol, "GH₵")
@@ -24,6 +32,7 @@ class MarketProfileTests(SimpleTestCase):
         self.assertEqual(GH.identity_label, "Ghana Card")
 
     @override_settings(
+        MARKETLIFT_MARKET=GH,
         MARKETLIFT_MARKET_COUNTRY_CODE="GH",
         MARKETLIFT_MARKET_CURRENCY="GHS",
         MARKETLIFT_MARKET_CURRENCY_SYMBOL="GH₵",

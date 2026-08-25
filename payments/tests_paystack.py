@@ -8,7 +8,6 @@ from marketlift.markets.profiles import get_market_profile
 from payments.providers.paystack import PaystackProvider
 from payments.webhooks import valid_paystack_signature
 
-
 GH = get_market_profile("GH")
 
 
@@ -95,13 +94,18 @@ class PaystackProviderTests(SimpleTestCase):
         import hmac
 
         body = b'{"event":"charge.success","data":{"reference":"ML-REF"}}'
-        signature = hmac.new(
-            b"sk_test_marketlift", body, hashlib.sha512
-        ).hexdigest()
+        signature = hmac.new(b"sk_test_marketlift", body, hashlib.sha512).hexdigest()
         self.assertTrue(
-            valid_paystack_signature(body=body, signature=signature, secret="sk_test_marketlift")
+            valid_paystack_signature(
+                body=body, signature=signature, secret="sk_test_marketlift"
+            )
         )
-        self.assertFalse(valid_paystack_signature(body=body, signature="invalid", secret="sk_test_marketlift"))
+        self.assertFalse(
+            valid_paystack_signature(
+                body=body, signature="invalid", secret="sk_test_marketlift"
+            )
+        )
+
 
 class PaymentProviderRoutingTests(SimpleTestCase):
     @override_settings(

@@ -15,6 +15,8 @@ class SellerPlanType:
     recommended: bool
     active: bool
     sort_order: int
+    country_code: str = ""
+    currency: str = ""
 
 
 @strawberry.type

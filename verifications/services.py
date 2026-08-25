@@ -11,15 +11,18 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit.services import record_audit_event
-from marketlift.markets.service import profile_for_country_code
+from marketlift.markets.service import (
+    identity_provider_for_country_code,
+    profile_for_country_code,
+)
 from notifications.services import create_admin_notifications, create_notification
 from .models import VerificationSubmission
 
 
 def require_identity_verification_enabled():
-    enabled = getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False) or getattr(
-        settings, "MARKETLIFT_CPF_VERIFICATION_ENABLED", False
-    )
+    enabled = getattr(
+        settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False
+    ) or getattr(settings, "MARKETLIFT_CPF_VERIFICATION_ENABLED", False)
     if not enabled:
         raise ValidationError("Seller identity verification is not available yet.")
 
@@ -59,8 +62,12 @@ def normalize_identity_number(value: str, *, country_code: str) -> str:
     return normalized
 
 
-def identity_digest(identity_number: str, *, country_code: str, identity_type: str) -> str:
-    canonical = f"{country_code.upper()}:{identity_type.strip().lower()}:{identity_number}"
+def identity_digest(
+    identity_number: str, *, country_code: str, identity_type: str
+) -> str:
+    canonical = (
+        f"{country_code.upper()}:{identity_type.strip().lower()}:{identity_number}"
+    )
     return hmac.new(
         settings.SECRET_KEY.encode(), canonical.encode(), hashlib.sha256
     ).hexdigest()
@@ -118,10 +125,15 @@ def submit_verification(
         raise ValidationError({"legalName": "Legal name is required."})
     if birth_date >= timezone.localdate():
         raise ValidationError({"birthDate": "Birth date must be in the past."})
-    if document_type and document_type not in VerificationSubmission.DocumentType.values:
+    if (
+        document_type
+        and document_type not in VerificationSubmission.DocumentType.values
+    ):
         raise ValidationError({"documentType": "Invalid identity document type."})
 
-    profile = profile_for_country_code(country_code or getattr(seller, "country_code", None))
+    profile = profile_for_country_code(
+        country_code or getattr(seller, "country_code", None)
+    )
     if getattr(seller, "country_code", profile.country_code) != profile.country_code:
         raise ValidationError(
             {"countryCode": "Verification country must match the seller market."}
@@ -183,10 +195,7 @@ def submit_verification(
         document_front_url=document_front_url,
         document_back_url=document_back_url,
         selfie_url=selfie_url,
-        provider=(
-            getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled")
-            or "disabled"
-        ),
+        provider=identity_provider_for_country_code(profile.country_code),
         provider_result="Identity checks queued for review",
         risk_flags=flags,
         risk_level=risk,

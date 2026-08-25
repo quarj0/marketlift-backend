@@ -3,6 +3,7 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
+from marketlift.markets.service import default_country_code
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.db import transaction, models
@@ -69,7 +70,7 @@ def _resolve_listing_location(
         state_code=state_code,
         city=city,
         district=district,
-        country_code=country_code or settings.MARKETLIFT_MARKET_COUNTRY_CODE,
+        country_code=country_code or default_country_code(),
     )
     lat, lng = validate_coordinates(latitude, longitude)
     return {

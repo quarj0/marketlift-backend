@@ -1,5 +1,6 @@
 from unittest.mock import Mock, patch
 from marketlift.markets.profiles import get_market_profile
+from marketlift.markets.service import invalidate_market_cache
 import hashlib
 import hmac
 import uuid
@@ -11,6 +12,8 @@ from listings.models import Listing
 from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan, SellerSubscription
 from promotions.models import PromotionProduct, ListingPromotion
+from platform_settings.market_catalog import ensure_market_catalog
+from platform_settings.models import Market, PromotionProductMarketPrice, SellerPlanMarketPrice
 from .models import Payment
 from .services import (
     create_promotion_payment,
@@ -34,6 +37,7 @@ class PaymentsReleaseGateTests(SimpleTestCase):
 )
 class PaymentTests(TestCase):
     def setUp(self):
+        ensure_market_catalog()
         U = get_user_model()
         self.user = U.objects.create_user(
             email="pay@example.com", password="testpass123", full_name="Pay Seller"
@@ -69,6 +73,28 @@ class PaymentTests(TestCase):
         )
         self.product = PromotionProduct.objects.create(
             code="featured", name="Featured", duration_days=7, price=19.90
+        )
+        # Payments now require explicit per-market pricing. This deliberately
+        # avoids falling back from BRL values into another market's currency.
+        market = Market.objects.get(code=self.seller.country_code)
+        market.is_enabled = True
+        market.is_default = True
+        market.payment_provider = "mock"
+        market.payment_methods = ["pix", "card", "boleto"]
+        market.save()
+        # TestCase wraps each test in an outer transaction, so Market.save()'s
+        # on_commit cache invalidation does not run until teardown. Clear the
+        # runtime market cache explicitly before payment/provider resolution.
+        invalidate_market_cache()
+        SellerPlanMarketPrice.objects.create(
+            market=market,
+            plan=self.pro,
+            monthly_price=self.pro.monthly_price,
+            yearly_price=self.pro.yearly_price,
+            active=True,
+        )
+        PromotionProductMarketPrice.objects.create(
+            market=market, product=self.product, price=self.product.price, active=True
         )
 
     def test_subscription_payment_is_idempotent_and_activates_plan(self):

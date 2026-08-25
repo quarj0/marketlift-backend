@@ -31,6 +31,7 @@ class MarketProfile:
             "languageCode": self.django_language_code,
             "currency": self.currency,
             "currencySymbol": self.currency_symbol,
+            "paymentProvider": self.default_payment_provider,
             "paymentMethods": list(self.payment_methods),
             "identityLabel": self.identity_label,
             "identityKey": self.identity_key,
@@ -160,7 +161,9 @@ def list_market_profiles() -> tuple[MarketProfile, ...]:
     return tuple(_MARKETS[key] for key in sorted(_MARKETS))
 
 
-def market_profiles_for_codes(codes: list[str] | tuple[str, ...]) -> tuple[MarketProfile, ...]:
+def market_profiles_for_codes(
+    codes: list[str] | tuple[str, ...],
+) -> tuple[MarketProfile, ...]:
     seen: set[str] = set()
     profiles: list[MarketProfile] = []
     for code in codes:

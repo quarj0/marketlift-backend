@@ -7,9 +7,7 @@ from marketlift.search.parser import parse_marketplace_query
 
 class MultiMarketSearchParserTests(SimpleTestCase):
     def test_ghana_cedi_query(self):
-        parsed = parse_marketplace_query(
-            "Samsung S24 8GB under GH₵6,000 in Kumasi"
-        )
+        parsed = parse_marketplace_query("Samsung S24 8GB under GH₵6,000 in Kumasi")
         self.assertEqual(parsed.core_tokens, ("samsung", "s24", "kumasi"))
         self.assertEqual(parsed.specification_tokens, ("8gb",))
         self.assertEqual(parsed.max_price, Decimal("6000"))

@@ -40,7 +40,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="verificationsubmission",
             name="cpf_digest",
-            field=models.CharField(blank=True, db_index=True, default="", max_length=64),
+            field=models.CharField(
+                blank=True, db_index=True, default="", max_length=64
+            ),
         ),
         migrations.AlterField(
             model_name="verificationsubmission",

@@ -7,7 +7,10 @@ from audit.services import record_audit_event
 from uploads.models import UploadAsset
 from uploads.services import claim_upload
 from marketlift.location.validators import validate_location_strings
-from marketlift.markets.service import normalize_enabled_country_code
+from marketlift.markets.service import (
+    normalize_enabled_country_code,
+    profile_for_country_code,
+)
 
 from .models import AccountSettings, User
 
@@ -79,7 +82,11 @@ def reactivate_account(*, user, actor, reason: str, request=None):
 
 
 def get_account_settings(user):
-    return AccountSettings.objects.get_or_create(user=user)[0]
+    profile = profile_for_country_code(user.country_code)
+    return AccountSettings.objects.get_or_create(
+        user=user,
+        defaults={"language": profile.locale, "currency": profile.currency},
+    )[0]
 
 
 @transaction.atomic
@@ -128,7 +135,9 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
         district = data.get("district", user.district)
         # Empty location remains valid on a buyer account. Once city/state values are
         # supplied, reuse the same country-aware validation used by listings.
-        if any(str(value or "").strip() for value in (state, state_code, city, district)):
+        if any(
+            str(value or "").strip() for value in (state, state_code, city, district)
+        ):
             location = validate_location_strings(
                 country_code=country_code,
                 state=state,

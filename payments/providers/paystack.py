@@ -8,9 +8,9 @@ import httpx
 from django.conf import settings
 
 from marketlift.markets.profiles import get_market_profile
+from marketlift.markets.service import enabled_market_profiles
 
 from .base import BasePaymentProvider, PaymentProviderError, ProviderResult
-
 
 _METHOD_CHANNEL = {
     "card": "card",
@@ -23,14 +23,16 @@ _METHOD_CHANNEL = {
 
 def _profile_for_currency(currency: str):
     currency = (currency or "").upper()
-    for profile in settings.MARKETLIFT_ENABLED_MARKETS:
+    for profile in enabled_market_profiles():
         if profile.currency == currency:
             return profile
-    # A one-market deployment can still verify historical rows after changing
-    # MARKETLIFT_ENABLED_MARKETS by resolving the current profile directly.
-    current = get_market_profile(settings.MARKETLIFT_MARKET_CODE)
-    if current.currency == currency:
-        return current
+    # Historical payment verification must keep working after a market is
+    # disabled, so fall back to the static country definitions by currency.
+    from marketlift.markets.profiles import list_market_profiles
+
+    for profile in list_market_profiles():
+        if profile.currency == currency:
+            return profile
     raise PaymentProviderError(f"Paystack currency {currency!r} is not configured.")
 
 
@@ -47,9 +49,9 @@ def _major_amount(value: Any, currency: str) -> Decimal | None:
         return None
     profile = _profile_for_currency(currency)
     try:
-        return (Decimal(str(value)) / Decimal(profile.currency_subunit_factor)).quantize(
-            Decimal("0.01")
-        )
+        return (
+            Decimal(str(value)) / Decimal(profile.currency_subunit_factor)
+        ).quantize(Decimal("0.01"))
     except Exception:
         return None
 
@@ -84,7 +86,9 @@ class PaystackProvider(BasePaymentProvider):
 
     @property
     def base_url(self) -> str:
-        return getattr(settings, "PAYSTACK_API_BASE_URL", "https://api.paystack.co").rstrip("/")
+        return getattr(
+            settings, "PAYSTACK_API_BASE_URL", "https://api.paystack.co"
+        ).rstrip("/")
 
     def _headers(self) -> dict[str, str]:
         secret = getattr(settings, "PAYSTACK_SECRET_KEY", "").strip()
@@ -112,11 +116,15 @@ class PaystackProvider(BasePaymentProvider):
                 detail = exc.response.json()
             except Exception:
                 detail = exc.response.text
-            raise PaymentProviderError(f"Paystack rejected the request: {detail}") from exc
+            raise PaymentProviderError(
+                f"Paystack rejected the request: {detail}"
+            ) from exc
         except httpx.HTTPError as exc:
             raise PaymentProviderError("Could not reach Paystack.") from exc
         except ValueError as exc:
-            raise PaymentProviderError("Paystack returned an invalid response.") from exc
+            raise PaymentProviderError(
+                "Paystack returned an invalid response."
+            ) from exc
         if not isinstance(payload, dict) or payload.get("status") is False:
             raise PaymentProviderError(
                 str((payload or {}).get("message") or "Paystack rejected the request.")
@@ -133,7 +141,9 @@ class PaystackProvider(BasePaymentProvider):
             )
         email = str((payer or {}).get("email") or payment.user.email or "").strip()
         if not email:
-            raise PaymentProviderError("Paystack checkout requires a payer email address.")
+            raise PaymentProviderError(
+                "Paystack checkout requires a payer email address."
+            )
 
         payload: dict[str, Any] = {
             "email": email,

@@ -7,13 +7,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listings', '0008_backfill_brazil_country_code'),
+        ("listings", "0008_backfill_brazil_country_code"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='listing',
-            name='country_code',
-            field=models.CharField(blank=True, db_index=True, default=marketlift.markets.defaults.default_market_country_code, max_length=2),
+            model_name="listing",
+            name="country_code",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                default=marketlift.markets.defaults.default_market_country_code,
+                max_length=2,
+            ),
         ),
     ]

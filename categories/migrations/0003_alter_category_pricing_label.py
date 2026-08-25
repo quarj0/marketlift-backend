@@ -7,13 +7,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0002_categoryfield_allow_custom_value'),
+        ("categories", "0002_categoryfield_allow_custom_value"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='category',
-            name='pricing_label',
-            field=models.CharField(default=marketlift.markets.defaults.default_pricing_label, max_length=120),
+            model_name="category",
+            name="pricing_label",
+            field=models.CharField(
+                default=marketlift.markets.defaults.default_pricing_label,
+                max_length=120,
+            ),
         ),
     ]

@@ -3,7 +3,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from marketlift.common.models import UUIDTimeStampedModel
-from marketlift.markets.defaults import default_market_country_code, default_market_currency
+from marketlift.markets.defaults import (
+    default_market_country_code,
+    default_market_currency,
+)
 
 
 class Payment(UUIDTimeStampedModel):
@@ -39,8 +42,12 @@ class Payment(UUIDTimeStampedModel):
         max_length=16, choices=Status.choices, default=Status.PENDING
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    country_code = models.CharField(max_length=2, default=default_market_country_code, db_index=True)
-    currency = models.CharField(max_length=3, default=default_market_currency, editable=False)
+    country_code = models.CharField(
+        max_length=2, default=default_market_country_code, db_index=True
+    )
+    currency = models.CharField(
+        max_length=3, default=default_market_currency, editable=False
+    )
 
     reference = models.CharField(max_length=64, unique=True)
     idempotency_key = models.CharField(max_length=80, unique=True)

@@ -1,7 +1,9 @@
 import strawberry
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 
 from marketlift.graphql.auth import require_seller, require_staff
+from marketlift.markets.service import active_market_profile, profile_for_country_code
 from subscriptions.models import SellerPlan, SellerSubscription
 from subscriptions.services import get_active_subscription, get_effective_plan
 from .mappers import plan_to_type, subscription_to_type
@@ -11,13 +13,26 @@ from .types import SellerPlanType, SellerSubscriptionType
 @strawberry.type
 class SubscriptionQuery:
     @strawberry.field
-    def seller_plans(self) -> list[SellerPlanType]:
-        return [plan_to_type(plan) for plan in SellerPlan.objects.filter(active=True)]
+    def seller_plans(self, country_code: str | None = None) -> list[SellerPlanType]:
+        profile = profile_for_country_code(
+            country_code or active_market_profile().country_code
+        )
+        rows: list[SellerPlanType] = []
+        for plan in SellerPlan.objects.filter(active=True):
+            try:
+                rows.append(plan_to_type(plan, country_code=profile.country_code))
+            except ValidationError:
+                # A paid plan without a configured market price is intentionally
+                # unavailable in that market rather than inheriting another
+                # country's numeric price.
+                continue
+        return rows
 
     @strawberry.field
     def my_seller_plan(self, info: strawberry.Info) -> SellerPlanType | None:
-        plan = get_effective_plan(require_seller(info))
-        return plan_to_type(plan) if plan else None
+        seller = require_seller(info)
+        plan = get_effective_plan(seller)
+        return plan_to_type(plan, country_code=seller.country_code) if plan else None
 
     @strawberry.field
     def my_subscription(self, info: strawberry.Info) -> SellerSubscriptionType | None:

@@ -253,10 +253,13 @@ class RegisterView(APIView):
                 {"phone": ["An account with this phone already exists."]}, status=400
             )
 
+        from marketlift.markets.service import default_country_code
+
         user = User.objects.create_user(
             email=data["email"],
             phone=data["phone"],
             full_name=data["fullName"],
+            country_code=data.get("countryCode") or default_country_code(),
             password=data["password"],
             is_active=False,
             terms_accepted_at=timezone.now(),
@@ -268,6 +271,7 @@ class RegisterView(APIView):
                 "name": user.full_name,
                 "email": user.email,
                 "phone": user.phone,
+                "countryCode": user.country_code,
                 "requiresVerification": True,
             },
             status=201,

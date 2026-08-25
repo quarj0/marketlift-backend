@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from categories.models import CategoryField
 from listings.models import Listing
 from sellers.models import SellerProfile
-from marketlift.markets.service import profile_for_country_code
+from marketlift.markets.service import profile_for_country_code, default_country_code
 
 from .contracts import SearchPage, SearchRequest
 from .parser import parse_marketplace_query
@@ -177,7 +177,7 @@ def validate_search_request(request: SearchRequest) -> SearchRequest:
     country_code = (
         normalize_country_code(request.country_code)
         if request.country_code
-        else settings.MARKETLIFT_MARKET_COUNTRY_CODE
+        else default_country_code()
     )
     profile_for_country_code(country_code)
     if country_code == "BR":

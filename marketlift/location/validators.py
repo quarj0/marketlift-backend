@@ -8,7 +8,10 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from marketlift.locations import BRAZIL_STATES, normalize_brazil_state_code
-from marketlift.markets.service import normalize_enabled_country_code
+from marketlift.markets.service import (
+    default_country_code,
+    normalize_enabled_country_code,
+)
 
 _COUNTRY_RE = re.compile(r"^[A-Z]{2}$")
 
@@ -76,7 +79,7 @@ def validate_location_strings(
     district: str = "",
     country_code: str | None = None,
 ) -> dict[str, str]:
-    country = normalize_country_code(country_code) or settings.MARKETLIFT_MARKET_COUNTRY_CODE
+    country = normalize_country_code(country_code) or default_country_code()
     country = normalize_enabled_country_code(country)
 
     raw_state = (state or "").strip()

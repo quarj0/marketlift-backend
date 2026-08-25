@@ -7,6 +7,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_503_SERVICE_UNAVAILABLE
 from django.conf import settings
+from marketlift.markets.service import (
+    active_market_profile,
+    enabled_market_profiles,
+    identity_provider_for_country_code,
+)
 
 
 @api_view(["GET"])
@@ -14,23 +19,22 @@ from django.conf import settings
 def market_profile(request):
     """Public deployment capabilities used to configure marketplace frontends."""
 
-    active = settings.MARKETLIFT_MARKET
+    active = active_market_profile()
+    enabled = enabled_market_profiles()
     return Response(
         {
             "active": active.as_public_dict(),
-            "enabledMarkets": [
-                profile.as_public_dict() for profile in settings.MARKETLIFT_ENABLED_MARKETS
-            ],
+            "enabledMarkets": [profile.as_public_dict() for profile in enabled],
             "payments": {
                 "enabled": bool(settings.MARKETLIFT_PAYMENTS_ENABLED),
-                "provider": settings.MARKETLIFT_PAYMENT_PROVIDER,
-                "methods": list(settings.MARKETLIFT_PAYMENT_METHODS),
+                "provider": active.default_payment_provider,
+                "methods": list(active.payment_methods),
             },
             "identityVerification": {
                 "enabled": bool(
                     getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False)
                 ),
-                "provider": settings.MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER,
+                "provider": identity_provider_for_country_code(active.country_code),
                 "label": active.identity_label,
                 "key": active.identity_key,
             },

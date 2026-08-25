@@ -44,7 +44,9 @@ def sync_paystack_transaction(self, reference: str):
         # The initialize response always uses our own payment.reference as the
         # Paystack reference. This fallback also handles a webhook racing the DB
         # update that stores provider_order_id.
-        payment = Payment.objects.filter(provider="paystack", reference=reference).first()
+        payment = Payment.objects.filter(
+            provider="paystack", reference=reference
+        ).first()
     if not payment:
         return {"ignored": True, "reason": "payment_not_found"}
     result = provider.get_order(reference)

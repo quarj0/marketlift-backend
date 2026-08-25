@@ -13,7 +13,7 @@ from marketlift.location.service import geocode_locations, reverse_geocode_locat
 from marketlift.location.tokens import encode_location_token
 from marketlift.location.validators import normalize_country_code, validate_coordinates
 from marketlift.locations import BRAZIL_REGIONS
-from marketlift.markets.service import profile_for_country_code
+from marketlift.markets.service import profile_for_country_code, default_country_code
 from marketlift.security.rate_limit import enforce_rate_limit
 
 
@@ -45,7 +45,7 @@ def _country(request) -> str:
     raw = (
         request.query_params.get("country")
         or request.query_params.get("countryCode")
-        or settings.MARKETLIFT_MARKET_COUNTRY_CODE
+        or default_country_code()
     )
     try:
         code = normalize_country_code(raw)
@@ -128,14 +128,18 @@ class LocationCitiesView(APIView):
                 cities = brazil_cities(state, query=query, limit=limit)
             except DjangoValidationError as exc:
                 raise _drf(exc) from exc
-            return Response({"cities": cities, "mode": "catalog", "countryCode": country})
+            return Response(
+                {"cities": cities, "mode": "catalog", "countryCode": country}
+            )
 
         qs = Listing.objects.public().filter(country_code=country).exclude(city="")
         if state:
             qs = qs.filter(state_code__iexact=state)
         if query:
             qs = qs.filter(city__icontains=query)
-        cities = list(qs.order_by("city").values_list("city", flat=True).distinct()[:limit])
+        cities = list(
+            qs.order_by("city").values_list("city", flat=True).distinct()[:limit]
+        )
         return Response({"cities": cities, "mode": "inventory", "countryCode": country})
 
 
@@ -189,7 +193,9 @@ class LocationSearchView(APIView):
         rows = [row for row in rows if (row.country_code or "").upper() == country]
         return Response(
             {
-                "results": [row.as_dict(token=encode_location_token(row)) for row in rows],
+                "results": [
+                    row.as_dict(token=encode_location_token(row)) for row in rows
+                ],
                 "countryCode": country,
             }
         )
