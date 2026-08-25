@@ -9,6 +9,7 @@ from marketlift.graphql.auth import request_from_info, require_staff
 from marketlift.graphql.errors import not_found_error, validation_error
 from marketlift.markets.profiles import get_market_profile
 from payments.models import Payment
+from platform_settings.readiness import market_readiness
 from platform_settings.models import (
     Market,
     PlatformConfiguration,
@@ -210,6 +211,22 @@ class PlatformSettingsMutation:
             if input.is_default:
                 market.is_enabled = True
 
+        enabling_market = (input.is_enabled is True and not before["is_enabled"]) or (
+            input.is_default is True and not before["is_default"]
+        )
+        if enabling_market:
+            readiness = market_readiness(market)
+            if not readiness.launch_ready:
+                raise validation_error(
+                    ValidationError(
+                        {
+                            "isEnabled": "Market is not launch-ready: "
+                            + "; ".join(readiness.launch_issues)
+                        }
+                    ),
+                    code="MARKET_NOT_LAUNCH_READY",
+                )
+
         try:
             market.full_clean(exclude=("id",))
             market.save()
@@ -257,6 +274,13 @@ class PlatformSettingsMutation:
                 ValidationError("Market prices cannot be negative."),
                 code="MARKET_PRICE_VALIDATION_ERROR",
             )
+        if active and plan.code != "free" and (monthly_price <= 0 or yearly_price <= 0):
+            raise validation_error(
+                ValidationError(
+                    "Active paid plans require positive monthly and yearly prices."
+                ),
+                code="MARKET_PRICE_VALIDATION_ERROR",
+            )
         row, _ = SellerPlanMarketPrice.objects.update_or_create(
             market=market,
             plan=plan,
@@ -300,6 +324,11 @@ class PlatformSettingsMutation:
         if price < 0:
             raise validation_error(
                 ValidationError("Market price cannot be negative."),
+                code="MARKET_PRICE_VALIDATION_ERROR",
+            )
+        if active and price <= 0:
+            raise validation_error(
+                ValidationError("Active promotions require a price greater than zero."),
                 code="MARKET_PRICE_VALIDATION_ERROR",
             )
         row, _ = PromotionProductMarketPrice.objects.update_or_create(

@@ -29,9 +29,17 @@ class PaymentType:
 
 
 @strawberry.type
+class PaymentCurrencySummaryType:
+    currency: str
+    paid_total: float
+    refunded_total: float
+
+
+@strawberry.type
 class PaymentSummaryType:
     paid_total: float
     refunded_total: float
+    currency_totals: list[PaymentCurrencySummaryType]
     paid_count: int
     failed_count: int
     pending_count: int

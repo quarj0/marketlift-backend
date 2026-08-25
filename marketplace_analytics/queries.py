@@ -35,10 +35,13 @@ class AnalyticsQuery:
 
     @strawberry.field
     def admin_analytics(
-        self, info: strawberry.Info, days: int = 30
+        self,
+        info: strawberry.Info,
+        days: int = 30,
+        country_code: str | None = None,
     ) -> AdminAnalyticsType:
         require_staff(info, roles={"admin", "finance", "moderator", "support"})
-        data = analytics_data(days)
+        data = analytics_data(days, country_code=country_code)
         return AdminAnalyticsType(
             user_growth=_series(data["user_growth"]),
             seller_growth=_series(data["seller_growth"]),

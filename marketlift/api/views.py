@@ -7,10 +7,16 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_503_SERVICE_UNAVAILABLE
 from django.conf import settings
+from marketlift.markets.pricing import market_pricing_readiness
 from marketlift.markets.service import (
     active_market_profile,
     enabled_market_profiles,
     identity_provider_for_country_code,
+)
+from platform_settings.models import Market
+from platform_settings.readiness import (
+    identity_provider_readiness,
+    payment_provider_readiness,
 )
 
 
@@ -21,19 +27,54 @@ def market_profile(request):
 
     active = active_market_profile()
     enabled = enabled_market_profiles()
+    rows = {
+        row.code: row
+        for row in Market.objects.filter(code__in=[profile.code for profile in enabled])
+    }
+
+    def public_profile(profile):
+        payload = profile.as_public_dict()
+        row = rows.get(profile.code)
+        payment_ready = False
+        identity_ready = False
+        if row is not None:
+            provider_ready, _ = payment_provider_readiness(row)
+            pricing_ready, _ = market_pricing_readiness(row)
+            identity_provider_ready, _ = identity_provider_readiness(row)
+            payment_ready = bool(
+                settings.MARKETLIFT_PAYMENTS_ENABLED
+                and provider_ready
+                and pricing_ready
+                and row.payment_methods
+            )
+            identity_ready = bool(
+                getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False)
+                and identity_provider_ready
+            )
+        payload["paymentsEnabled"] = payment_ready
+        payload["identityVerificationEnabled"] = identity_ready
+        return payload
+
+    enabled_payloads = [public_profile(profile) for profile in enabled]
+    active_payload = next(
+        (
+            payload
+            for payload in enabled_payloads
+            if payload["countryCode"] == active.country_code
+        ),
+        public_profile(active),
+    )
     return Response(
         {
-            "active": active.as_public_dict(),
-            "enabledMarkets": [profile.as_public_dict() for profile in enabled],
+            "active": active_payload,
+            "enabledMarkets": enabled_payloads,
             "payments": {
-                "enabled": bool(settings.MARKETLIFT_PAYMENTS_ENABLED),
+                "enabled": bool(active_payload["paymentsEnabled"]),
                 "provider": active.default_payment_provider,
                 "methods": list(active.payment_methods),
             },
             "identityVerification": {
-                "enabled": bool(
-                    getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False)
-                ),
+                "enabled": bool(active_payload["identityVerificationEnabled"]),
                 "provider": identity_provider_for_country_code(active.country_code),
                 "label": active.identity_label,
                 "key": active.identity_key,

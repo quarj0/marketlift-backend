@@ -12,6 +12,7 @@ input AccountProfileInput {
   email: String = null
   phone: String = null
   bio: String = null
+  countryCode: String = null
   state: String = null
   stateCode: String = null
   city: String = null
@@ -95,6 +96,7 @@ type AdminSellerType {
   name: String!
   email: String!
   sellerType: String!
+  countryCode: String!
   verified: Boolean!
   suspended: Boolean!
   activatedAt: DateTime!
@@ -146,7 +148,7 @@ input CategoryAdminInput {
   active: Boolean! = true
   sortOrder: Int! = 0
   pricingMode: String! = "required"
-  pricingLabel: String! = "Price (R$)"
+  pricingLabel: String! = ""
   pricingPlaceholder: String = null
   conditionEnabled: Boolean! = true
   conditionRequired: Boolean! = true
@@ -409,6 +411,41 @@ type LocationType {
   district: String
 }
 
+input MarketConfigurationInput {
+  isEnabled: Boolean = null
+  isDefault: Boolean = null
+  paymentProvider: String = null
+  paymentMethods: [String!] = null
+  identityProvider: String = null
+  sortOrder: Int = null
+}
+
+type MarketType {
+  code: String!
+  countryName: String!
+  locale: String!
+  currency: String!
+  currencySymbol: String!
+  timezone: String!
+  paymentProvider: String!
+  paymentMethods: [String!]!
+  identityProvider: String!
+  identityLabel: String!
+  identityKey: String!
+  locationMode: String!
+  isEnabled: Boolean!
+  isDefault: Boolean!
+  sortOrder: Int!
+  pricingReady: Boolean!
+  pricingIssues: [String!]!
+  paymentReady: Boolean!
+  paymentReadinessMessage: String!
+  identityReady: Boolean!
+  identityReadinessMessage: String!
+  launchReady: Boolean!
+  launchIssues: [String!]!
+}
+
 type MarketplaceHealthType {
   paymentSuccessPercent: Float!
   openReportRatePercent: Float!
@@ -462,7 +499,7 @@ type Mutation {
   setAdminRole(userId: ID!, role: String!, enabled: Boolean! = true): AdminUserType!
   inviteAdministrator(email: String!, role: String!): AdminInvitationType!
   revokeAdminInvitation(invitationId: ID!): AdminInvitationType!
-  activateSelling(sellerType: String! = "individual", displayName: String! = ""): SellerType!
+  activateSelling(sellerType: String! = "individual", displayName: String! = "", countryCode: String = null): SellerType!
   updateMySellerProfile(input: SellerProfileInput!): SellerType!
   updateMySellerSettings(input: SellerSettingsInput!): SellerSettingsType!
   followSeller(sellerId: ID!): SellerType!
@@ -524,6 +561,9 @@ type Mutation {
   adminReplySupportTicket(ticketId: ID!, message: String!, internal: Boolean! = false, status: String = null): SupportTicketType!
   adminUpdateSupportTicket(ticketId: ID!, status: String = null, priority: String = null, assignedToUserId: ID = null): SupportTicketType!
   updatePlatformConfiguration(input: PlatformConfigurationInput!): PlatformConfigurationType!
+  updateMarket(code: String!, input: MarketConfigurationInput!): MarketType!
+  setSellerPlanMarketPrice(marketCode: String!, planId: String!, monthlyPrice: Float!, yearlyPrice: Float!, active: Boolean! = true): SellerPlanMarketPriceType!
+  setPromotionMarketPrice(marketCode: String!, promotionId: String!, price: Float!, active: Boolean! = true): PromotionMarketPriceType!
   invalidateAllSessions(reason: String!): Int!
 }
 
@@ -536,6 +576,12 @@ type NotificationType {
   read: Boolean!
   href: String
   data: JSON!
+}
+
+type PaymentCurrencySummaryType {
+  currency: String!
+  paidTotal: Float!
+  refundedTotal: Float!
 }
 
 input PaymentPayerInput {
@@ -555,6 +601,7 @@ input PaymentPayerInput {
 type PaymentSummaryType {
   paidTotal: Float!
   refundedTotal: Float!
+  currencyTotals: [PaymentCurrencySummaryType!]!
   paidCount: Int!
   failedCount: Int!
   pendingCount: Int!
@@ -620,12 +667,41 @@ type PlatformConfigurationType {
   featureFlags: JSON!
 }
 
+type ProductionReadinessItemType {
+  key: String!
+  label: String!
+  category: String!
+  status: String!
+  required: Boolean!
+  message: String!
+  hint: String!
+}
+
+type ProductionReadinessType {
+  ready: Boolean!
+  blockers: Int!
+  warnings: Int!
+  checkedAt: String!
+  items: [ProductionReadinessItemType!]!
+}
+
+type PromotionMarketPriceType {
+  marketCode: String!
+  currency: String!
+  promotionId: String!
+  promotionName: String!
+  price: Float!
+  active: Boolean!
+}
+
 type PromotionOptionType {
   id: String!
   name: String!
   description: String!
   durationDays: Int!
   price: Float!
+  countryCode: String!
+  currency: String!
 }
 
 type Query {
@@ -660,12 +736,12 @@ type Query {
   myRecentlyViewedListings(limit: Int! = 20): [ListingType!]!
   adminListings(search: String = null, status: String = null, includeSellerDeleted: Boolean! = true, limit: Int! = 100, offset: Int! = 0): [ListingType!]!
   adminListing(id: String!): ListingType
-  sellerPlans: [SellerPlanType!]!
+  sellerPlans(countryCode: String = null): [SellerPlanType!]!
   mySellerPlan: SellerPlanType
   mySubscription: SellerSubscriptionType
   adminSellerPlans: [SellerPlanType!]!
   adminSubscriptions(search: String = null, status: String = null, limit: Int! = 50, offset: Int! = 0): [SellerSubscriptionType!]!
-  promotionOptions: [PromotionOptionType!]!
+  promotionOptions(countryCode: String = null): [PromotionOptionType!]!
   myListingPromotions(listingId: ID = null): [ListingPromotionType!]!
   myPayments(limit: Int! = 50, offset: Int! = 0): [PaymentType!]!
   payment(id: ID!): PaymentType
@@ -696,8 +772,12 @@ type Query {
   supportTickets(status: String = null, limit: Int! = 100): [SupportTicketType!]!
   supportTicket(id: ID!): SupportTicketType
   platformConfiguration: PlatformConfigurationType!
+  adminProductionReadiness: ProductionReadinessType!
+  adminMarkets: [MarketType!]!
+  adminSellerPlanMarketPrices(marketCode: String = null): [SellerPlanMarketPriceType!]!
+  adminPromotionMarketPrices(marketCode: String = null): [PromotionMarketPriceType!]!
   adminDashboard: AdminDashboardType!
-  adminAnalytics(days: Int! = 30): AdminAnalyticsType!
+  adminAnalytics(days: Int! = 30, countryCode: String = null): AdminAnalyticsType!
 }
 
 input ReportInput {
@@ -789,6 +869,16 @@ type SellerDashboardPlanType {
   limit: Int!
 }
 
+type SellerPlanMarketPriceType {
+  marketCode: String!
+  currency: String!
+  planId: String!
+  planName: String!
+  monthlyPrice: Float!
+  yearlyPrice: Float!
+  active: Boolean!
+}
+
 type SellerPlanType {
   id: String!
   name: String!
@@ -801,6 +891,8 @@ type SellerPlanType {
   recommended: Boolean!
   active: Boolean!
   sortOrder: Int!
+  countryCode: String!
+  currency: String!
 }
 
 input SellerProfileInput {
@@ -857,6 +949,7 @@ type SellerType {
   phone: String
   verified: Boolean!
   sellerType: String!
+  countryCode: String!
   isSuspended: Boolean!
   rating: Float!
   reviews: Int!
@@ -922,9 +1015,12 @@ type VerificationQueueSummaryType {
 }
 
 input VerificationSubmissionInput {
-  cpf: String!
   legalName: String!
   birthDate: Date!
+  identityNumber: String = null
+  identityType: String = null
+  countryCode: String = null
+  cpf: String = null
   documentType: String = null
   documentFrontUrl: String = null
   documentBackUrl: String = null
@@ -935,7 +1031,10 @@ type VerificationType {
   id: ID!
   sellerId: ID!
   sellerName: String!
-  cpfMasked: String!
+  identityCountryCode: String!
+  identityType: String!
+  identityMasked: String!
+  cpfMasked: String
   legalName: String!
   birthDate: Date!
   documentType: String
@@ -946,6 +1045,7 @@ type VerificationType {
   riskLevel: String!
   riskFlags: [String!]!
   automatedChecks: JSON!
+  provider: String
   providerResult: String
   submittedAt: DateTime!
   reviewStartedAt: DateTime

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import OperationalError, ProgrammingError
+
 try:
     from django.test.testcases import DatabaseOperationForbidden
 except Exception:  # pragma: no cover
@@ -66,7 +67,9 @@ def _db_market_rows(*, enabled_only: bool = False):
             )
             from .profiles import list_market_profiles
 
-            expected_codes = {profile.country_code for profile in list_market_profiles()}
+            expected_codes = {
+                profile.country_code for profile in list_market_profiles()
+            }
             present_codes = {row["code"] for row in rows}
             if not expected_codes.issubset(present_codes):
                 # A reused test database may have been flushed while migration
@@ -77,7 +80,9 @@ def _db_market_rows(*, enabled_only: bool = False):
 
                 ensure_market_catalog()
                 rows = list(
-                    Market.objects.order_by("sort_order", "country_name").values(*fields)
+                    Market.objects.order_by("sort_order", "country_name").values(
+                        *fields
+                    )
                 )
             try:
                 cache.set("ml:markets:catalog:v1", rows, timeout=60)
@@ -163,6 +168,8 @@ def identity_provider_for_country_code(country_code: str | None) -> str:
     for row in rows:
         if row.code == code:
             return (row.identity_provider or "disabled").strip().lower()
-    return str(
-        getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled")
-    ).strip().lower()
+    return (
+        str(getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled"))
+        .strip()
+        .lower()
+    )

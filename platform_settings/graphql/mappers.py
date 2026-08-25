@@ -1,4 +1,5 @@
 from marketlift.markets.pricing import market_pricing_readiness
+from platform_settings.readiness import market_readiness
 from platform_settings.models import (
     Market,
     PlatformConfiguration,
@@ -35,6 +36,7 @@ def config_to_type(config: PlatformConfiguration) -> PlatformConfigurationType:
 
 def market_to_type(market: Market) -> MarketType:
     ready, issues = market_pricing_readiness(market)
+    readiness = market_readiness(market)
     return MarketType(
         code=market.code,
         country_name=market.country_name,
@@ -55,6 +57,12 @@ def market_to_type(market: Market) -> MarketType:
         sort_order=market.sort_order,
         pricing_ready=ready,
         pricing_issues=issues,
+        payment_ready=readiness.payment_ready,
+        payment_readiness_message=readiness.payment_message,
+        identity_ready=readiness.identity_ready,
+        identity_readiness_message=readiness.identity_message,
+        launch_ready=readiness.launch_ready,
+        launch_issues=readiness.launch_issues,
     )
 
 

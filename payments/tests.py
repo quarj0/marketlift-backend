@@ -13,7 +13,11 @@ from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan, SellerSubscription
 from promotions.models import PromotionProduct, ListingPromotion
 from platform_settings.market_catalog import ensure_market_catalog
-from platform_settings.models import Market, PromotionProductMarketPrice, SellerPlanMarketPrice
+from platform_settings.models import (
+    Market,
+    PromotionProductMarketPrice,
+    SellerPlanMarketPrice,
+)
 from .models import Payment
 from .services import (
     create_promotion_payment,
@@ -210,7 +214,10 @@ class PaystackProviderUnitTests(SimpleTestCase):
         self.assertEqual(payload["currency"], "GHS")
         self.assertEqual(payload["reference"], "ML-ABC123")
         self.assertEqual(payload["channels"], ["mobile_money"])
-        self.assertEqual(result.checkout_data["authorization_url"], "https://checkout.paystack.com/example")
+        self.assertEqual(
+            result.checkout_data["authorization_url"],
+            "https://checkout.paystack.com/example",
+        )
 
     @override_settings(
         MARKETLIFT_MARKET_CODE="CI",

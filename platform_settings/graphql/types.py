@@ -57,6 +57,12 @@ class MarketType:
     sort_order: int
     pricing_ready: bool
     pricing_issues: list[str]
+    payment_ready: bool
+    payment_readiness_message: str
+    identity_ready: bool
+    identity_readiness_message: str
+    launch_ready: bool
+    launch_issues: list[str]
 
 
 @strawberry.input
@@ -88,3 +94,23 @@ class PromotionMarketPriceType:
     promotion_name: str
     price: float
     active: bool
+
+
+@strawberry.type
+class ProductionReadinessItemType:
+    key: str
+    label: str
+    category: str
+    status: str
+    required: bool
+    message: str
+    hint: str
+
+
+@strawberry.type
+class ProductionReadinessType:
+    ready: bool
+    blockers: int
+    warnings: int
+    checked_at: str
+    items: list[ProductionReadinessItemType]

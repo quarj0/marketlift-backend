@@ -71,15 +71,19 @@ def ensure_market_catalog(*, using: str = "default") -> int:
 
             enabled = manager.filter(is_enabled=True)
             if not enabled.exists():
-                fallback = manager.filter(code=bootstrap).first() or manager.order_by(
-                    "sort_order", "country_name"
-                ).first()
+                fallback = (
+                    manager.filter(code=bootstrap).first()
+                    or manager.order_by("sort_order", "country_name").first()
+                )
                 if fallback is not None:
-                    manager.filter(pk=fallback.pk).update(is_enabled=True, is_default=True)
+                    manager.filter(pk=fallback.pk).update(
+                        is_enabled=True, is_default=True
+                    )
             elif not enabled.filter(is_default=True).exists():
-                fallback = enabled.filter(code=bootstrap).first() or enabled.order_by(
-                    "sort_order", "country_name"
-                ).first()
+                fallback = (
+                    enabled.filter(code=bootstrap).first()
+                    or enabled.order_by("sort_order", "country_name").first()
+                )
                 if fallback is not None:
                     manager.filter(is_default=True).update(is_default=False)
                     manager.filter(pk=fallback.pk).update(is_default=True)

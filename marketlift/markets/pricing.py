@@ -11,9 +11,7 @@ def _market(country_code: str):
     from platform_settings.models import Market
 
     profile = profile_for_country_code(country_code)
-    market = Market.objects.filter(
-        code=profile.country_code, is_enabled=True
-    ).first()
+    market = Market.objects.filter(code=profile.country_code, is_enabled=True).first()
     if market is None:
         # No raw DoesNotExist should leak from a normal lookup. Catalog rows are
         # self-healing, but payment still fails safely if the market is truly
@@ -75,22 +73,32 @@ def market_pricing_readiness(market) -> tuple[bool, list[str]]:
 
     problems: list[str] = []
     paid_plans = SellerPlan.objects.filter(active=True).exclude(code="free")
-    priced_plan_ids = set(
-        SellerPlanMarketPrice.objects.filter(market=market, active=True).values_list(
-            "plan_id", flat=True
-        )
-    )
+    plan_rows = {
+        row.plan_id: row
+        for row in SellerPlanMarketPrice.objects.filter(market=market, active=True)
+    }
     for plan in paid_plans:
-        if plan.id not in priced_plan_ids:
+        row = plan_rows.get(plan.id)
+        if row is None:
             problems.append(f"Missing seller plan price: {plan.code}")
+        elif row.monthly_price <= 0 or row.yearly_price <= 0:
+            problems.append(
+                f"Invalid seller plan price: {plan.code} must have positive monthly and yearly prices"
+            )
 
     products = PromotionProduct.objects.filter(active=True)
-    priced_product_ids = set(
-        PromotionProductMarketPrice.objects.filter(market=market, active=True).values_list(
-            "product_id", flat=True
+    product_rows = {
+        row.product_id: row
+        for row in PromotionProductMarketPrice.objects.filter(
+            market=market, active=True
         )
-    )
+    }
     for product in products:
-        if product.id not in priced_product_ids:
+        row = product_rows.get(product.id)
+        if row is None:
             problems.append(f"Missing promotion price: {product.code}")
+        elif row.price <= 0:
+            problems.append(
+                f"Invalid promotion price: {product.code} must be greater than zero"
+            )
     return not problems, problems

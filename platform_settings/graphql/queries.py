@@ -1,6 +1,8 @@
 import strawberry
+from django.utils import timezone
 
 from marketlift.graphql.auth import require_staff
+from platform_settings.readiness import deployment_readiness_items, readiness_summary
 from platform_settings.models import (
     Market,
     PlatformConfiguration,
@@ -19,6 +21,8 @@ from .types import (
     PlatformConfigurationType,
     PromotionMarketPriceType,
     SellerPlanMarketPriceType,
+    ProductionReadinessItemType,
+    ProductionReadinessType,
 )
 
 
@@ -30,6 +34,32 @@ class PlatformSettingsQuery:
     ) -> PlatformConfigurationType:
         require_staff(info, roles={"admin"})
         return config_to_type(PlatformConfiguration.load())
+
+    @strawberry.field
+    def admin_production_readiness(
+        self, info: strawberry.Info
+    ) -> ProductionReadinessType:
+        require_staff(info, roles={"admin"})
+        rows = deployment_readiness_items()
+        ready, blockers, warnings = readiness_summary(rows)
+        return ProductionReadinessType(
+            ready=ready,
+            blockers=blockers,
+            warnings=warnings,
+            checked_at=timezone.now().isoformat(),
+            items=[
+                ProductionReadinessItemType(
+                    key=row.key,
+                    label=row.label,
+                    category=row.category,
+                    status=row.status,
+                    required=row.required,
+                    message=row.message,
+                    hint=row.hint,
+                )
+                for row in rows
+            ],
+        )
 
     @strawberry.field
     def admin_markets(self, info: strawberry.Info) -> list[MarketType]:

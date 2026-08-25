@@ -95,7 +95,9 @@ class MarketConfigurationTests(TestCase):
         invalidate_market_cache()
         profile = active_market_profile()
         self.assertTrue(Market.objects.filter(code=profile.country_code).exists())
-        self.assertTrue(Market.objects.filter(is_enabled=True, is_default=True).exists())
+        self.assertTrue(
+            Market.objects.filter(is_enabled=True, is_default=True).exists()
+        )
 
 
 class MarketPricingTests(TestCase):
