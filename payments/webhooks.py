@@ -30,3 +30,11 @@ def valid_mercado_pago_signature(
 
     expected = hmac.new(secret.encode(), manifest.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, received)
+
+
+def valid_paystack_signature(*, body: bytes, signature: str, secret: str) -> bool:
+    """Validate Paystack's x-paystack-signature HMAC-SHA512 header."""
+    if not body or not signature or not secret:
+        return False
+    expected = hmac.new(secret.encode(), body, hashlib.sha512).hexdigest()
+    return hmac.compare_digest(expected, signature.strip())

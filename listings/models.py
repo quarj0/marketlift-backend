@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from marketlift.common.models import UUIDTimeStampedModel
+from marketlift.markets.defaults import default_market_country_code
 
 
 class ListingQuerySet(models.QuerySet):
@@ -63,7 +64,7 @@ class Listing(UUIDTimeStampedModel):
     # and lexical marketplace search. `location_point` is private/internal and
     # powers PostGIS radius and distance calculations.
     country_code = models.CharField(
-        max_length=2, blank=True, default="BR", db_index=True
+        max_length=2, blank=True, default=default_market_country_code, db_index=True
     )
     state = models.CharField(max_length=100, blank=True)
     state_code = models.CharField(max_length=8, blank=True)

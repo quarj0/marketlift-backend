@@ -1,3 +1,5 @@
+from unittest.mock import Mock, patch
+from marketlift.markets.profiles import get_market_profile
 import hashlib
 import hmac
 import uuid
@@ -135,4 +137,73 @@ class MercadoPagoWebhookSignatureTests(TestCase):
                 signature=f"ts={timestamp},v1=invalid",
                 secret=secret,
             )
+        )
+
+
+class PaystackProviderUnitTests(SimpleTestCase):
+    @override_settings(
+        MARKETLIFT_MARKET_CODE="GH",
+        MARKETLIFT_ENABLED_MARKETS=(get_market_profile("GH"),),
+        PAYSTACK_SECRET_KEY="sk_test_example",
+        PAYSTACK_CALLBACK_URL="https://example.test/payments/callback",
+    )
+    @patch("payments.providers.paystack.httpx.Client")
+    def test_initialize_uses_currency_subunits_and_supported_channel(self, client_cls):
+        from types import SimpleNamespace
+        from decimal import Decimal
+        from payments.providers.paystack import PaystackProvider
+
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "status": True,
+            "message": "Authorization URL created",
+            "data": {
+                "authorization_url": "https://checkout.paystack.com/example",
+                "access_code": "access",
+                "reference": "ML-ABC123",
+            },
+        }
+        client = Mock()
+        client.request.return_value = response
+        client_cls.return_value.__enter__.return_value = client
+        payment = SimpleNamespace(
+            id="00000000-0000-0000-0000-000000000001",
+            amount=Decimal("12.34"),
+            currency="GHS",
+            reference="ML-ABC123",
+            method="mobile_money",
+            purpose="promotion",
+            seller_id="00000000-0000-0000-0000-000000000002",
+        )
+        result = PaystackProvider().create_order(
+            payment=payment, payer={"email": "seller@example.com"}
+        )
+        payload = client.request.call_args.kwargs["json"]
+        self.assertEqual(payload["amount"], "1234")
+        self.assertEqual(payload["currency"], "GHS")
+        self.assertEqual(payload["reference"], "ML-ABC123")
+        self.assertEqual(payload["channels"], ["mobile_money"])
+        self.assertEqual(result.checkout_data["authorization_url"], "https://checkout.paystack.com/example")
+
+    @override_settings(
+        MARKETLIFT_MARKET_CODE="CI",
+        MARKETLIFT_ENABLED_MARKETS=(get_market_profile("CI"),),
+    )
+    def test_xof_is_still_sent_to_paystack_multiplied_by_100(self):
+        from decimal import Decimal
+        from payments.providers.paystack import _subunit
+
+        self.assertEqual(_subunit(Decimal("500"), "XOF"), 50000)
+
+    def test_paystack_webhook_signature_uses_sha512(self):
+        import hashlib
+        import hmac
+        from payments.webhooks import valid_paystack_signature
+
+        body = b'{"event":"charge.success"}'
+        secret = "secret"
+        signature = hmac.new(secret.encode(), body, hashlib.sha512).hexdigest()
+        self.assertTrue(
+            valid_paystack_signature(body=body, signature=signature, secret=secret)
         )

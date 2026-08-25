@@ -1,0 +1,48 @@
+from django.core.exceptions import ValidationError
+from django.test import SimpleTestCase, override_settings
+
+from marketlift.markets.defaults import (
+    default_market_country_code,
+    default_market_currency,
+    default_market_locale,
+    default_pricing_label,
+)
+from marketlift.markets.profiles import get_market_profile
+from marketlift.markets.service import profile_for_country_code
+
+
+GH = get_market_profile("GH")
+BR = get_market_profile("BR")
+
+
+class MarketProfileTests(SimpleTestCase):
+    def test_ghana_profile(self):
+        self.assertEqual(GH.currency, "GHS")
+        self.assertEqual(GH.currency_symbol, "GH₵")
+        self.assertEqual(GH.default_payment_provider, "paystack")
+        self.assertEqual(GH.payment_methods, ("card", "mobile_money"))
+        self.assertEqual(GH.identity_label, "Ghana Card")
+
+    @override_settings(
+        MARKETLIFT_MARKET_COUNTRY_CODE="GH",
+        MARKETLIFT_MARKET_CURRENCY="GHS",
+        MARKETLIFT_MARKET_CURRENCY_SYMBOL="GH₵",
+        MARKETLIFT_MARKET_LOCALE="en-GH",
+    )
+    def test_model_defaults_follow_active_market(self):
+        self.assertEqual(default_market_country_code(), "GH")
+        self.assertEqual(default_market_currency(), "GHS")
+        self.assertEqual(default_market_locale(), "en-GH")
+        self.assertEqual(default_pricing_label(), "Price (GH₵)")
+
+    @override_settings(
+        MARKETLIFT_MARKET=GH,
+        MARKETLIFT_MARKET_CODE="GH",
+        MARKETLIFT_MARKET_COUNTRY_CODE="GH",
+        MARKETLIFT_ENABLED_MARKETS=(GH,),
+        MARKETLIFT_SUPPORTED_COUNTRY_CODES=("GH",),
+    )
+    def test_disabled_country_is_rejected(self):
+        self.assertEqual(profile_for_country_code("GH"), GH)
+        with self.assertRaises(ValidationError):
+            profile_for_country_code("BR")

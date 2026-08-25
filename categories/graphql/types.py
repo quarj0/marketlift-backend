@@ -83,7 +83,7 @@ class CategoryAdminInput:
     active: bool = True
     sort_order: int = 0
     pricing_mode: str = "required"
-    pricing_label: str = "Price (R$)"
+    pricing_label: str = ""
     pricing_placeholder: str | None = None
     condition_enabled: bool = True
     condition_required: bool = True

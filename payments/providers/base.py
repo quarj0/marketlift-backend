@@ -10,6 +10,8 @@ class ProviderResult:
     status: str = "created"
     status_detail: str = ""
     checkout_data: dict[str, Any] = field(default_factory=dict)
+    amount: Decimal | None = None
+    currency: str = ""
 
 
 class PaymentProviderError(Exception):

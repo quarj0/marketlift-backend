@@ -6,6 +6,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from marketlift.markets.profiles import get_market_profile, market_profiles_for_codes
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
@@ -21,8 +23,37 @@ def env_list(name: str, default: str = "") -> list[str]:
     ]
 
 
+def env_text(name: str, default: str = "") -> str:
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    return value.strip()
+
+
 MARKETLIFT_ENV = os.getenv("MARKETLIFT_ENV", "development").strip().lower()
 IS_PRODUCTION = MARKETLIFT_ENV in {"production", "prod"}
+
+# Market/country configuration. Domain code uses ISO country/currency values and
+# provider interfaces; Brazil is only the compatibility default. A deployment can
+# switch markets without rewriting listing/search/payment business logic.
+MARKETLIFT_MARKET_CODE = os.getenv("MARKETLIFT_MARKET_CODE", "BR").strip().upper()
+MARKETLIFT_MARKET = get_market_profile(MARKETLIFT_MARKET_CODE)
+MARKETLIFT_ENABLED_MARKET_CODES = env_list(
+    "MARKETLIFT_ENABLED_MARKETS", MARKETLIFT_MARKET_CODE
+)
+if MARKETLIFT_MARKET_CODE not in {code.upper() for code in MARKETLIFT_ENABLED_MARKET_CODES}:
+    MARKETLIFT_ENABLED_MARKET_CODES.insert(0, MARKETLIFT_MARKET_CODE)
+MARKETLIFT_ENABLED_MARKETS = market_profiles_for_codes(
+    [code.upper() for code in MARKETLIFT_ENABLED_MARKET_CODES]
+)
+MARKETLIFT_SUPPORTED_COUNTRY_CODES = tuple(
+    profile.country_code for profile in MARKETLIFT_ENABLED_MARKETS
+)
+MARKETLIFT_MARKET_COUNTRY_CODE = MARKETLIFT_MARKET.country_code
+MARKETLIFT_MARKET_LOCALE = MARKETLIFT_MARKET.locale
+MARKETLIFT_MARKET_CURRENCY = MARKETLIFT_MARKET.currency
+MARKETLIFT_MARKET_CURRENCY_SYMBOL = MARKETLIFT_MARKET.currency_symbol
+MARKETLIFT_MARKET_PAYMENT_METHODS = MARKETLIFT_MARKET.payment_methods
 
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY", "django-insecure-marketlift-local-development-only"
@@ -139,8 +170,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "pt-br"
-TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "America/Sao_Paulo")
+LANGUAGE_CODE = env_text("DJANGO_LANGUAGE_CODE", MARKETLIFT_MARKET.django_language_code)
+TIME_ZONE = env_text("DJANGO_TIME_ZONE", MARKETLIFT_MARKET.timezone)
 USE_I18N = True
 USE_TZ = True
 
@@ -340,19 +371,35 @@ EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "15"))
 # The frontend flags must only be enabled after these server-side flags and the
 # corresponding provider certification are enabled together.
 MARKETLIFT_PAYMENTS_ENABLED = env_bool("MARKETLIFT_PAYMENTS_ENABLED", False)
-MARKETLIFT_CPF_VERIFICATION_ENABLED = env_bool(
-    "MARKETLIFT_CPF_VERIFICATION_ENABLED", False
+MARKETLIFT_IDENTITY_VERIFICATION_ENABLED = env_bool(
+    "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED",
+    env_bool("MARKETLIFT_CPF_VERIFICATION_ENABLED", False),
 )
+# Compatibility alias for the existing Brazil frontend/config. New code should use
+# MARKETLIFT_IDENTITY_VERIFICATION_ENABLED.
+MARKETLIFT_CPF_VERIFICATION_ENABLED = MARKETLIFT_IDENTITY_VERIFICATION_ENABLED
 MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER = (
     os.getenv("MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled").strip().lower()
 )
 
-# Marketlift service-payment integration. Product-sale payments remain outside Marketlift V1.
-MARKETLIFT_PAYMENT_PROVIDER = os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "mock")
+# Marketlift service-payment integration. Buyer -> seller transactions remain outside
+# the platform. `mock` stays the safe default until a deployment explicitly enables
+# its country provider.
+MARKETLIFT_PAYMENT_PROVIDER = os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "mock").strip().lower()
+MARKETLIFT_PAYMENT_METHODS = tuple(
+    item.strip().lower()
+    for item in env_list(
+        "MARKETLIFT_PAYMENT_METHODS", ",".join(MARKETLIFT_MARKET_PAYMENT_METHODS)
+    )
+)
 PAYMENT_MOCK_AUTO_APPROVE = env_bool("PAYMENT_MOCK_AUTO_APPROVE", True)
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN", "")
 MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY", "")
 MERCADO_PAGO_WEBHOOK_SECRET = os.getenv("MERCADO_PAGO_WEBHOOK_SECRET", "")
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY", "").strip()
+PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY", "").strip()
+PAYSTACK_API_BASE_URL = os.getenv("PAYSTACK_API_BASE_URL", "https://api.paystack.co").rstrip("/")
+PAYSTACK_CALLBACK_URL = os.getenv("PAYSTACK_CALLBACK_URL", "").strip()
 
 
 # Production/security controls. These stay environment-driven so hosting providers can change.
@@ -428,8 +475,8 @@ MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS = int(
     os.getenv("MARKETLIFT_SEARCH_STATEMENT_TIMEOUT_MS", "1500")
 )
 
-# Brazil location/autocomplete/geocoding. The reference catalog and geocoder are
-# replaceable infrastructure services; listing/search domain logic stays provider-neutral.
+# Market-aware location/autocomplete/geocoding. The geocoder is country-scoped by
+# the active market while listing/search domain logic stays provider-neutral.
 MARKETLIFT_LOCATION_MAX_RADIUS_KM = float(
     os.getenv("MARKETLIFT_LOCATION_MAX_RADIUS_KM", "200")
 )
@@ -458,7 +505,9 @@ MARKETLIFT_GEOCODER_TIMEOUT_SECONDS = float(
 MARKETLIFT_GEOCODER_CACHE_SECONDS = int(
     os.getenv("MARKETLIFT_GEOCODER_CACHE_SECONDS", "86400")
 )
-MARKETLIFT_GEOCODER_LANGUAGE = os.getenv("MARKETLIFT_GEOCODER_LANGUAGE", "pt-BR,en")
+MARKETLIFT_GEOCODER_LANGUAGE = env_text(
+    "MARKETLIFT_GEOCODER_LANGUAGE", MARKETLIFT_MARKET.geocoder_language
+)
 MARKETLIFT_GEOCODER_USER_AGENT = os.getenv(
     "MARKETLIFT_GEOCODER_USER_AGENT", "Marketlift/0.1 development"
 )

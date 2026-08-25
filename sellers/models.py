@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 
 from marketlift.common.models import UUIDTimeStampedModel
+from marketlift.markets.defaults import default_market_country_code
 
 
 class SellerProfile(UUIDTimeStampedModel):
@@ -20,6 +21,9 @@ class SellerProfile(UUIDTimeStampedModel):
         default=SellerType.INDIVIDUAL,
     )
     display_name = models.CharField(max_length=160, blank=True)
+    country_code = models.CharField(
+        max_length=2, default=default_market_country_code, db_index=True
+    )
     activated_at = models.DateTimeField(auto_now_add=True)
     verified_at = models.DateTimeField(null=True, blank=True)
 

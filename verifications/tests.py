@@ -1,3 +1,4 @@
+from marketlift.markets.profiles import get_market_profile
 from datetime import date
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -64,3 +65,31 @@ class VerificationTests(TestCase):
             birth_date=date(1992, 4, 15),
         )
         self.assertEqual(again.status, VerificationSubmission.Status.PENDING)
+
+
+class MultiMarketIdentityNormalizationTests(SimpleTestCase):
+    @override_settings(
+        MARKETLIFT_MARKET_COUNTRY_CODE="GH",
+        MARKETLIFT_SUPPORTED_COUNTRY_CODES=("GH",),
+        MARKETLIFT_ENABLED_MARKETS=(get_market_profile("GH"),),
+    )
+    def test_ghana_card_is_normalized_without_storing_formatting(self):
+        from verifications.services import normalize_identity_number, mask_identity
+
+        value = normalize_identity_number("GHA-123456789-0", country_code="GH")
+        self.assertEqual(value, "GHA1234567890")
+        self.assertEqual(mask_identity(value, country_code="GH"), "••••7890")
+
+    @override_settings(
+        MARKETLIFT_MARKET_COUNTRY_CODE="BR",
+        MARKETLIFT_SUPPORTED_COUNTRY_CODES=("BR",),
+        MARKETLIFT_ENABLED_MARKETS=(get_market_profile("BR"),),
+    )
+    def test_brazil_cpf_validator_remains_available(self):
+        from verifications.services import normalize_identity_number
+
+        # Well-known mathematically valid CPF used only as a checksum test value.
+        self.assertEqual(
+            normalize_identity_number("529.982.247-25", country_code="BR"),
+            "52998224725",
+        )

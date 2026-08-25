@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from audit.services import record_audit_event
 from notifications.services import create_admin_notifications, create_notification
+from marketlift.markets.service import profile_for_country_code
 from promotions.models import ListingPromotion
 from subscriptions.services import activate_paid_subscription
 from .models import Payment
@@ -22,7 +23,7 @@ def require_payments_enabled():
 
 
 def _reference():
-    return f"ML_{uuid.uuid4().hex.upper()}"[:64]
+    return f"ML-{uuid.uuid4().hex.upper()}"[:64]
 
 
 def _money(value) -> Decimal:
@@ -32,15 +33,39 @@ def _money(value) -> Decimal:
 def _status_from_provider(status: str, detail: str = ""):
     status = (status or "").lower()
     detail = (detail or "").lower()
-    if status == "processed" or detail == "accredited":
+    if status in {"processed", "success", "successful"} or detail == "accredited":
         return Payment.Status.PAID
-    if status == "refunded" or detail == "refunded":
+    if status in {"refunded", "reversed"} or detail in {"refunded", "reversed"}:
         return Payment.Status.REFUNDED
-    if status in {"cancelled", "canceled", "expired"}:
+    if status in {"cancelled", "canceled", "expired", "abandoned"}:
         return Payment.Status.CANCELLED
     if status in {"failed", "rejected"}:
         return Payment.Status.FAILED
     return Payment.Status.PENDING
+
+
+def _market_for_seller(seller):
+    return profile_for_country_code(getattr(seller, "country_code", None))
+
+
+def _validate_payment_method(*, seller, method: str):
+    profile = _market_for_seller(seller)
+    configured = set(getattr(settings, "MARKETLIFT_PAYMENT_METHODS", ()))
+    allowed = set(profile.payment_methods)
+    # The explicit env override can disable channels for a deployment, but never
+    # enables a channel the country profile does not support.
+    if configured and profile.code == settings.MARKETLIFT_MARKET_CODE:
+        allowed &= configured
+    if method not in Payment.Method.values or method not in allowed:
+        raise ValidationError(
+            {
+                "method": (
+                    f"Payment method {method!r} is not available for {profile.country_name}. "
+                    f"Available methods: {', '.join(sorted(allowed))}."
+                )
+            }
+        )
+    return profile
 
 
 def _split_name(full_name: str):
@@ -117,8 +142,7 @@ def create_subscription_payment(
         raise ValidationError("This seller plan is unavailable.")
     if billing_cycle not in SellerSubscription.BillingCycle.values:
         raise ValidationError({"billingCycle": "Invalid billing cycle."})
-    if method not in Payment.Method.values:
-        raise ValidationError({"method": "Invalid payment method."})
+    profile = _validate_payment_method(seller=seller, method=method)
     if plan.code == "free":
         raise ValidationError("The Free plan does not require a payment.")
     key = (idempotency_key or "").strip()
@@ -140,9 +164,11 @@ def create_subscription_payment(
         purpose=Payment.Purpose.SUBSCRIPTION,
         method=method,
         amount=amount,
+        country_code=profile.country_code,
+        currency=profile.currency,
         reference=_reference(),
         idempotency_key=key,
-        provider=get_payment_provider().name,
+        provider=get_payment_provider(country_code=profile.country_code).name,
         seller_plan=plan,
         billing_cycle=billing_cycle,
     )
@@ -178,8 +204,7 @@ def create_promotion_payment(
         raise ValidationError("Only published listings can be promoted.")
     if not product.active:
         raise ValidationError("This promotion is unavailable.")
-    if method not in Payment.Method.values:
-        raise ValidationError({"method": "Invalid payment method."})
+    profile = _validate_payment_method(seller=seller, method=method)
     key = (idempotency_key or "").strip()
     if not key:
         raise ValidationError({"idempotencyKey": "An idempotency key is required."})
@@ -194,9 +219,11 @@ def create_promotion_payment(
         purpose=Payment.Purpose.PROMOTION,
         method=method,
         amount=_money(product.price),
+        country_code=profile.country_code,
+        currency=profile.currency,
         reference=_reference(),
         idempotency_key=key,
-        provider=get_payment_provider().name,
+        provider=get_payment_provider(country_code=profile.country_code).name,
         listing=listing,
         promotion_product=product,
     )
@@ -212,7 +239,7 @@ def create_promotion_payment(
 
 
 def _send_to_provider(*, payment, payer, card, request=None):
-    provider = get_payment_provider()
+    provider = get_payment_provider(name=payment.provider)
     try:
         result = provider.create_order(payment=payment, payer=payer, card=card)
     except PaymentProviderError as exc:
@@ -240,6 +267,14 @@ def sync_payment_from_provider(
 ):
     require_payments_enabled()
     old = payment.status
+    if result.currency and result.currency.upper() != payment.currency.upper():
+        raise ValidationError(
+            "Payment provider returned a different currency than the Marketlift payment."
+        )
+    if result.amount is not None and _money(result.amount) != _money(payment.amount):
+        raise ValidationError(
+            "Payment provider returned a different amount than the Marketlift payment."
+        )
     payment.provider_order_id = result.order_id or payment.provider_order_id
     payment.provider_payment_id = result.payment_id or payment.provider_payment_id
     payment.provider_status = result.status
@@ -346,9 +381,7 @@ def refresh_payment(*, payment, request=None):
     require_payments_enabled()
     if not payment.provider_order_id:
         return payment
-    provider = get_payment_provider()
-    if provider.name != payment.provider:
-        return payment
+    provider = get_payment_provider(name=payment.provider)
     try:
         result = provider.get_order(payment.provider_order_id)
     except PaymentProviderError as exc:

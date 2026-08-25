@@ -6,7 +6,8 @@ from django.utils import timezone
 from audit.services import record_audit_event
 from uploads.models import UploadAsset
 from uploads.services import claim_upload
-from marketlift.locations import BRAZIL_STATES, normalize_brazil_state_code
+from marketlift.location.validators import validate_location_strings
+from marketlift.markets.service import normalize_enabled_country_code
 
 from .models import AccountSettings, User
 
@@ -88,6 +89,7 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
         "email",
         "phone",
         "bio",
+        "country_code",
         "state",
         "state_code",
         "city",
@@ -114,23 +116,33 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
             data["phone"] = phone
             user.phone_verified_at = None
 
-    if "state_code" in data:
-        raw_state_code = str(data["state_code"] or "").strip()
-        if raw_state_code:
-            try:
-                state_code = normalize_brazil_state_code(raw_state_code)
-            except ValueError as exc:
-                raise ValidationError({"stateCode": str(exc)}) from exc
-            data["state_code"] = state_code
-            data["state"] = BRAZIL_STATES[state_code]
-        else:
-            data["state_code"] = ""
-            data["state"] = ""
+    if "country_code" in data and data["country_code"] is not None:
+        data["country_code"] = normalize_enabled_country_code(data["country_code"])
 
-    if "city" in data and data["city"] is not None:
-        data["city"] = str(data["city"]).strip()
-    if "district" in data and data["district"] is not None:
-        data["district"] = str(data["district"]).strip()
+    location_keys = {"country_code", "state", "state_code", "city", "district"}
+    if location_keys.intersection(data):
+        country_code = data.get("country_code", user.country_code)
+        state = data.get("state", user.state)
+        state_code = data.get("state_code", user.state_code)
+        city = data.get("city", user.city)
+        district = data.get("district", user.district)
+        # Empty location remains valid on a buyer account. Once city/state values are
+        # supplied, reuse the same country-aware validation used by listings.
+        if any(str(value or "").strip() for value in (state, state_code, city, district)):
+            location = validate_location_strings(
+                country_code=country_code,
+                state=state,
+                state_code=state_code,
+                city=city,
+                district=district,
+            )
+            data.update(location)
+        else:
+            data["country_code"] = country_code
+            data["state"] = ""
+            data["state_code"] = ""
+            data["city"] = ""
+            data["district"] = ""
 
     if "full_name" in data:
         data["full_name"] = str(data["full_name"] or "").strip()

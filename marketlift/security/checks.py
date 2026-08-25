@@ -77,9 +77,16 @@ def marketlift_deploy_checks(app_configs, **kwargs):
             )
         )
     payments_enabled = getattr(settings, "MARKETLIFT_PAYMENTS_ENABLED", False)
-    provider = getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "mock")
+    provider = str(getattr(settings, "MARKETLIFT_PAYMENT_PROVIDER", "mock")).strip().lower()
+    if provider in {"auto", "market", "market_default"}:
+        providers = {
+            profile.default_payment_provider
+            for profile in getattr(settings, "MARKETLIFT_ENABLED_MARKETS", ())
+        }
+    else:
+        providers = {provider}
     if payments_enabled and (
-        provider == "mock" or getattr(settings, "PAYMENT_MOCK_AUTO_APPROVE", False)
+        "mock" in providers or getattr(settings, "PAYMENT_MOCK_AUTO_APPROVE", False)
     ):
         issues.append(
             Error(
@@ -89,7 +96,7 @@ def marketlift_deploy_checks(app_configs, **kwargs):
         )
     if (
         payments_enabled
-        and provider == "mercado_pago"
+        and "mercado_pago" in providers
         and (
             not getattr(settings, "MERCADO_PAGO_ACCESS_TOKEN", "")
             or not getattr(settings, "MERCADO_PAGO_WEBHOOK_SECRET", "")
@@ -101,12 +108,23 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 id="marketlift.E007",
             )
         )
-    if getattr(settings, "MARKETLIFT_CPF_VERIFICATION_ENABLED", False) and getattr(
+    if (
+        payments_enabled
+        and "paystack" in providers
+        and not getattr(settings, "PAYSTACK_SECRET_KEY", "")
+    ):
+        issues.append(
+            Error(
+                "Paystack production secret key is missing.",
+                id="marketlift.E020",
+            )
+        )
+    if getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False) and getattr(
         settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled"
     ) in {"", "disabled", "internal"}:
         issues.append(
             Error(
-                "CPF verification requires a certified external identity provider in production.",
+                "Identity verification requires a certified external identity provider in production.",
                 id="marketlift.E019",
             )
         )

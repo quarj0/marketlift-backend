@@ -47,7 +47,7 @@ def expire_due_listings():
                 and listing.category_id is not None
                 and listing.category.active
                 and (
-                    not settings.MARKETLIFT_CPF_VERIFICATION_ENABLED
+                    not settings.MARKETLIFT_IDENTITY_VERIFICATION_ENABLED
                     or not config.seller_verification_required
                     or listing.seller.verified
                 )

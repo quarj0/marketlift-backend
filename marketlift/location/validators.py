@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from marketlift.locations import BRAZIL_STATES, normalize_brazil_state_code
+from marketlift.markets.service import normalize_enabled_country_code
 
 _COUNTRY_RE = re.compile(r"^[A-Z]{2}$")
 
@@ -73,26 +74,35 @@ def validate_location_strings(
     state_code: str,
     city: str,
     district: str = "",
-    country_code: str = "BR",
+    country_code: str | None = None,
 ) -> dict[str, str]:
-    country = normalize_country_code(country_code) or "BR"
-    if country != "BR":
-        raise ValidationError(
-            {"country_code": "Marketlift currently supports Brazil locations only."}
-        )
-    try:
-        code = normalize_brazil_state_code(state_code)
-    except ValueError as exc:
-        raise ValidationError({"state_code": str(exc)}) from exc
+    country = normalize_country_code(country_code) or settings.MARKETLIFT_MARKET_COUNTRY_CODE
+    country = normalize_enabled_country_code(country)
+
+    raw_state = (state or "").strip()
+    raw_code = (state_code or "").strip().upper()
+    if country == "BR":
+        try:
+            code = normalize_brazil_state_code(raw_code)
+        except ValueError as exc:
+            raise ValidationError({"state_code": str(exc)}) from exc
+        raw_state = BRAZIL_STATES[code]
+        raw_code = code
 
     values = {
-        "state": BRAZIL_STATES[code],
-        "state_code": code,
+        "state": raw_state,
+        "state_code": raw_code,
         "city": (city or "").strip(),
         "district": (district or "").strip(),
-        "country_code": "BR",
+        "country_code": country,
     }
-    limits = {"state": 100, "state_code": 8, "city": 100, "district": 120}
+    limits = {
+        "state": 100,
+        "state_code": 8,
+        "city": 100,
+        "district": 120,
+        "country_code": 2,
+    }
     errors = {}
     for name, limit in limits.items():
         if len(values[name]) > limit:

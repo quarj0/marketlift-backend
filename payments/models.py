@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from marketlift.common.models import UUIDTimeStampedModel
+from marketlift.markets.defaults import default_market_country_code, default_market_currency
 
 
 class Payment(UUIDTimeStampedModel):
@@ -11,8 +12,12 @@ class Payment(UUIDTimeStampedModel):
         PROMOTION = "promotion", "Promotion"
 
     class Method(models.TextChoices):
+        CARD = "card", "Card"
+        MOBILE_MONEY = "mobile_money", "Mobile money"
+        BANK_TRANSFER = "bank_transfer", "Bank transfer"
+        USSD = "ussd", "USSD"
+        EFT = "eft", "EFT"
         PIX = "pix", "Pix"
-        CARD = "card", "Credit card"
         BOLETO = "boleto", "Boleto"
 
     class Status(models.TextChoices):
@@ -29,12 +34,13 @@ class Payment(UUIDTimeStampedModel):
         "sellers.SellerProfile", on_delete=models.PROTECT, related_name="payments"
     )
     purpose = models.CharField(max_length=16, choices=Purpose.choices)
-    method = models.CharField(max_length=12, choices=Method.choices)
+    method = models.CharField(max_length=16, choices=Method.choices)
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.PENDING
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=3, default="BRL", editable=False)
+    country_code = models.CharField(max_length=2, default=default_market_country_code, db_index=True)
+    currency = models.CharField(max_length=3, default=default_market_currency, editable=False)
 
     reference = models.CharField(max_length=64, unique=True)
     idempotency_key = models.CharField(max_length=80, unique=True)

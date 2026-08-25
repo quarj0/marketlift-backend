@@ -31,10 +31,15 @@ class VerificationSubmission(UUIDTimeStampedModel):
         max_length=16, choices=Status.choices, default=Status.PENDING
     )
 
-    # CPF is deliberately never stored in plaintext. cpf_digest supports duplicate checks;
-    # cpf_masked is the only display representation returned by the API.
-    cpf_digest = models.CharField(max_length=64, db_index=True)
-    cpf_masked = models.CharField(max_length=14)
+    # Identity numbers are deliberately never stored in plaintext. These generic
+    # fields are the canonical multi-market representation. The legacy CPF fields
+    # remain as compatibility mirrors for Brazil until the old frontend is retired.
+    identity_country_code = models.CharField(max_length=2, blank=True, db_index=True)
+    identity_type = models.CharField(max_length=40, blank=True)
+    identity_digest = models.CharField(max_length=64, blank=True, db_index=True)
+    identity_masked = models.CharField(max_length=40, blank=True)
+    cpf_digest = models.CharField(max_length=64, blank=True, default="", db_index=True)
+    cpf_masked = models.CharField(max_length=14, blank=True, default="")
     legal_name = models.CharField(max_length=160)
     birth_date = models.DateField()
     document_type = models.CharField(

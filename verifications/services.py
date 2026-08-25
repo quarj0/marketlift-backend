@@ -11,13 +11,22 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit.services import record_audit_event
+from marketlift.markets.service import profile_for_country_code
 from notifications.services import create_admin_notifications, create_notification
 from .models import VerificationSubmission
 
 
+def require_identity_verification_enabled():
+    enabled = getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False) or getattr(
+        settings, "MARKETLIFT_CPF_VERIFICATION_ENABLED", False
+    )
+    if not enabled:
+        raise ValidationError("Seller identity verification is not available yet.")
+
+
 def require_cpf_verification_enabled():
-    if not getattr(settings, "MARKETLIFT_CPF_VERIFICATION_ENABLED", False):
-        raise ValidationError("CPF seller verification is not available yet.")
+    """Backward-compatible alias for the original Brazil API/tests."""
+    return require_identity_verification_enabled()
 
 
 def normalize_cpf(value: str) -> str:
@@ -35,7 +44,30 @@ def normalize_cpf(value: str) -> str:
     return digits
 
 
+def normalize_identity_number(value: str, *, country_code: str) -> str:
+    profile = profile_for_country_code(country_code)
+    if profile.country_code == "BR":
+        return normalize_cpf(value)
+    raw = (value or "").strip().upper()
+    # External providers remain authoritative for country-specific identity rules.
+    # This local check only rejects malformed/unsafe values before hashing them.
+    normalized = re.sub(r"[\s.-]+", "", raw)
+    if not re.fullmatch(r"[A-Z0-9]{6,32}", normalized):
+        raise ValidationError(
+            {"identityNumber": f"Enter a valid {profile.identity_label} number."}
+        )
+    return normalized
+
+
+def identity_digest(identity_number: str, *, country_code: str, identity_type: str) -> str:
+    canonical = f"{country_code.upper()}:{identity_type.strip().lower()}:{identity_number}"
+    return hmac.new(
+        settings.SECRET_KEY.encode(), canonical.encode(), hashlib.sha256
+    ).hexdigest()
+
+
 def cpf_digest(cpf: str) -> str:
+    # Preserve the legacy digest algorithm so existing Brazil duplicate rows still match.
     return hmac.new(
         settings.SECRET_KEY.encode(), cpf.encode(), hashlib.sha256
     ).hexdigest()
@@ -45,20 +77,30 @@ def mask_cpf(cpf: str) -> str:
     return f"***.***.***-{cpf[-2:]}"
 
 
+def mask_identity(identity_number: str, *, country_code: str) -> str:
+    if country_code.upper() == "BR":
+        return mask_cpf(identity_number)
+    tail = identity_number[-4:] if len(identity_number) >= 4 else identity_number
+    return f"••••{tail}"
+
+
 @transaction.atomic
 def submit_verification(
     *,
     seller,
-    cpf: str,
     legal_name: str,
     birth_date: date,
+    identity_number: str | None = None,
+    identity_type: str | None = None,
+    country_code: str | None = None,
+    cpf: str | None = None,
     document_type: str = "",
     document_front_url: str = "",
     document_back_url: str = "",
     selfie_url: str = "",
     request=None,
 ):
-    require_cpf_verification_enabled()
+    require_identity_verification_enabled()
     if seller.verified:
         raise ValidationError("This seller is already verified.")
     if seller.is_suspended:
@@ -76,41 +118,80 @@ def submit_verification(
         raise ValidationError({"legalName": "Legal name is required."})
     if birth_date >= timezone.localdate():
         raise ValidationError({"birthDate": "Birth date must be in the past."})
-    if (
-        document_type
-        and document_type not in VerificationSubmission.DocumentType.values
-    ):
+    if document_type and document_type not in VerificationSubmission.DocumentType.values:
         raise ValidationError({"documentType": "Invalid identity document type."})
 
-    normalized = normalize_cpf(cpf)
-    digest = cpf_digest(normalized)
+    profile = profile_for_country_code(country_code or getattr(seller, "country_code", None))
+    if getattr(seller, "country_code", profile.country_code) != profile.country_code:
+        raise ValidationError(
+            {"countryCode": "Verification country must match the seller market."}
+        )
+    raw_identity = identity_number or cpf or ""
+    if not raw_identity:
+        raise ValidationError(
+            {"identityNumber": f"{profile.identity_label} number is required."}
+        )
+    canonical_type = (identity_type or profile.identity_key).strip().lower()
+    normalized = normalize_identity_number(
+        raw_identity, country_code=profile.country_code
+    )
+    digest = identity_digest(
+        normalized,
+        country_code=profile.country_code,
+        identity_type=canonical_type,
+    )
+    masked = mask_identity(normalized, country_code=profile.country_code)
+
     flags = []
     risk = VerificationSubmission.RiskLevel.LOW
-    if (
+    duplicate = (
         VerificationSubmission.objects.filter(
-            cpf_digest=digest, status=VerificationSubmission.Status.VERIFIED
+            identity_digest=digest,
+            status=VerificationSubmission.Status.VERIFIED,
         )
         .exclude(seller=seller)
         .exists()
-    ):
-        flags.append("CPF is already associated with another verified seller")
+    )
+    # Existing Brazil rows may predate generic identity_digest.
+    legacy_cpf_digest = cpf_digest(normalized) if profile.country_code == "BR" else ""
+    if not duplicate and legacy_cpf_digest:
+        duplicate = (
+            VerificationSubmission.objects.filter(
+                cpf_digest=legacy_cpf_digest,
+                status=VerificationSubmission.Status.VERIFIED,
+            )
+            .exclude(seller=seller)
+            .exists()
+        )
+    if duplicate:
+        flags.append(
+            f"{profile.identity_label} is already associated with another verified seller"
+        )
         risk = VerificationSubmission.RiskLevel.HIGH
 
     verification = VerificationSubmission.objects.create(
         seller=seller,
-        cpf_digest=digest,
-        cpf_masked=mask_cpf(normalized),
+        identity_country_code=profile.country_code,
+        identity_type=canonical_type,
+        identity_digest=digest,
+        identity_masked=masked,
+        cpf_digest=legacy_cpf_digest,
+        cpf_masked=mask_cpf(normalized) if profile.country_code == "BR" else "",
         legal_name=legal_name,
         birth_date=birth_date,
         document_type=document_type,
         document_front_url=document_front_url,
         document_back_url=document_back_url,
         selfie_url=selfie_url,
-        provider="internal",
-        provider_result="Identity checks queued",
+        provider=(
+            getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER", "disabled")
+            or "disabled"
+        ),
+        provider_result="Identity checks queued for review",
         risk_flags=flags,
         risk_level=risk,
         automated_checks={
+            "identity_format": "passed",
             "document_quality": "queued",
             "face_match": "queued",
             "duplicate_check": "flagged" if flags else "passed",
@@ -122,7 +203,11 @@ def submit_verification(
         target=verification,
         target_type="verification",
         target_label=str(seller),
-        metadata={"risk_level": risk},
+        metadata={
+            "risk_level": risk,
+            "country_code": profile.country_code,
+            "identity_type": canonical_type,
+        },
         request=request,
     )
     create_admin_notifications(
@@ -130,7 +215,11 @@ def submit_verification(
         title="New seller verification",
         body=f"{seller} submitted identity verification.",
         href="/verifications",
-        data={"verificationId": str(verification.id), "riskLevel": risk},
+        data={
+            "verificationId": str(verification.id),
+            "riskLevel": risk,
+            "countryCode": profile.country_code,
+        },
         preference="admin_verification_queue_alerts",
     )
     return verification
@@ -138,7 +227,7 @@ def submit_verification(
 
 @transaction.atomic
 def move_to_review(*, verification, actor, note: str = "", request=None):
-    require_cpf_verification_enabled()
+    require_identity_verification_enabled()
     if verification.is_final:
         raise ValidationError("A final verification decision cannot be reopened.")
     if verification.status == VerificationSubmission.Status.REVIEW:
@@ -164,7 +253,7 @@ def move_to_review(*, verification, actor, note: str = "", request=None):
 
 @transaction.atomic
 def approve_verification(*, verification, actor, note: str, request=None):
-    require_cpf_verification_enabled()
+    require_identity_verification_enabled()
     note = (note or "").strip()
     if verification.is_final:
         if verification.status == VerificationSubmission.Status.VERIFIED:
@@ -212,7 +301,7 @@ def approve_verification(*, verification, actor, note: str, request=None):
 
 @transaction.atomic
 def reject_verification(*, verification, actor, note: str, request=None):
-    require_cpf_verification_enabled()
+    require_identity_verification_enabled()
     note = (note or "").strip()
     if not note:
         raise ValidationError({"note": "A rejection reason is required."})

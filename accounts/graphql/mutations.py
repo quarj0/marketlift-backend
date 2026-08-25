@@ -52,6 +52,7 @@ class AccountMutation:
                 "email",
                 "phone",
                 "bio",
+                "country_code",
                 "state",
                 "state_code",
                 "city",

@@ -6,6 +6,36 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_503_SERVICE_UNAVAILABLE
+from django.conf import settings
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def market_profile(request):
+    """Public deployment capabilities used to configure marketplace frontends."""
+
+    active = settings.MARKETLIFT_MARKET
+    return Response(
+        {
+            "active": active.as_public_dict(),
+            "enabledMarkets": [
+                profile.as_public_dict() for profile in settings.MARKETLIFT_ENABLED_MARKETS
+            ],
+            "payments": {
+                "enabled": bool(settings.MARKETLIFT_PAYMENTS_ENABLED),
+                "provider": settings.MARKETLIFT_PAYMENT_PROVIDER,
+                "methods": list(settings.MARKETLIFT_PAYMENT_METHODS),
+            },
+            "identityVerification": {
+                "enabled": bool(
+                    getattr(settings, "MARKETLIFT_IDENTITY_VERIFICATION_ENABLED", False)
+                ),
+                "provider": settings.MARKETLIFT_IDENTITY_VERIFICATION_PROVIDER,
+                "label": active.identity_label,
+                "key": active.identity_key,
+            },
+        }
+    )
 
 
 @api_view(["GET"])

@@ -7,7 +7,7 @@ from marketlift.location.contracts import LocationCandidate
 
 class GeocoderBackend(ABC):
     @abstractmethod
-    def geocode(self, query: str, *, limit: int = 5) -> list[LocationCandidate]:
+    def geocode(self, query: str, *, limit: int = 5, country_code: str | None = None) -> list[LocationCandidate]:
         raise NotImplementedError
 
     @abstractmethod

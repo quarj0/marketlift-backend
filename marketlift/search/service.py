@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from categories.models import CategoryField
 from listings.models import Listing
 from sellers.models import SellerProfile
+from marketlift.markets.service import profile_for_country_code
 
 from .contracts import SearchPage, SearchRequest
 from .parser import parse_marketplace_query
@@ -174,19 +175,23 @@ def validate_search_request(request: SearchRequest) -> SearchRequest:
     region = (request.region or "").strip().upper() or None
     state = (request.state or "").strip().upper() or None
     country_code = (
-        normalize_country_code(request.country_code) if request.country_code else "BR"
+        normalize_country_code(request.country_code)
+        if request.country_code
+        else settings.MARKETLIFT_MARKET_COUNTRY_CODE
     )
-    if country_code != "BR":
+    profile_for_country_code(country_code)
+    if country_code == "BR":
+        if region and region not in BRAZIL_REGION_STATES:
+            raise ValidationError({"region": "Unsupported Brazilian region."})
+        if state and state not in BRAZIL_STATE_CODES:
+            raise ValidationError({"state": "Unsupported Brazilian state."})
+        if region and state and state not in BRAZIL_REGION_STATES[region]:
+            raise ValidationError(
+                {"state": "Selected state does not belong to the selected region."}
+            )
+    elif region:
         raise ValidationError(
-            {"country_code": "Marketlift currently supports Brazil only."}
-        )
-    if region and region not in BRAZIL_REGION_STATES:
-        raise ValidationError({"region": "Unsupported Brazilian region."})
-    if state and state not in BRAZIL_STATE_CODES:
-        raise ValidationError({"state": "Unsupported Brazilian state."})
-    if region and state and state not in BRAZIL_REGION_STATES[region]:
-        raise ValidationError(
-            {"state": "Selected state does not belong to the selected region."}
+            {"region": "Macro-region filtering is only defined for the Brazil market."}
         )
 
     lat, lng = validate_coordinates(request.latitude, request.longitude)

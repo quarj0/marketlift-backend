@@ -38,6 +38,9 @@ class VerificationMutation:
         try:
             item = submit_verification(
                 seller=seller,
+                identity_number=input.identity_number,
+                identity_type=input.identity_type,
+                country_code=input.country_code,
                 cpf=input.cpf,
                 legal_name=input.legal_name,
                 birth_date=input.birth_date,

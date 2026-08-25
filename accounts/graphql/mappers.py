@@ -17,6 +17,7 @@ def user_to_type(user):
         avatar_url=user.avatar_url or None,
         bio=user.bio or None,
         location=LocationType(
+            country_code=user.country_code,
             state=user.state,
             state_code=user.state_code,
             city=user.city,
@@ -67,6 +68,7 @@ def admin_user_to_type(user):
         suspended=bool(user.suspended_at),
         joined_at=user.date_joined,
         location=LocationType(
+            country_code=user.country_code,
             state=user.state,
             state_code=user.state_code,
             city=user.city,

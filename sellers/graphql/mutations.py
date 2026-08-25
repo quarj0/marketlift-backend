@@ -8,6 +8,7 @@ from marketlift.graphql.auth import (
 )
 from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 from sellers.models import SellerProfile, SellerSettings
+from marketlift.markets.service import normalize_enabled_country_code
 from sellers.services import (
     follow_seller,
     restore_seller,
@@ -32,6 +33,7 @@ class SellerMutation:
         info: strawberry.Info,
         seller_type: str = "individual",
         display_name: str = "",
+        country_code: str | None = None,
     ) -> SellerType:
         user = require_user(info)
         from platform_settings.models import PlatformConfiguration
@@ -46,9 +48,19 @@ class SellerMutation:
             raise domain_error(
                 "Invalid seller type.", code="INVALID_SELLER_TYPE", status=422
             )
+        try:
+            market_country = normalize_enabled_country_code(
+                country_code or user.country_code
+            )
+        except ValidationError as exc:
+            raise validation_error(exc, code="SELLER_VALIDATION_ERROR") from exc
         seller, created = SellerProfile.objects.get_or_create(
             user=user,
-            defaults={"seller_type": seller_type, "display_name": display_name.strip()},
+            defaults={
+                "seller_type": seller_type,
+                "display_name": display_name.strip(),
+                "country_code": market_country,
+            },
         )
         if not created:
             seller.seller_type = seller_type

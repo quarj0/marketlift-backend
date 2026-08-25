@@ -10,6 +10,7 @@ from categories.services import (
     update_category_field,
 )
 from marketlift.graphql.auth import request_from_info, require_staff
+from marketlift.markets.defaults import default_pricing_label
 from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 
 from .mappers import category_to_type
@@ -62,7 +63,7 @@ def _category_schema_values(input: CategoryAdminInput):
         )
     return {
         "pricing_mode": pricing_mode,
-        "pricing_label": input.pricing_label.strip() or "Price (R$)",
+        "pricing_label": input.pricing_label.strip() or default_pricing_label(),
         "pricing_placeholder": (input.pricing_placeholder or "").strip(),
         "condition_enabled": input.condition_enabled,
         "condition_required": input.condition_required,

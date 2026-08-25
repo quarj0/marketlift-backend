@@ -35,7 +35,7 @@ def _resolve_listing_location(
     state_code: str = "",
     city: str = "",
     district: str = "",
-    country_code: str = "BR",
+    country_code: str | None = None,
     latitude=None,
     longitude=None,
     location_token: str | None = None,
@@ -69,7 +69,7 @@ def _resolve_listing_location(
         state_code=state_code,
         city=city,
         district=district,
-        country_code=country_code or "BR",
+        country_code=country_code or settings.MARKETLIFT_MARKET_COUNTRY_CODE,
     )
     lat, lng = validate_coordinates(latitude, longitude)
     return {
@@ -314,7 +314,7 @@ def create_listing(
     state_code: str = "",
     city: str = "",
     district: str = "",
-    country_code: str = "BR",
+    country_code: str | None = None,
     latitude=None,
     longitude=None,
     location_token: str | None = None,
@@ -338,11 +338,15 @@ def create_listing(
         state_code=state_code,
         city=city,
         district=district,
-        country_code=country_code,
+        country_code=country_code or seller.country_code,
         latitude=latitude,
         longitude=longitude,
         location_token=location_token,
     )
+    if location["country_code"] != seller.country_code:
+        raise ValidationError(
+            {"countryCode": "Listing country must match the seller market."}
+        )
     listing = Listing.objects.create(
         seller=seller,
         category=category,
@@ -384,7 +388,7 @@ def update_listing(
     state_code: str = "",
     city: str = "",
     district: str = "",
-    country_code: str = "BR",
+    country_code: str | None = None,
     latitude=None,
     longitude=None,
     location_token: str | None = None,
@@ -412,11 +416,15 @@ def update_listing(
         state_code=state_code,
         city=city,
         district=district,
-        country_code=country_code,
+        country_code=country_code or listing.seller.country_code,
         latitude=latitude,
         longitude=longitude,
         location_token=location_token,
     )
+    if location["country_code"] != listing.seller.country_code:
+        raise ValidationError(
+            {"countryCode": "Listing country must match the seller market."}
+        )
     listing.category = category
     listing.title = title.strip()
     listing.description = description.strip()
@@ -484,7 +492,7 @@ def publish_listing(listing: Listing):
 
     config = PlatformConfiguration.load()
     if (
-        settings.MARKETLIFT_CPF_VERIFICATION_ENABLED
+        settings.MARKETLIFT_IDENTITY_VERIFICATION_ENABLED
         and config.seller_verification_required
         and not listing.seller.verified
     ):

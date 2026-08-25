@@ -111,12 +111,19 @@ class NominatimGeocoder(GeocoderBackend):
                 {"location": "Location provider returned an invalid response."}
             ) from exc
 
-    def geocode(self, query: str, *, limit: int = 5) -> list[LocationCandidate]:
+    def geocode(
+        self, query: str, *, limit: int = 5, country_code: str | None = None
+    ) -> list[LocationCandidate]:
         query = (query or "").strip()
         limit = max(1, min(int(limit), 8))
+        country = (country_code or settings.MARKETLIFT_MARKET_COUNTRY_CODE).strip().lower()
+        if len(country) != 2:
+            raise ValidationError({"country_code": "Country code must be a two-letter ISO code."})
         cache_key = (
             "marketlift:geocode:"
-            + hashlib.sha256(f"{self.language}|{query}|{limit}".encode()).hexdigest()
+            + hashlib.sha256(
+                f"{self.language}|{country}|{query}|{limit}".encode()
+            ).hexdigest()
         )
         cached = cache.get(cache_key)
         if cached is not None:
@@ -128,7 +135,7 @@ class NominatimGeocoder(GeocoderBackend):
                 "format": "jsonv2",
                 "addressdetails": 1,
                 "limit": limit,
-                "countrycodes": "br",
+                "countrycodes": country,
             },
         )
         rows = payload if isinstance(payload, list) else []

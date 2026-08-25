@@ -47,7 +47,7 @@ class PlatformSettingsMutation:
             if value is not None:
                 setattr(config, field, value)
 
-        if not settings.MARKETLIFT_CPF_VERIFICATION_ENABLED:
+        if not settings.MARKETLIFT_IDENTITY_VERIFICATION_ENABLED:
             config.seller_verification_required = False
             config.admin_verification_queue_alerts = False
         if not settings.MARKETLIFT_PAYMENTS_ENABLED:

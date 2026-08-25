@@ -27,6 +27,7 @@ def seller_to_type(seller) -> SellerType:
         phone=(user.phone or None) if show_phone else None,
         verified=seller.verified,
         seller_type=seller.seller_type,
+        country_code=seller.country_code,
         is_suspended=seller.is_suspended,
         rating=float(seller.rating_average),
         reviews=seller.review_count,
@@ -37,6 +38,7 @@ def seller_to_type(seller) -> SellerType:
         is_followed=bool(getattr(seller, "viewer_follows", False)),
         member_since=seller.activated_at,
         location=LocationType(
+            country_code=user.country_code,
             state=user.state,
             state_code=user.state_code,
             city=user.city,
@@ -52,6 +54,7 @@ def admin_seller_to_type(seller) -> AdminSellerType:
         name=seller.display_name or seller.user.full_name or seller.user.email,
         email=seller.user.email,
         seller_type=seller.seller_type,
+        country_code=seller.country_code,
         verified=seller.verified,
         suspended=seller.is_suspended,
         activated_at=seller.activated_at,

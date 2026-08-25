@@ -50,6 +50,7 @@ class AccountProfileInput:
     email: str | None = None
     phone: str | None = None
     bio: str | None = None
+    country_code: str | None = None
     state: str | None = None
     state_code: str | None = None
     city: str | None = None

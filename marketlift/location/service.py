@@ -19,7 +19,9 @@ def _backend():
     return getattr(importlib.import_module(module_name), class_name)()
 
 
-def geocode_locations(query: str, *, limit: int = 5) -> list[LocationCandidate]:
+def geocode_locations(
+    query: str, *, limit: int = 5, country_code: str | None = None
+) -> list[LocationCandidate]:
     query = (query or "").strip()
     if len(query) < 2:
         raise ValidationError(
@@ -30,7 +32,11 @@ def geocode_locations(query: str, *, limit: int = 5) -> list[LocationCandidate]:
         raise ValidationError(
             {"q": f"Location search cannot exceed {max_length} characters."}
         )
-    return _backend().geocode(query, limit=max(1, min(int(limit), 8)))
+    return _backend().geocode(
+        query,
+        limit=max(1, min(int(limit), 8)),
+        country_code=country_code or settings.MARKETLIFT_MARKET_COUNTRY_CODE,
+    )
 
 
 def reverse_geocode_location(latitude, longitude) -> LocationCandidate | None:

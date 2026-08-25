@@ -13,6 +13,7 @@ class SellerType:
     phone: str | None
     verified: bool
     seller_type: str
+    country_code: str
     is_suspended: bool
     rating: float
     reviews: int
@@ -32,6 +33,7 @@ class AdminSellerType:
     name: str
     email: str
     seller_type: str
+    country_code: str
     verified: bool
     suspended: bool
     activated_at: datetime

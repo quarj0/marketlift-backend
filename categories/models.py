@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from marketlift.common.models import UUIDTimeStampedModel
+from marketlift.markets.defaults import default_pricing_label
 
 
 class Category(UUIDTimeStampedModel):
@@ -29,7 +30,7 @@ class Category(UUIDTimeStampedModel):
         choices=PricingMode.choices,
         default=PricingMode.REQUIRED,
     )
-    pricing_label = models.CharField(max_length=120, default="Price (R$)")
+    pricing_label = models.CharField(max_length=120, default=default_pricing_label)
     pricing_placeholder = models.CharField(max_length=120, blank=True)
     condition_enabled = models.BooleanField(default=True)
     condition_required = models.BooleanField(default=True)

@@ -30,6 +30,7 @@ STOP_WORDS = {
     "the",
     "to",
     "with",
+    "near",
     "per",
     "month",
     "de",
@@ -60,6 +61,16 @@ STOP_WORDS = {
     "pelo",
     "minimo",
     "maximo",
+    # French marketplace grammar
+    "avec",
+    "dans",
+    "du",
+    "des",
+    "et",
+    "moins",
+    "plus",
+    "jusqu",
+    "au",
 }
 
 # When an explicit unit is present, these words describe the specification
@@ -83,23 +94,25 @@ _SPEC_LABEL_WORDS = {
     "rodados",
 }
 
-# A BRL amount may use Brazilian punctuation and common shorthand. The whole
-# amount is captured as one group so it can be normalized consistently.
-_NUMBER = r"(?:\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)"
-_SCALE = r"(?:\s*(?:k|mil|milhao|milhoes))?"
-_PREFIX = r"(?:(?:r\$|brl)\s*)?"
-_SUFFIX = r"(?:\s*(?:real|reais|brl))?"
-_PRODUCT_UNIT = r"(?:gb|gigabytes?|gigas?|giga|tb|terabytes?|teras?|tera|mb|megabytes?|megas?|mega|km|kg|m2|m²|cm|mm|in|inch|polegada|polegadas|l|litro|litros|%)"
-_MONEY = rf"({_PREFIX}{_NUMBER}{_SCALE}{_SUFFIX})(?![a-z0-9.,])(?!\s*(?:k|mil|milhao|milhoes)\b)(?!\s*{_PRODUCT_UNIT}(?![a-z0-9]))"
+# Currency-aware marketplace amounts. The parser accepts Brazilian and common
+# African notation but emits one neutral Decimal range for the search backend.
+# Examples: R$9.000, GH₵6,000, ₦1.5m, KSh 1.8m, R 25 000, FCFA 500000.
+_NUMBER = r"(?:\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)"
+_SCALE = r"(?:\s*(?:k|m|mil|milhao|milhoes|thousand|million|millions))?"
+_PREFIX = r"(?:(?:r\$|brl|gh₵|ghs|₵|ngn|₦|ksh|kes|zar|xof|fcfa|cfa|r(?!\$))\s*)?"
+_SUFFIX = r"(?:\s*(?:real|reais|brl|cedi|cedis|ghs|naira|ngn|shilling|shillings|kes|rand|zar|xof|fcfa|cfa))?"
+_PRODUCT_UNIT = r"(?:gb|gigabytes?|gigas?|giga|tb|terabytes?|teras?|tera|mb|megabytes?|megas?|mega|km|kg|m2|m²|cm|mm|inch|polegada|polegadas|l|litro|litros|%)"
+_MONEY = rf"({_PREFIX}{_NUMBER}{_SCALE}{_SUFFIX})(?![a-z0-9.,])(?!\s*(?:k|m|mil|milhao|milhoes|thousand|million|millions)\b)(?!\s*{_PRODUCT_UNIT}(?![a-z0-9]))"
 
 _RANGE_PATTERNS = [
     re.compile(rf"\bbetween\s+{_MONEY}\s+(?:and|to)\s+{_MONEY}\b", re.I),
     re.compile(rf"\bentre\s+{_MONEY}\s+e\s+{_MONEY}\b", re.I),
+    re.compile(rf"\bentre\s+{_MONEY}\s+et\s+{_MONEY}\b", re.I),
     re.compile(rf"\bde\s+{_MONEY}\s+a\s+{_MONEY}\b", re.I),
 ]
 _MAX_PATTERNS = [
     re.compile(
-        rf"\b(?:under|below|less\s+than|up\s+to|max(?:imum)?|ate|abaixo\s+de|menos\s+de|maximo(?:\s+de)?|no\s+maximo(?:\s+de)?)\s+{_MONEY}\b",
+        rf"\b(?:under|below|less\s+than|up\s+to|max(?:imum)?|ate|abaixo\s+de|menos\s+de|maximo(?:\s+de)?|no\s+maximo(?:\s+de)?|moins\s+de|jusqu(?:a|\s+a))\s+{_MONEY}\b",
         re.I,
     ),
     re.compile(rf"(?:<=|≤)\s*{_MONEY}", re.I),
@@ -107,7 +120,7 @@ _MAX_PATTERNS = [
 ]
 _MIN_PATTERNS = [
     re.compile(
-        rf"\b(?:over|above|more\s+than|at\s+least|min(?:imum)?|acima\s+de|mais\s+de|pelo\s+menos|minimo(?:\s+de)?|no\s+minimo(?:\s+de)?)\s+{_MONEY}\b",
+        rf"\b(?:over|above|more\s+than|at\s+least|min(?:imum)?|acima\s+de|mais\s+de|pelo\s+menos|minimo(?:\s+de)?|no\s+minimo(?:\s+de)?|plus\s+de|au\s+moins)\s+{_MONEY}\b",
         re.I,
     ),
     re.compile(rf"(?:>=|≥)\s*{_MONEY}", re.I),
@@ -154,7 +167,7 @@ _SPEC_RANGE_QUANTITY = (
 )
 _SPEC_RANGE_LABEL = r"(?:\s+(?:de\s+)?(?P<label>ram|memoria(?:\s+ram)?|memory|storage|armazenamento|capacidade|mileage|quilometragem|rodados|screen|tela|battery|bateria|area))?"
 _SPEC_MAX_PATTERN = re.compile(
-    rf"\b(?:under|below|less\s+than|up\s+to|max(?:imum)?|ate|abaixo\s+de|menos\s+de|maximo(?:\s+de)?|no\s+maximo(?:\s+de)?)\s+{_SPEC_RANGE_QUANTITY}{_SPEC_RANGE_LABEL}(?![a-z0-9])",
+    rf"\b(?:under|below|less\s+than|up\s+to|max(?:imum)?|ate|abaixo\s+de|menos\s+de|maximo(?:\s+de)?|no\s+maximo(?:\s+de)?|moins\s+de|jusqu(?:a|\s+a))\s+{_SPEC_RANGE_QUANTITY}{_SPEC_RANGE_LABEL}(?![a-z0-9])",
     re.I,
 )
 _SPEC_MIN_PATTERN = re.compile(
@@ -172,29 +185,54 @@ _NEAR_ME_PATTERNS = [
 
 
 def _money_decimal(raw: str) -> Decimal:
-    value = strip_accents(raw or "").strip().casefold().replace(" ", "")
-    value = re.sub(r"^(?:r\$|brl)", "", value)
-    value = re.sub(r"(?:reais?|brl)$", "", value)
+    value = strip_accents(raw or "").strip().casefold()
+    value = re.sub(r"\s+", "", value)
+    value = re.sub(
+        r"^(?:r\$|brl|gh₵|ghs|₵|ngn|₦|ksh|kes|zar|xof|fcfa|cfa|r(?=\d))",
+        "",
+        value,
+    )
+    value = re.sub(
+        r"(?:reais?|brl|cedis?|ghs|naira|ngn|shillings?|kes|rand|zar|xof|fcfa|cfa)$",
+        "",
+        value,
+    )
 
     multiplier = Decimal("1")
-    scale_match = re.search(r"(milhoes|milhao|mil|k)$", value)
+    scale_match = re.search(
+        r"(millions|million|milhoes|milhao|thousand|mil|m|k)$", value
+    )
     if scale_match:
         scale = scale_match.group(1)
         value = value[: scale_match.start()]
-        multiplier = (
-            Decimal("1000000") if scale in {"milhao", "milhoes"} else Decimal("1000")
-        )
+        if scale in {"million", "millions", "milhao", "milhoes", "m"}:
+            multiplier = Decimal("1000000")
+        else:
+            multiplier = Decimal("1000")
 
+    # Infer the decimal separator from the last separator when both are present.
+    # With one separator, three trailing digits are treated as a thousands group
+    # unless a magnitude suffix (1.5m / 1,5 mil) makes it clearly decimal.
     if "," in value and "." in value:
-        value = value.replace(".", "").replace(",", ".")
+        if value.rfind(",") > value.rfind("."):
+            value = value.replace(".", "").replace(",", ".")
+        else:
+            value = value.replace(",", "")
     elif "," in value:
-        value = value.replace(".", "").replace(",", ".")
-    elif value.count(".") == 1:
-        before, after = value.split(".")
-        # In BRL searches, 1.200 is overwhelmingly a thousands separator, but
-        # 1.2k / 1.2 mil is a decimal shorthand and must remain 1.2.
-        if multiplier == 1 and len(after) == 3 and len(before) <= 3:
-            value = before + after
+        before, after = value.rsplit(",", 1)
+        if len(after) == 3 and multiplier == 1:
+            value = before.replace(",", "") + after
+        else:
+            value = value.replace(",", ".")
+    elif value.count(".") >= 1:
+        parts = value.split(".")
+        if len(parts) > 2 and all(len(part) == 3 for part in parts[1:]):
+            value = "".join(parts)
+        elif len(parts) == 2:
+            before, after = parts
+            if len(after) == 3 and multiplier == 1 and len(before) <= 3:
+                value = before + after
+
     try:
         number = Decimal(value) * multiplier
     except (InvalidOperation, ValueError) as exc:
@@ -212,7 +250,10 @@ def _looks_like_unqualified_year(raw: str) -> bool:
     token so category attributes can match it instead.
     """
     normalized = strip_accents(raw or "").casefold().strip()
-    if re.search(r"r\$|\bbrl\b|\breais?\b|\b(?:k|mil|milhao|milhoes)\b", normalized):
+    if re.search(
+        r"r\$|\b(?:brl|ghs|ngn|kes|zar|xof|fcfa|cfa|reais?|cedis?|naira|rand|shillings?)\b|[₦₵]|\b(?:k|m|mil|milhao|milhoes|thousand|million|millions)\b",
+        normalized,
+    ):
         return False
     try:
         number = _money_decimal(normalized)

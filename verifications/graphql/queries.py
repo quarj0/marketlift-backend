@@ -39,6 +39,7 @@ class VerificationQuery:
                 Q(seller__display_name__icontains=search)
                 | Q(seller__user__full_name__icontains=search)
                 | Q(seller__user__email__icontains=search)
+                | Q(identity_masked__icontains=search)
                 | Q(cpf_masked__icontains=search)
             )
         if status:

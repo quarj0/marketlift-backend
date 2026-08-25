@@ -4,8 +4,10 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.conf import settings
 
 from categories.models import Category, CategoryField, CategoryFieldOption
+from marketlift.markets.defaults import default_pricing_label
 from promotions.models import PromotionProduct
 from subscriptions.models import SellerPlan
 
@@ -61,8 +63,12 @@ class Command(BaseCommand):
                 "sort_order": category_index,
                 "schema_version": item.get("schemaVersion", 1),
                 "pricing_mode": item.get("pricing", {}).get("mode", "required"),
-                "pricing_label": item.get("pricing", {}).get("label", "Price (R$)"),
-                "pricing_placeholder": item.get("pricing", {}).get("placeholder", ""),
+                "pricing_label": self._market_text(
+                    item.get("pricing", {}).get("label", default_pricing_label())
+                ),
+                "pricing_placeholder": self._market_text(
+                    item.get("pricing", {}).get("placeholder", "")
+                ),
                 "condition_enabled": item.get("condition", {}).get("enabled", True),
                 "condition_required": item.get("condition", {}).get("required", True),
             }
@@ -82,9 +88,9 @@ class Command(BaseCommand):
                     "required": field_data.get("required", False),
                     "filterable": field_data.get("filterable", False),
                     "allow_custom_value": field_data.get("allowCustomValue", False),
-                    "placeholder": field_data.get("placeholder", ""),
-                    "help_text": field_data.get("helpText", ""),
-                    "unit": field_data.get("unit", ""),
+                    "placeholder": self._market_text(field_data.get("placeholder", "")),
+                    "help_text": self._market_text(field_data.get("helpText", "")),
+                    "unit": self._market_text(field_data.get("unit", "")),
                     "min_value": self._decimal_or_none(field_data.get("min")),
                     "max_value": self._decimal_or_none(field_data.get("max")),
                     "step_value": self._decimal_or_none(field_data.get("step")),
@@ -159,6 +165,16 @@ class Command(BaseCommand):
                 },
             )
         return len(products_data)
+
+    @staticmethod
+    def _market_text(value):
+        text = str(value or "")
+        if getattr(settings, "MARKETLIFT_MARKET_COUNTRY_CODE", "BR") == "BR":
+            return text
+        symbol = getattr(settings, "MARKETLIFT_MARKET_CURRENCY_SYMBOL", "")
+        text = text.replace("R$", symbol)
+        text = text.replace("São Paulo metro area", "your local area")
+        return text
 
     @staticmethod
     def _decimal_or_none(value):

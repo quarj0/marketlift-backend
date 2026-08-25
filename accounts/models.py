@@ -4,6 +4,11 @@ from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserMa
 from django.db import models
 
 from marketlift.common.models import UUIDTimeStampedModel
+from marketlift.markets.defaults import (
+    default_market_country_code,
+    default_market_currency,
+    default_market_locale,
+)
 
 
 class UserManager(DjangoUserManager):
@@ -64,6 +69,9 @@ class User(AbstractUser):
     avatar_url = models.URLField(blank=True)
     bio = models.TextField(blank=True)
 
+    country_code = models.CharField(
+        max_length=2, default=default_market_country_code, db_index=True
+    )
     state = models.CharField(max_length=100, blank=True)
     state_code = models.CharField(max_length=8, blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -108,7 +116,12 @@ class User(AbstractUser):
 class AccountSettings(UUIDTimeStampedModel):
     class Language(models.TextChoices):
         ENGLISH = "en", "English"
+        ENGLISH_GHANA = "en-GH", "English (Ghana)"
+        ENGLISH_NIGERIA = "en-NG", "English (Nigeria)"
+        ENGLISH_KENYA = "en-KE", "English (Kenya)"
+        ENGLISH_SOUTH_AFRICA = "en-ZA", "English (South Africa)"
         PORTUGUESE_BRAZIL = "pt-BR", "Português (Brasil)"
+        FRENCH_COTE_DIVOIRE = "fr-CI", "Français (Côte d’Ivoire)"
 
     user = models.OneToOneField(
         User,
@@ -118,9 +131,11 @@ class AccountSettings(UUIDTimeStampedModel):
     language = models.CharField(
         max_length=8,
         choices=Language.choices,
-        default=Language.PORTUGUESE_BRAZIL,
+        default=default_market_locale,
     )
-    currency = models.CharField(max_length=3, default="BRL", editable=False)
+    currency = models.CharField(
+        max_length=3, default=default_market_currency, editable=False
+    )
 
     email_messages = models.BooleanField(default=True)
     email_listing_updates = models.BooleanField(default=True)
