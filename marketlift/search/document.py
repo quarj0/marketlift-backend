@@ -7,6 +7,7 @@ from django.contrib.postgres.search import SearchVector
 from django.db.models import Value
 from django.utils import timezone
 
+from .aliases import attribute_search_aliases, condition_search_aliases
 from .normalization import attribute_unit_tokens, normalize_text, tokenize
 
 
@@ -46,6 +47,8 @@ def build_listing_search_document(
         listing.condition,
     ):
         _append(parts, tokens, value)
+    for alias in condition_search_aliases(listing.condition):
+        _append(parts, tokens, alias)
 
     attrs = (
         attributes
@@ -57,6 +60,8 @@ def build_listing_search_document(
         _append(parts, tokens, attribute.label_snapshot)
         value = attribute.value
         _append(parts, tokens, value)
+        for alias in attribute_search_aliases(attribute):
+            _append(parts, tokens, alias)
         field = getattr(attribute, "field", None)
         unit = getattr(field, "unit", "") if field is not None else ""
         for compact in attribute_unit_tokens(value, unit):

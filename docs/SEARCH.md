@@ -49,10 +49,16 @@ The parser intentionally supports explicit marketplace syntax:
 
 - listing/product/location text such as `samsung s21`, `apartamento pinheiros`, or `honda civic 2020`
 - BRL price ceilings: `under r$800`, `below 800`, `até 800`, `abaixo de 800`, `menos de 800`, `<= 800`
-- BRL price floors: `over r$800`, `above 800`, `acima de 800`, `mais de 800`, `>= 800`
+- BRL price floors: `over r$800`, `above 800`, `acima de 800`, `mais de 800`, `pelo menos 800`, `>= 800`
+- Brazilian money shorthand such as `R$9k`, `9 mil`, `R$1,5 mil`, `R$1,2 milhão`, and `5 mil reais`
 - price ranges: `between 500 and 800`, `entre 500 e 800`, `de 500 a 800`
-- explicit unit specifications such as `8gb`, `128gb`, `1tb`, `500km`, `15in`, `90%`
+- explicit unit specifications such as `8gb`, `8 giga`, `128gb`, `1tb`, `500km`, `15in`, `90%`, `120m²`, and `400 litros`
+- numeric specification ranges such as `pelo menos 16gb ram`, `até 256gb storage`, `menos de 100 mil km`, and `acima de 100m²`
+- vehicle-year ranges such as `a partir de 2020`, `after 2020`, and `before 2020`
+- relative-location phrases such as `perto de mim` and `within 20km of me` when trusted latitude/longitude are supplied separately
 - common spelling mistakes through PostgreSQL `pg_trgm` for alphabetic terms of four or more characters
+
+Brazilian Portuguese aliases are added to the search projection for common canonical category values (for example `automatic` → `automático`, `laptop` → `notebook`, and property terms such as `apartment` → `apartamento`). These aliases do not change stored transactional values.
 
 It does not map subjective phrases to product features or invoke an LLM.
 
@@ -117,7 +123,7 @@ Examples:
 /api/v1/search/listings/?q=iphone&lat=-23.5505&lng=-46.6333&radius_km=10&sort=distance
 ```
 
-Region/state combinations are validated. For example, `region=NE&state=SP` is rejected instead of silently producing confusing results. Radius and distance sorting require valid coordinates.
+Region/state combinations are validated. For example, `region=NE&state=SP` is rejected instead of silently producing confusing results. Radius and distance sorting require valid coordinates. Free-text `near me` / `perto de mim` also requires coordinates; when no explicit radius is supplied it uses a 25 km default, while an explicit query radius such as `within 20km of me` is honored.
 
 Dynamic category fields use allowlisted parameters derived from active `CategoryField(filterable=True)` rows:
 

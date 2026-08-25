@@ -66,9 +66,7 @@ class S3CompatibleStorageBackend(StorageBackend):
 
     @property
     def secret_key(self) -> str:
-        value = str(
-            getattr(settings, "MARKETLIFT_S3_SECRET_ACCESS_KEY", "")
-        ).strip()
+        value = str(getattr(settings, "MARKETLIFT_S3_SECRET_ACCESS_KEY", "")).strip()
         if not value:
             raise RuntimeError("S3-compatible secret key is not configured.")
         return value
@@ -129,9 +127,7 @@ class S3CompatibleStorageBackend(StorageBackend):
             "X-Amz-Expires": str(max(60, min(int(expires), 3600))),
             "X-Amz-SignedHeaders": signed_headers,
         }
-        canonical_query = urlencode(
-            sorted(query.items()), quote_via=quote, safe="-_.~"
-        )
+        canonical_query = urlencode(sorted(query.items()), quote_via=quote, safe="-_.~")
         canonical_request = "\n".join(
             [
                 method.upper(),

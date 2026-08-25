@@ -87,9 +87,13 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                 id="marketlift.E006",
             )
         )
-    if payments_enabled and provider == "mercado_pago" and (
-        not getattr(settings, "MERCADO_PAGO_ACCESS_TOKEN", "")
-        or not getattr(settings, "MERCADO_PAGO_WEBHOOK_SECRET", "")
+    if (
+        payments_enabled
+        and provider == "mercado_pago"
+        and (
+            not getattr(settings, "MERCADO_PAGO_ACCESS_TOKEN", "")
+            or not getattr(settings, "MERCADO_PAGO_WEBHOOK_SECRET", "")
+        )
     ):
         issues.append(
             Error(

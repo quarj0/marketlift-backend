@@ -7,14 +7,29 @@ from decimal import Decimal
 _SPACE_RE = re.compile(r"\s+")
 _TOKEN_RE = re.compile(r"[a-z0-9]+(?:\+[a-z0-9]*)?", re.IGNORECASE)
 _UNIT_RE = re.compile(
-    r"(?<![a-z0-9])(?P<number>\d+(?:[.,]\d+)?)\s*(?P<unit>gb|tb|mb|km|kg|m2|m²|cm|mm|in|inch|polegadas|%)\b",
+    r"(?<![a-z0-9])(?P<number>\d+(?:[.,]\d+)?)\s*(?P<scale>k|mil)?\s*(?P<unit>gb|gigabytes?|gigas?|giga|tb|terabytes?|teras?|tera|mb|megabytes?|megas?|mega|km|kg|m2|m²|cm|mm|in|inch|polegada|polegadas|l|litro|litros|%)(?![a-z0-9])",
     re.IGNORECASE,
 )
 
 UNIT_ALIASES = {
     "m²": "m2",
     "inch": "in",
+    "polegada": "in",
     "polegadas": "in",
+    "giga": "gb",
+    "gigas": "gb",
+    "gigabyte": "gb",
+    "gigabytes": "gb",
+    "tera": "tb",
+    "teras": "tb",
+    "terabyte": "tb",
+    "terabytes": "tb",
+    "mega": "mb",
+    "megas": "mb",
+    "megabyte": "mb",
+    "megabytes": "mb",
+    "litro": "l",
+    "litros": "l",
 }
 
 
@@ -38,13 +53,28 @@ def compact_decimal(value: Decimal | int | float | str) -> str:
     return format(number.normalize(), "f")
 
 
-def normalize_unit_token(number: str, unit: str) -> str:
+def normalize_unit_token(number: str, unit: str, scale: str | None = None) -> str:
     unit = UNIT_ALIASES.get(
         strip_accents(unit).casefold(), strip_accents(unit).casefold()
     )
-    number = number.replace(",", ".")
+    raw_number = number.strip()
+    if "," in raw_number and "." in raw_number:
+        normalized_number = raw_number.replace(".", "").replace(",", ".")
+    elif "," in raw_number:
+        normalized_number = raw_number.replace(",", ".")
+    elif raw_number.count(".") == 1:
+        before, after = raw_number.split(".")
+        if scale is None and len(after) == 3 and len(before) <= 3:
+            normalized_number = before + after
+        else:
+            normalized_number = raw_number
+    else:
+        normalized_number = raw_number
     try:
-        compact = compact_decimal(number)
+        numeric = Decimal(normalized_number)
+        if scale in {"k", "mil"}:
+            numeric *= Decimal("1000")
+        compact = compact_decimal(numeric)
     except Exception:
         compact = number
     return f"{compact}{unit}"
@@ -54,7 +84,9 @@ def extract_unit_tokens(value: str) -> list[str]:
     normalized = strip_accents(value or "").casefold()
     tokens: list[str] = []
     for match in _UNIT_RE.finditer(normalized):
-        token = normalize_unit_token(match.group("number"), match.group("unit"))
+        token = normalize_unit_token(
+            match.group("number"), match.group("unit"), match.group("scale")
+        )
         if token not in tokens:
             tokens.append(token)
     return tokens
@@ -68,7 +100,9 @@ def extract_unit_tokens_and_clean(value: str) -> tuple[str, list[str]]:
     for match in _UNIT_RE.finditer(normalized):
         pieces.append(normalized[last : match.start()])
         pieces.append(" " * (match.end() - match.start()))
-        token = normalize_unit_token(match.group("number"), match.group("unit"))
+        token = normalize_unit_token(
+            match.group("number"), match.group("unit"), match.group("scale")
+        )
         if token not in tokens:
             tokens.append(token)
         last = match.end()
@@ -105,6 +139,7 @@ def attribute_unit_tokens(value: object, unit: str | None) -> list[str]:
         "cm",
         "mm",
         "in",
+        "l",
         "%",
     }:
         return []

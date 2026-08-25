@@ -5,10 +5,17 @@ from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
 
-from .contracts import ParsedMarketplaceQuery
-from .normalization import extract_unit_tokens_and_clean, normalize_text, strip_accents
+from .contracts import NumericSpecificationConstraint, ParsedMarketplaceQuery
+from .normalization import (
+    extract_unit_tokens_and_clean,
+    normalize_text,
+    normalize_unit_token,
+    strip_accents,
+)
 
-# Intentionally small. These are grammar words, not marketplace concepts.
+# Grammar and common attribute-label words that should not become hard search
+# requirements. Marketplace concepts such as brand/model names are intentionally
+# not included here.
 STOP_WORDS = {
     "a",
     "an",
@@ -23,6 +30,8 @@ STOP_WORDS = {
     "the",
     "to",
     "with",
+    "per",
+    "month",
     "de",
     "da",
     "das",
@@ -36,9 +45,53 @@ STOP_WORDS = {
     "nos",
     "para",
     "por",
+    "mes",
+    "com",
+    "um",
+    "uma",
+    "uns",
+    "umas",
+    "partir",
+    "ate",
+    "abaixo",
+    "acima",
+    "menos",
+    "mais",
+    "pelo",
+    "minimo",
+    "maximo",
 }
 
-_MONEY = r"(?:r\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)"
+# When an explicit unit is present, these words describe the specification
+# rather than the product. Removing them prevents queries such as
+# ``16 GB de memória`` from requiring the literal Portuguese label ``memoria``
+# to exist in an otherwise correctly structured listing document.
+_SPEC_LABEL_WORDS = {
+    "ram",
+    "memory",
+    "memoria",
+    "storage",
+    "armazenamento",
+    "capacity",
+    "capacidade",
+    "screen",
+    "tela",
+    "area",
+    "peso",
+    "mileage",
+    "quilometragem",
+    "rodados",
+}
+
+# A BRL amount may use Brazilian punctuation and common shorthand. The whole
+# amount is captured as one group so it can be normalized consistently.
+_NUMBER = r"(?:\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)"
+_SCALE = r"(?:\s*(?:k|mil|milhao|milhoes))?"
+_PREFIX = r"(?:(?:r\$|brl)\s*)?"
+_SUFFIX = r"(?:\s*(?:real|reais|brl))?"
+_PRODUCT_UNIT = r"(?:gb|gigabytes?|gigas?|giga|tb|terabytes?|teras?|tera|mb|megabytes?|megas?|mega|km|kg|m2|m²|cm|mm|in|inch|polegada|polegadas|l|litro|litros|%)"
+_MONEY = rf"({_PREFIX}{_NUMBER}{_SCALE}{_SUFFIX})(?![a-z0-9.,])(?!\s*(?:k|mil|milhao|milhoes)\b)(?!\s*{_PRODUCT_UNIT}(?![a-z0-9]))"
+
 _RANGE_PATTERNS = [
     re.compile(rf"\bbetween\s+{_MONEY}\s+(?:and|to)\s+{_MONEY}\b", re.I),
     re.compile(rf"\bentre\s+{_MONEY}\s+e\s+{_MONEY}\b", re.I),
@@ -46,7 +99,7 @@ _RANGE_PATTERNS = [
 ]
 _MAX_PATTERNS = [
     re.compile(
-        rf"\b(?:under|below|less\s+than|up\s+to|max(?:imum)?|ate|abaixo\s+de|menos\s+de|maximo(?:\s+de)?)\s+{_MONEY}\b",
+        rf"\b(?:under|below|less\s+than|up\s+to|max(?:imum)?|ate|abaixo\s+de|menos\s+de|maximo(?:\s+de)?|no\s+maximo(?:\s+de)?)\s+{_MONEY}\b",
         re.I,
     ),
     re.compile(rf"(?:<=|≤)\s*{_MONEY}", re.I),
@@ -54,27 +107,96 @@ _MAX_PATTERNS = [
 ]
 _MIN_PATTERNS = [
     re.compile(
-        rf"\b(?:over|above|more\s+than|at\s+least|min(?:imum)?|acima\s+de|mais\s+de|a\s+partir\s+de|minimo(?:\s+de)?)\s+{_MONEY}\b",
+        rf"\b(?:over|above|more\s+than|at\s+least|min(?:imum)?|acima\s+de|mais\s+de|pelo\s+menos|minimo(?:\s+de)?|no\s+minimo(?:\s+de)?)\s+{_MONEY}\b",
         re.I,
     ),
     re.compile(rf"(?:>=|≥)\s*{_MONEY}", re.I),
     re.compile(rf"{_MONEY}\s+(?:or\s+more|ou\s+mais)\b", re.I),
 ]
+_STARTING_FROM_PATTERN = re.compile(rf"\ba\s+partir\s+de\s+{_MONEY}\b", re.I)
+
+_RADIUS_PATTERNS = [
+    re.compile(r"\bwithin\s+(\d+(?:[.,]\d+)?)\s*km\s+(?:of|from)\s+me\b", re.I),
+    re.compile(
+        r"\b(?:ate|a)\s+(\d+(?:[.,]\d+)?)\s*km\s+(?:de\s+mim|daqui)\b",
+        re.I,
+    ),
+    re.compile(r"\b(\d+(?:[.,]\d+)?)\s*km\s+(?:de\s+mim|from\s+me)\b", re.I),
+    re.compile(
+        r"\b(?:em\s+um\s+raio\s+de|num\s+raio\s+de|raio\s+de)\s+(\d+(?:[.,]\d+)?)\s*km\b",
+        re.I,
+    ),
+]
+_YEAR = r"(?P<year>(?:19|20)\d{2}|2100)(?!\s*(?:reais?|brl|k|mil|milhao|milhoes)\b)"
+_YEAR_MIN_INCLUSIVE_PATTERNS = [
+    re.compile(rf"\ba\s+partir\s+de\s+{_YEAR}\b", re.I),
+    re.compile(
+        rf"\b{_YEAR}\s+(?:ou\s+mais\s+novo|ou\s+mais\s+recente|or\s+newer)\b", re.I
+    ),
+    re.compile(rf"\b(?:ano|year)\s*(?:>=|a\s+partir\s+de|from)\s*{_YEAR}\b", re.I),
+]
+_YEAR_MIN_EXCLUSIVE_PATTERNS = [
+    re.compile(rf"\b(?:after|depois\s+de)\s+{_YEAR}\b", re.I),
+    re.compile(rf"\b(?:ano|year)\s+(?:acima\s+de|above)\s+{_YEAR}\b", re.I),
+]
+_YEAR_MAX_INCLUSIVE_PATTERNS = [
+    re.compile(rf"\b(?:ano|year)\s*(?:<=|ate|up\s+to)\s*{_YEAR}\b", re.I),
+    re.compile(rf"\b{_YEAR}\s+(?:ou\s+mais\s+antigo|or\s+older)\b", re.I),
+]
+_YEAR_MAX_EXCLUSIVE_PATTERNS = [
+    re.compile(rf"\b(?:before|antes\s+de)\s+{_YEAR}\b", re.I),
+    re.compile(rf"\b(?:ano|year)\s+(?:abaixo\s+de|below)\s+{_YEAR}\b", re.I),
+]
+
+_SPEC_RANGE_UNIT = r"(?:gb|gigabytes?|gigas?|giga|tb|terabytes?|teras?|tera|mb|megabytes?|megas?|mega|km|kg|m2|m²|cm|mm|in|inch|polegada|polegadas|l|litro|litros|%)"
+_SPEC_RANGE_QUANTITY = (
+    rf"(?P<number>{_NUMBER})\s*(?P<scale>k|mil)?\s*(?P<unit>{_SPEC_RANGE_UNIT})"
+)
+_SPEC_RANGE_LABEL = r"(?:\s+(?:de\s+)?(?P<label>ram|memoria(?:\s+ram)?|memory|storage|armazenamento|capacidade|mileage|quilometragem|rodados|screen|tela|battery|bateria|area))?"
+_SPEC_MAX_PATTERN = re.compile(
+    rf"\b(?:under|below|less\s+than|up\s+to|max(?:imum)?|ate|abaixo\s+de|menos\s+de|maximo(?:\s+de)?|no\s+maximo(?:\s+de)?)\s+{_SPEC_RANGE_QUANTITY}{_SPEC_RANGE_LABEL}(?![a-z0-9])",
+    re.I,
+)
+_SPEC_MIN_PATTERN = re.compile(
+    rf"\b(?:over|above|more\s+than|at\s+least|min(?:imum)?|acima\s+de|mais\s+de|pelo\s+menos|minimo(?:\s+de)?|no\s+minimo(?:\s+de)?|a\s+partir\s+de)\s+{_SPEC_RANGE_QUANTITY}{_SPEC_RANGE_LABEL}(?![a-z0-9])",
+    re.I,
+)
+
+_NEAR_ME_PATTERNS = [
+    re.compile(r"\bnear\s+me\b", re.I),
+    re.compile(r"\bclose\s+to\s+me\b", re.I),
+    re.compile(r"\baround\s+me\b", re.I),
+    re.compile(r"\bperto\s+de\s+mim\b", re.I),
+    re.compile(r"\bproximo\s+(?:de|a)\s+mim\b", re.I),
+]
 
 
 def _money_decimal(raw: str) -> Decimal:
-    value = raw.strip().replace(" ", "")
+    value = strip_accents(raw or "").strip().casefold().replace(" ", "")
+    value = re.sub(r"^(?:r\$|brl)", "", value)
+    value = re.sub(r"(?:reais?|brl)$", "", value)
+
+    multiplier = Decimal("1")
+    scale_match = re.search(r"(milhoes|milhao|mil|k)$", value)
+    if scale_match:
+        scale = scale_match.group(1)
+        value = value[: scale_match.start()]
+        multiplier = (
+            Decimal("1000000") if scale in {"milhao", "milhoes"} else Decimal("1000")
+        )
+
     if "," in value and "." in value:
         value = value.replace(".", "").replace(",", ".")
     elif "," in value:
         value = value.replace(".", "").replace(",", ".")
     elif value.count(".") == 1:
         before, after = value.split(".")
-        # In BRL searches, 1.200 is overwhelmingly a thousands separator.
-        if len(after) == 3 and len(before) <= 3:
+        # In BRL searches, 1.200 is overwhelmingly a thousands separator, but
+        # 1.2k / 1.2 mil is a decimal shorthand and must remain 1.2.
+        if multiplier == 1 and len(after) == 3 and len(before) <= 3:
             value = before + after
     try:
-        number = Decimal(value)
+        number = Decimal(value) * multiplier
     except (InvalidOperation, ValueError) as exc:
         raise ValidationError({"q": "Invalid price in search query."}) from exc
     if number < 0:
@@ -82,8 +204,152 @@ def _money_decimal(raw: str) -> Decimal:
     return number
 
 
+def _looks_like_unqualified_year(raw: str) -> bool:
+    """Guard ambiguous ``a partir de 2020`` from becoming a R$2,020 price.
+
+    Currency markers and magnitude words make the intent monetary. A bare
+    four-digit value in the normal vehicle/model-year range is kept as a text
+    token so category attributes can match it instead.
+    """
+    normalized = strip_accents(raw or "").casefold().strip()
+    if re.search(r"r\$|\bbrl\b|\breais?\b|\b(?:k|mil|milhao|milhoes)\b", normalized):
+        return False
+    try:
+        number = _money_decimal(normalized)
+    except ValidationError:
+        return False
+    return number == number.to_integral() and Decimal("1900") <= number <= Decimal(
+        "2100"
+    )
+
+
 def _remove_span(text: str, start: int, end: int) -> str:
     return text[:start] + (" " * (end - start)) + text[end:]
+
+
+def _spec_constraint_key(unit: str, label: str | None) -> str | None:
+    normalized_label = normalize_text(label or "")
+    if unit == "gb":
+        if normalized_label in {"ram", "memory", "memoria", "memoria ram"}:
+            return "ram_gb"
+        if normalized_label in {"storage", "armazenamento", "capacidade"}:
+            return "storage_gb"
+        return None
+    if unit == "km":
+        return "mileage_km"
+    if unit == "in":
+        return "screen_size"
+    if unit == "%":
+        return "battery_health"
+    return None
+
+
+def _spec_quantity(number: str, scale: str | None, unit: str) -> tuple[Decimal, str]:
+    token = normalize_unit_token(number, unit, scale)
+    match = re.fullmatch(r"(?P<number>[0-9]+(?:\.[0-9]+)?)(?P<unit>[a-z0-9%]+)", token)
+    if not match:
+        raise ValidationError({"q": "Invalid specification range in search query."})
+    return Decimal(match.group("number")), match.group("unit")
+
+
+def _extract_year_ranges(
+    value: str,
+) -> tuple[str, tuple[NumericSpecificationConstraint, ...]]:
+    working = strip_accents(value or "").casefold()
+    constraints: list[NumericSpecificationConstraint] = []
+    groups = (
+        ("min_inclusive", _YEAR_MIN_INCLUSIVE_PATTERNS),
+        ("min_exclusive", _YEAR_MIN_EXCLUSIVE_PATTERNS),
+        ("max_inclusive", _YEAR_MAX_INCLUSIVE_PATTERNS),
+        ("max_exclusive", _YEAR_MAX_EXCLUSIVE_PATTERNS),
+    )
+    for _ in range(2):
+        candidates = []
+        for kind, patterns in groups:
+            for pattern in patterns:
+                match = pattern.search(working)
+                if match:
+                    candidates.append((match.start(), kind, match))
+        if not candidates:
+            break
+        _, kind, match = min(candidates, key=lambda item: item[0])
+        year = Decimal(match.group("year"))
+        minimum = None
+        maximum = None
+        if kind == "min_inclusive":
+            minimum = year
+        elif kind == "min_exclusive":
+            minimum = year + 1
+        elif kind == "max_inclusive":
+            maximum = year
+        else:
+            maximum = year - 1
+        constraints.append(
+            NumericSpecificationConstraint(key="year", minimum=minimum, maximum=maximum)
+        )
+        working = _remove_span(working, *match.span())
+    return working, tuple(constraints)
+
+
+def _extract_specification_ranges(
+    value: str,
+) -> tuple[str, tuple[NumericSpecificationConstraint, ...]]:
+    working = strip_accents(value or "").casefold()
+    constraints: list[NumericSpecificationConstraint] = []
+
+    # Extract at most six explicit numeric range constraints. Always consume the
+    # earliest one so mixed queries preserve their original semantics.
+    for _ in range(6):
+        candidates = []
+        for kind, pattern in (("max", _SPEC_MAX_PATTERN), ("min", _SPEC_MIN_PATTERN)):
+            match = pattern.search(working)
+            if match:
+                candidates.append((match.start(), kind, match))
+        if not candidates:
+            break
+        _, kind, match = min(candidates, key=lambda item: item[0])
+        number, unit = _spec_quantity(
+            match.group("number"), match.group("scale"), match.group("unit")
+        )
+        key = _spec_constraint_key(unit, match.groupdict().get("label"))
+        constraints.append(
+            NumericSpecificationConstraint(
+                unit=unit,
+                minimum=number if kind == "min" else None,
+                maximum=number if kind == "max" else None,
+                key=key,
+            )
+        )
+        working = _remove_span(working, *match.span())
+
+    return working, tuple(constraints)
+
+
+def _extract_radius(value: str) -> tuple[str, Decimal | None, bool]:
+    working = strip_accents(value or "").casefold()
+    radius: Decimal | None = None
+    near_me = False
+
+    for pattern in _RADIUS_PATTERNS:
+        match = pattern.search(working)
+        if match:
+            try:
+                radius = Decimal(match.group(1).replace(",", "."))
+            except (InvalidOperation, ValueError) as exc:
+                raise ValidationError({"q": "Invalid radius in search query."}) from exc
+            if radius <= 0:
+                raise ValidationError({"q": "Search radius must be positive."})
+            near_me = True
+            working = _remove_span(working, *match.span())
+            break
+
+    for pattern in _NEAR_ME_PATTERNS:
+        match = pattern.search(working)
+        if match:
+            near_me = True
+            working = _remove_span(working, *match.span())
+
+    return working, radius, near_me
 
 
 def _extract_prices(value: str) -> tuple[str, Decimal | None, Decimal | None]:
@@ -115,6 +381,12 @@ def _extract_prices(value: str) -> tuple[str, Decimal | None, Decimal | None]:
             working = _remove_span(working, *match.span())
             break
 
+    if min_price is None:
+        match = _STARTING_FROM_PATTERN.search(working)
+        if match and not _looks_like_unqualified_year(match.group(1)):
+            min_price = _money_decimal(match.group(1))
+            working = _remove_span(working, *match.span())
+
     if min_price is not None and max_price is not None and min_price > max_price:
         raise ValidationError(
             {"q": "Search minimum price cannot exceed maximum price."}
@@ -135,13 +407,19 @@ def parse_marketplace_query(
             {"q": "Search query contains invalid control characters."}
         )
 
-    remaining, min_price, max_price = _extract_prices(raw)
+    remaining, radius_km, near_me = _extract_radius(raw)
+    remaining, year_specifications = _extract_year_ranges(remaining)
+    remaining, numeric_specifications = _extract_specification_ranges(remaining)
+    numeric_specifications = year_specifications + numeric_specifications
+    remaining, min_price, max_price = _extract_prices(remaining)
     remaining, spec_tokens = extract_unit_tokens_and_clean(remaining)
     normalized = normalize_text(remaining)
 
     core: list[str] = []
     for token in normalized.split():
         if token in STOP_WORDS or token in spec_tokens:
+            continue
+        if spec_tokens and token in _SPEC_LABEL_WORDS:
             continue
         if len(token) > 40:
             continue
@@ -159,4 +437,7 @@ def parse_marketplace_query(
         specification_tokens=tuple(spec_tokens),
         min_price=min_price,
         max_price=max_price,
+        radius_km=radius_km,
+        near_me=near_me,
+        numeric_specifications=numeric_specifications,
     )
