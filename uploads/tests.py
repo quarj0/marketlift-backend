@@ -149,7 +149,6 @@ class ListingUploadIntegrationTests(TestCase):
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
 
 
-
 @override_settings(
     MARKETLIFT_STORAGE_BUCKETS={
         "temp": "marketlift-temp",
@@ -226,7 +225,9 @@ class S3CompatibleStorageBackendTests(SimpleTestCase):
             self._response(200, content=b"hello", method="GET"),
             self._response(204, method="DELETE"),
         ]
-        with patch("uploads.storage.s3.httpx.request", side_effect=responses) as request:
+        with patch(
+            "uploads.storage.s3.httpx.request", side_effect=responses
+        ) as request:
             info = backend.store(asset, io.BytesIO(b"hello"))
             stat = backend.stat(asset)
             opened = backend.open(asset).read()
@@ -239,7 +240,9 @@ class S3CompatibleStorageBackendTests(SimpleTestCase):
         self.assertTrue(urls)
         self.assertTrue(all("/marketlift-public/" in url for url in urls))
         put_headers = request.call_args_list[0].kwargs["headers"]
-        self.assertEqual(put_headers["cache-control"], "public, max-age=31536000, immutable")
+        self.assertEqual(
+            put_headers["cache-control"], "public, max-age=31536000, immutable"
+        )
         self.assertIn("authorization", put_headers)
 
     def test_public_base_url_avoids_signed_get_url(self):

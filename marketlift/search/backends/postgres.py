@@ -35,7 +35,7 @@ from marketlift.search.contracts import (
 
 _CURSOR_SALT = "marketlift.search.cursor.v1"
 
-_SPEC_UNIT_RE = re.compile(r"^[0-9.]+(?P<unit>gb|tb|mb|km|kg|m2|cm|mm|in|%)$")
+_SPEC_UNIT_RE = re.compile(r"^[0-9.]+(?P<unit>gb|tb|mb|km|kg|m2|cm|mm|in|l|%)$")
 _UNIT_COMPATIBILITY = {
     "tb": {"tb", "gb"},
     "gb": {"gb"},
@@ -45,7 +45,8 @@ _UNIT_COMPATIBILITY = {
     "m2": {"m2", "m²"},
     "cm": {"cm"},
     "mm": {"mm"},
-    "in": {"in", "inch", "polegadas"},
+    "in": {"in", "inch", "polegada", "polegadas"},
+    "l": {"l", "litro", "litros"},
     "%": {"%"},
 }
 
@@ -238,6 +239,25 @@ def _apply_structured_filters(
         qs = qs.filter(price__gte=min_price)
     if max_price is not None:
         qs = qs.filter(price__lte=max_price)
+
+    for constraint in parsed.numeric_specifications:
+        args = []
+        if constraint.unit:
+            compatible_units = _UNIT_COMPATIBILITY.get(
+                constraint.unit, {constraint.unit}
+            )
+            unit_query = Q()
+            for unit in compatible_units:
+                unit_query |= Q(attribute_values__field__unit__iexact=unit)
+            args.append(unit_query)
+        kwargs = {}
+        if constraint.key:
+            kwargs["attribute_values__key"] = constraint.key
+        if constraint.minimum is not None:
+            kwargs["attribute_values__number_value__gte"] = constraint.minimum
+        if constraint.maximum is not None:
+            kwargs["attribute_values__number_value__lte"] = constraint.maximum
+        qs = qs.filter(*args, **kwargs)
 
     days = {"today": 1, "week": 7, "month": 30}.get(request.date_listed)
     if days:

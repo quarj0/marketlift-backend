@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import re
 import uuid
+from dataclasses import replace
 from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
@@ -267,6 +268,28 @@ def validate_search_request(request: SearchRequest) -> SearchRequest:
     )
 
 
+def _validate_numeric_specifications(parsed) -> None:
+    maximum = Decimal("99999999999999.9999")
+    for constraint in parsed.numeric_specifications:
+        for name, value in (("min", constraint.minimum), ("max", constraint.maximum)):
+            if value is None:
+                continue
+            if value < 0:
+                raise ValidationError(
+                    {"q": f"Specification {name}imum cannot be negative."}
+                )
+            if value > maximum:
+                raise ValidationError(
+                    {"q": "Specification range exceeds the supported numeric range."}
+                )
+        if (
+            constraint.minimum is not None
+            and constraint.maximum is not None
+            and constraint.minimum > constraint.maximum
+        ):
+            raise ValidationError({"q": "Specification range is reversed."})
+
+
 def search_listings(request: SearchRequest) -> SearchPage:
     request = validate_search_request(request)
     parsed = parse_marketplace_query(
@@ -278,4 +301,32 @@ def search_listings(request: SearchRequest) -> SearchPage:
     # the backend then combines them using the stricter bound.
     _validate_decimal("min_price", parsed.min_price)
     _validate_decimal("max_price", parsed.max_price)
+    _validate_numeric_specifications(parsed)
+
+    # Relative-location language is meaningful only with a trusted device/map
+    # coordinate supplied separately by the client. Never attempt to infer a
+    # user's position from query text or silently broaden a ``near me`` search.
+    if parsed.near_me:
+        if request.latitude is None or request.longitude is None:
+            raise ValidationError(
+                {"q": "Near-me search requires latitude and longitude."}
+            )
+        parsed_radius = (
+            validate_radius_km(parsed.radius_km)
+            if parsed.radius_km is not None
+            else None
+        )
+        default_radius = validate_radius_km(
+            getattr(settings, "MARKETLIFT_SEARCH_NEAR_ME_DEFAULT_RADIUS_KM", 25)
+        )
+        if request.radius_km is not None and parsed_radius is not None:
+            effective_radius = min(request.radius_km, parsed_radius)
+        elif parsed_radius is not None:
+            effective_radius = parsed_radius
+        elif request.radius_km is not None:
+            effective_radius = request.radius_km
+        else:
+            effective_radius = default_radius
+        request = replace(request, radius_km=effective_radius)
+
     return _load_backend().search(request, parsed)

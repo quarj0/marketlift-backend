@@ -7,6 +7,26 @@ from typing import Any
 
 
 @dataclass(frozen=True)
+class NumericSpecificationConstraint:
+    unit: str = ""
+    minimum: Decimal | None = None
+    maximum: Decimal | None = None
+    key: str | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {}
+        if self.unit:
+            payload["unit"] = self.unit
+        if self.key:
+            payload["key"] = self.key
+        if self.minimum is not None:
+            payload["min"] = float(self.minimum)
+        if self.maximum is not None:
+            payload["max"] = float(self.maximum)
+        return payload
+
+
+@dataclass(frozen=True)
 class ParsedMarketplaceQuery:
     original: str
     normalized: str
@@ -14,6 +34,9 @@ class ParsedMarketplaceQuery:
     specification_tokens: tuple[str, ...] = ()
     min_price: Decimal | None = None
     max_price: Decimal | None = None
+    radius_km: Decimal | None = None
+    near_me: bool = False
+    numeric_specifications: tuple[NumericSpecificationConstraint, ...] = ()
 
     @property
     def has_text_anchor(self) -> bool:
@@ -28,6 +51,14 @@ class ParsedMarketplaceQuery:
             payload["minPrice"] = float(self.min_price)
         if self.max_price is not None:
             payload["maxPrice"] = float(self.max_price)
+        if self.radius_km is not None:
+            payload["radiusKm"] = float(self.radius_km)
+        if self.near_me:
+            payload["nearMe"] = True
+        if self.numeric_specifications:
+            payload["specificationRanges"] = [
+                item.as_dict() for item in self.numeric_specifications
+            ]
         return payload
 
 

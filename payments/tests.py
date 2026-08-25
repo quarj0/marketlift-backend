@@ -10,7 +10,11 @@ from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan, SellerSubscription
 from promotions.models import PromotionProduct, ListingPromotion
 from .models import Payment
-from .services import create_promotion_payment, create_subscription_payment, require_payments_enabled
+from .services import (
+    create_promotion_payment,
+    create_subscription_payment,
+    require_payments_enabled,
+)
 from .webhooks import valid_mercado_pago_signature
 
 
@@ -21,7 +25,11 @@ class PaymentsReleaseGateTests(SimpleTestCase):
             require_payments_enabled()
 
 
-@override_settings(MARKETLIFT_PAYMENTS_ENABLED=True, MARKETLIFT_PAYMENT_PROVIDER="mock", PAYMENT_MOCK_AUTO_APPROVE=True)
+@override_settings(
+    MARKETLIFT_PAYMENTS_ENABLED=True,
+    MARKETLIFT_PAYMENT_PROVIDER="mock",
+    PAYMENT_MOCK_AUTO_APPROVE=True,
+)
 class PaymentTests(TestCase):
     def setUp(self):
         U = get_user_model()

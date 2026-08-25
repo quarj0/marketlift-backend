@@ -126,6 +126,68 @@ class MarketplaceSearchIntegrationTests(TransactionTestCase):
         self.assertEqual([item.pk for item in page.items], [exact.pk])
         self.assertEqual(page.relaxed, [])
 
+    def test_natural_language_ram_floor_uses_numeric_attribute_range(self):
+        six = self._phone(
+            title="Samsung Galaxy S21 128GB", model="Galaxy S21", ram=6, price=720
+        )
+        eight = self._phone(
+            title="Samsung Galaxy S21 256GB", model="Galaxy S21", ram=8, price=760
+        )
+        twelve = self._phone(
+            title="Samsung Galaxy S21 512GB", model="Galaxy S21", ram=12, price=790
+        )
+
+        page = search_listings(
+            SearchRequest(
+                q="samsung s21 pelo menos 8gb ram abaixo de R$800", page_size=24
+            )
+        )
+
+        self.assertEqual({item.pk for item in page.items}, {eight.pk, twelve.pk})
+        self.assertNotIn(six.pk, {item.pk for item in page.items})
+        self.assertEqual(page.parsed_query.max_price, Decimal("800"))
+        constraint = page.parsed_query.numeric_specifications[0]
+        self.assertEqual(constraint.key, "ram_gb")
+        self.assertEqual(constraint.minimum, Decimal("8"))
+
+    def test_brazilian_portuguese_phone_query_matches_price_ram_and_location(self):
+        sao_paulo = self._phone(
+            title="Samsung Galaxy S23 256GB", model="Galaxy S23", ram=8, price=8500
+        )
+        salvador = Listing.objects.create(
+            seller=self.seller,
+            category=self.phones,
+            title="Samsung Galaxy S23 256GB Salvador",
+            description="Original smartphone in good condition.",
+            price=Decimal("8400"),
+            condition=Listing.Condition.USED,
+            state="Bahia",
+            state_code="BA",
+            city="Salvador",
+            district="Barra",
+            status=Listing.Status.PUBLISHED,
+            published_at=timezone.now(),
+        )
+        ListingAttribute.objects.create(
+            listing=salvador,
+            field=self.ram,
+            key="ram_gb",
+            label_snapshot="RAM",
+            field_type_snapshot="number",
+            number_value=Decimal("8"),
+        )
+        rebuild_listing_search_document(salvador.pk)
+
+        page = search_listings(
+            SearchRequest(
+                q="Samsung Galaxy abaixo de R$9.000 com 8GB de RAM em São Paulo",
+                page_size=24,
+            )
+        )
+
+        self.assertEqual([item.pk for item in page.items], [sao_paulo.pk])
+        self.assertNotIn(salvador.pk, {item.pk for item in page.items})
+
     def test_subjective_search_is_not_converted_into_product_advice(self):
         self._phone(title="Samsung Galaxy S21", model="Galaxy S21", ram=8, price=760)
         page = search_listings(

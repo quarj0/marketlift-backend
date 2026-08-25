@@ -56,11 +56,17 @@ class ModerationDecisionTests(TestCase):
         self.assertFalse(Listing.objects.public().filter(pk=self.listing.pk).exists())
 
     def test_approved_listing_can_be_removed_later_without_rewriting_approval(self):
-        move_listing_to_review(listing=self.listing, actor=self.admin, reason="initial review")
-        approved = approve_listing_case(listing=self.listing, actor=self.admin, reason="compliant")
+        move_listing_to_review(
+            listing=self.listing, actor=self.admin, reason="initial review"
+        )
+        approved = approve_listing_case(
+            listing=self.listing, actor=self.admin, reason="compliant"
+        )
         approved_at = approved.decided_at
 
-        remove_listing(listing=self.listing, actor=self.admin, reason="new policy violation")
+        remove_listing(
+            listing=self.listing, actor=self.admin, reason="new policy violation"
+        )
 
         self.listing.refresh_from_db()
         approved.refresh_from_db()
@@ -69,9 +75,15 @@ class ModerationDecisionTests(TestCase):
         self.assertEqual(approved.decided_at, approved_at)
         self.assertFalse(Listing.objects.public().filter(pk=self.listing.pk).exists())
 
-    def test_seller_can_soft_delete_listing_after_approval_without_rewriting_approval(self):
-        move_listing_to_review(listing=self.listing, actor=self.admin, reason="initial review")
-        approved = approve_listing_case(listing=self.listing, actor=self.admin, reason="compliant")
+    def test_seller_can_soft_delete_listing_after_approval_without_rewriting_approval(
+        self,
+    ):
+        move_listing_to_review(
+            listing=self.listing, actor=self.admin, reason="initial review"
+        )
+        approved = approve_listing_case(
+            listing=self.listing, actor=self.admin, reason="compliant"
+        )
 
         delete_listing_by_seller(listing=self.listing, reason="no longer for sale")
 
