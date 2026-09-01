@@ -58,9 +58,10 @@ class RealtimeWebSocketTests(TransactionTestCase):
         return client.cookies[settings.SESSION_COOKIE_NAME].value
 
     def _communicator(self, cookie=None):
+        origin = settings.MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS[0].encode()
         headers = [
             (b"host", b"localhost"),
-            (b"origin", b"http://localhost:3000"),
+            (b"origin", origin),
         ]
         if cookie:
             value = f"{settings.SESSION_COOKIE_NAME}={cookie}".encode()
