@@ -298,12 +298,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001",
+    "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br",
 )
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = env_list(
     "CSRF_TRUSTED_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001",
+    "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br",
 )
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
@@ -523,9 +523,9 @@ PAYSTACK_CALLBACK_URL = os.getenv("PAYSTACK_CALLBACK_URL", "").strip()
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL", "Marketlift <noreply@marketlift.local>"
 )
-MARKETLIFT_FRONTEND_URL = os.getenv("MARKETLIFT_FRONTEND_URL", "http://localhost:3000")
+MARKETLIFT_FRONTEND_URL = os.getenv("MARKETLIFT_FRONTEND_URL", "https://marketlift.com.br")
 MARKETLIFT_ADMIN_FRONTEND_URL = os.getenv(
-    "MARKETLIFT_ADMIN_FRONTEND_URL", "http://localhost:3001"
+    "MARKETLIFT_ADMIN_FRONTEND_URL", "https://dash.marketlift.com.br"
 )
 MARKETLIFT_ADMIN_SESSION_ORIGINS = env_list(
     "MARKETLIFT_ADMIN_SESSION_ORIGINS", MARKETLIFT_ADMIN_FRONTEND_URL
