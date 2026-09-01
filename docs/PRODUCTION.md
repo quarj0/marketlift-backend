@@ -1,5 +1,9 @@
 # Production readiness and deployment
 
+For the GitHub Actions deployment path to a Contabo VPS, including initial
+server setup, secrets, TLS and rollback behavior, see
+[Contabo continuous deployment](CONTABO_DEPLOYMENT.md).
+
 Marketlift is a multi-market classifieds platform. Country availability, the default market, payment provider selection, supported payment methods, identity-provider selection, and per-market plan/promotion pricing are **database/admin configuration**. Deployment secrets and infrastructure addresses remain environment configuration.
 
 The administrator console exposes **Settings → Production readiness** and **Markets**. These are the operational source of truth before launch: a market cannot be newly enabled/defaulted through the admin API while its required launch configuration is blocked.
