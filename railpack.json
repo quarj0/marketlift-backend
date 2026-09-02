@@ -11,6 +11,7 @@
   ],
 
   "deploy": {
-    "aptPackages": ["...", "gdal-bin", "libgdal-dev", "libgeos-dev"]
+    "aptPackages": ["...", "gdal-bin", "libgdal-dev", "libgeos-dev"],
+    "startCommand": "daphne -b 0.0.0.0 -p ${PORT:-8000} marketlift.asgi:application"
   }
 }
