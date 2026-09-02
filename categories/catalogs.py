@@ -163,10 +163,28 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
             fields_created += 1
             continue
 
-        if field.field_type != CategoryField.FieldType.SELECT:
-            raise ValidationError({"catalog": f"Field {key} already exists and is not a choice field."})
-
         changed: list[str] = []
+        if field.field_type != CategoryField.FieldType.SELECT:
+            if field.field_type not in {
+                CategoryField.FieldType.TEXT,
+                CategoryField.FieldType.TEXTAREA,
+            }:
+                raise ValidationError(
+                    {
+                        "catalog": (
+                            f"Field {key} already exists as {field.field_type}. "
+                            "Only text fields can be upgraded to catalog choices automatically."
+                        )
+                    }
+                )
+            # Historical ListingAttribute rows keep field_type_snapshot and their
+            # stored text values. This only changes future input validation/UI.
+            field.field_type = CategoryField.FieldType.SELECT
+            field.min_value = None
+            field.max_value = None
+            field.step_value = None
+            changed.extend(("field_type", "min_value", "max_value", "step_value"))
+
         values = {
             "label": definition["label"],
             "required": definition["required"],

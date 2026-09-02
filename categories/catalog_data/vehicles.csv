@@ -1,0 +1,275 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+make,Make,,,honda,Honda,true,true,true,true,,10,true
+make,Make,,,toyota,Toyota,true,true,true,true,,11,true
+make,Make,,,volkswagen,Volkswagen,true,true,true,true,,12,true
+make,Make,,,chevrolet,Chevrolet,true,true,true,true,,13,true
+make,Make,,,hyundai,Hyundai,true,true,true,true,,14,true
+make,Make,,,nissan,Nissan,true,true,true,true,,15,true
+make,Make,,,ford,Ford,true,true,true,true,,16,true
+make,Make,,,fiat,Fiat,true,true,true,true,,17,true
+make,Make,,,renault,Renault,true,true,true,true,,18,true
+make,Make,,,jeep,Jeep,true,true,true,true,,19,true
+make,Make,,,bmw,BMW,true,true,true,true,,20,true
+make,Make,,,mercedes-benz,Mercedes-Benz,true,true,true,true,,21,true
+make,Make,,,audi,Audi,true,true,true,true,,22,true
+make,Make,,,volvo,Volvo,true,true,true,true,,23,true
+make,Make,,,mitsubishi,Mitsubishi,true,true,true,true,,24,true
+make,Make,,,kia,Kia,true,true,true,true,,25,true
+make,Make,,,peugeot,Peugeot,true,true,true,true,,26,true
+make,Make,,,citroen,Citroën,true,true,true,true,,27,true
+make,Make,,,caoa-chery,CAOA Chery,true,true,true,true,,28,true
+make,Make,,,byd,BYD,true,true,true,true,,29,true
+make,Make,,,gwm,GWM,true,true,true,true,,30,true
+make,Make,,,porsche,Porsche,true,true,true,true,,31,true
+make,Make,,,land-rover,Land Rover,true,true,true,true,,32,true
+make,Make,,,ram,RAM,true,true,true,true,,33,true
+model,Model,make,honda,Civic,Civic,true,true,true,true,,10,true
+model,Model,make,honda,Civic Type R,Civic Type R,true,true,true,true,,11,true
+model,Model,make,honda,City Sedan,City Sedan,true,true,true,true,,12,true
+model,Model,make,honda,City Hatchback,City Hatchback,true,true,true,true,,13,true
+model,Model,make,honda,HR-V,HR-V,true,true,true,true,,14,true
+model,Model,make,honda,WR-V,WR-V,true,true,true,true,,15,true
+model,Model,make,honda,ZR-V,ZR-V,true,true,true,true,,16,true
+model,Model,make,honda,CR-V,CR-V,true,true,true,true,,17,true
+model,Model,make,honda,Accord,Accord,true,true,true,true,,18,true
+model,Model,make,honda,Prelude,Prelude,true,true,true,true,,19,true
+model,Model,make,honda,Fit,Fit,true,true,true,true,,20,true
+model,Model,make,toyota,Corolla,Corolla,true,true,true,true,,10,true
+model,Model,make,toyota,Corolla Cross,Corolla Cross,true,true,true,true,,11,true
+model,Model,make,toyota,GR Corolla,GR Corolla,true,true,true,true,,12,true
+model,Model,make,toyota,Yaris,Yaris,true,true,true,true,,13,true
+model,Model,make,toyota,Yaris Sedan,Yaris Sedan,true,true,true,true,,14,true
+model,Model,make,toyota,Hilux,Hilux,true,true,true,true,,15,true
+model,Model,make,toyota,SW4,SW4,true,true,true,true,,16,true
+model,Model,make,toyota,RAV4,RAV4,true,true,true,true,,17,true
+model,Model,make,toyota,Camry,Camry,true,true,true,true,,18,true
+model,Model,make,toyota,Prius,Prius,true,true,true,true,,19,true
+model,Model,make,toyota,Etios,Etios,true,true,true,true,,20,true
+model,Model,make,toyota,Hiace,Hiace,true,true,true,true,,21,true
+model,Model,make,volkswagen,Tiguan,Tiguan,true,true,true,true,,10,true
+model,Model,make,volkswagen,Tera,Tera,true,true,true,true,,11,true
+model,Model,make,volkswagen,Nivus,Nivus,true,true,true,true,,12,true
+model,Model,make,volkswagen,T-Cross,T-Cross,true,true,true,true,,13,true
+model,Model,make,volkswagen,Taos,Taos,true,true,true,true,,14,true
+model,Model,make,volkswagen,Polo,Polo,true,true,true,true,,15,true
+model,Model,make,volkswagen,Polo Track,Polo Track,true,true,true,true,,16,true
+model,Model,make,volkswagen,Golf GTI,Golf GTI,true,true,true,true,,17,true
+model,Model,make,volkswagen,Virtus,Virtus,true,true,true,true,,18,true
+model,Model,make,volkswagen,Jetta,Jetta,true,true,true,true,,19,true
+model,Model,make,volkswagen,Saveiro,Saveiro,true,true,true,true,,20,true
+model,Model,make,volkswagen,Amarok,Amarok,true,true,true,true,,21,true
+model,Model,make,volkswagen,ID.4,ID.4,true,true,true,true,,22,true
+model,Model,make,volkswagen,ID. Buzz,ID. Buzz,true,true,true,true,,23,true
+model,Model,make,volkswagen,Gol,Gol,true,true,true,true,,24,true
+model,Model,make,volkswagen,Voyage,Voyage,true,true,true,true,,25,true
+model,Model,make,volkswagen,Fox,Fox,true,true,true,true,,26,true
+model,Model,make,chevrolet,Onix,Onix,true,true,true,true,,10,true
+model,Model,make,chevrolet,Onix Plus,Onix Plus,true,true,true,true,,11,true
+model,Model,make,chevrolet,Tracker,Tracker,true,true,true,true,,12,true
+model,Model,make,chevrolet,Equinox,Equinox,true,true,true,true,,13,true
+model,Model,make,chevrolet,Trailblazer,Trailblazer,true,true,true,true,,14,true
+model,Model,make,chevrolet,Montana,Montana,true,true,true,true,,15,true
+model,Model,make,chevrolet,S10,S10,true,true,true,true,,16,true
+model,Model,make,chevrolet,Spin,Spin,true,true,true,true,,17,true
+model,Model,make,chevrolet,Spark EUV,Spark EUV,true,true,true,true,,18,true
+model,Model,make,chevrolet,Captiva EV,Captiva EV,true,true,true,true,,19,true
+model,Model,make,chevrolet,Cruze,Cruze,true,true,true,true,,20,true
+model,Model,make,chevrolet,Cobalt,Cobalt,true,true,true,true,,21,true
+model,Model,make,chevrolet,Prisma,Prisma,true,true,true,true,,22,true
+model,Model,make,hyundai,i20,i20,true,true,true,true,,10,true
+model,Model,make,hyundai,HB20,HB20,true,true,true,true,,11,true
+model,Model,make,hyundai,HB20S,HB20S,true,true,true,true,,12,true
+model,Model,make,hyundai,Creta,Creta,true,true,true,true,,13,true
+model,Model,make,hyundai,Creta N Line,Creta N Line,true,true,true,true,,14,true
+model,Model,make,hyundai,Kona Hybrid,Kona Hybrid,true,true,true,true,,15,true
+model,Model,make,hyundai,Palisade,Palisade,true,true,true,true,,16,true
+model,Model,make,hyundai,IONIQ 5,IONIQ 5,true,true,true,true,,17,true
+model,Model,make,hyundai,Tucson,Tucson,true,true,true,true,,18,true
+model,Model,make,hyundai,Santa Fe,Santa Fe,true,true,true,true,,19,true
+model,Model,make,hyundai,ix35,ix35,true,true,true,true,,20,true
+model,Model,make,nissan,Kicks,Kicks,true,true,true,true,,10,true
+model,Model,make,nissan,Kicks Play,Kicks Play,true,true,true,true,,11,true
+model,Model,make,nissan,Kait,Kait,true,true,true,true,,12,true
+model,Model,make,nissan,Sentra,Sentra,true,true,true,true,,13,true
+model,Model,make,nissan,Versa,Versa,true,true,true,true,,14,true
+model,Model,make,nissan,Frontier,Frontier,true,true,true,true,,15,true
+model,Model,make,nissan,Leaf,Leaf,true,true,true,true,,16,true
+model,Model,make,nissan,March,March,true,true,true,true,,17,true
+model,Model,make,nissan,V-Drive,V-Drive,true,true,true,true,,18,true
+model,Model,make,ford,Ranger,Ranger,true,true,true,true,,10,true
+model,Model,make,ford,Ranger Raptor,Ranger Raptor,true,true,true,true,,11,true
+model,Model,make,ford,Territory,Territory,true,true,true,true,,12,true
+model,Model,make,ford,Bronco Sport,Bronco Sport,true,true,true,true,,13,true
+model,Model,make,ford,Maverick,Maverick,true,true,true,true,,14,true
+model,Model,make,ford,Maverick Hybrid,Maverick Hybrid,true,true,true,true,,15,true
+model,Model,make,ford,Mustang,Mustang,true,true,true,true,,16,true
+model,Model,make,ford,Mustang Dark Horse,Mustang Dark Horse,true,true,true,true,,17,true
+model,Model,make,ford,Mustang Mach-E,Mustang Mach-E,true,true,true,true,,18,true
+model,Model,make,ford,F-150,F-150,true,true,true,true,,19,true
+model,Model,make,ford,Transit,Transit,true,true,true,true,,20,true
+model,Model,make,ford,EcoSport,EcoSport,true,true,true,true,,21,true
+model,Model,make,ford,Ka,Ka,true,true,true,true,,22,true
+model,Model,make,ford,Fiesta,Fiesta,true,true,true,true,,23,true
+model,Model,make,ford,Focus,Focus,true,true,true,true,,24,true
+model,Model,make,ford,Fusion,Fusion,true,true,true,true,,25,true
+model,Model,make,ford,Edge,Edge,true,true,true,true,,26,true
+model,Model,make,fiat,Mobi,Mobi,true,true,true,true,,10,true
+model,Model,make,fiat,Argo,Argo,true,true,true,true,,11,true
+model,Model,make,fiat,Cronos,Cronos,true,true,true,true,,12,true
+model,Model,make,fiat,Pulse,Pulse,true,true,true,true,,13,true
+model,Model,make,fiat,Fastback,Fastback,true,true,true,true,,14,true
+model,Model,make,fiat,Strada,Strada,true,true,true,true,,15,true
+model,Model,make,fiat,Toro,Toro,true,true,true,true,,16,true
+model,Model,make,fiat,Fiorino,Fiorino,true,true,true,true,,17,true
+model,Model,make,fiat,Ducato,Ducato,true,true,true,true,,18,true
+model,Model,make,fiat,Uno,Uno,true,true,true,true,,19,true
+model,Model,make,fiat,Palio,Palio,true,true,true,true,,20,true
+model,Model,make,fiat,Siena,Siena,true,true,true,true,,21,true
+model,Model,make,fiat,Idea,Idea,true,true,true,true,,22,true
+model,Model,make,fiat,Punto,Punto,true,true,true,true,,23,true
+model,Model,make,renault,Kwid,Kwid,true,true,true,true,,10,true
+model,Model,make,renault,Kardian,Kardian,true,true,true,true,,11,true
+model,Model,make,renault,Duster,Duster,true,true,true,true,,12,true
+model,Model,make,renault,Oroch,Oroch,true,true,true,true,,13,true
+model,Model,make,renault,Megane E-Tech,Megane E-Tech,true,true,true,true,,14,true
+model,Model,make,renault,Master,Master,true,true,true,true,,15,true
+model,Model,make,renault,Sandero,Sandero,true,true,true,true,,16,true
+model,Model,make,renault,Logan,Logan,true,true,true,true,,17,true
+model,Model,make,renault,Captur,Captur,true,true,true,true,,18,true
+model,Model,make,renault,Fluence,Fluence,true,true,true,true,,19,true
+model,Model,make,jeep,Renegade,Renegade,true,true,true,true,,10,true
+model,Model,make,jeep,Compass,Compass,true,true,true,true,,11,true
+model,Model,make,jeep,Commander,Commander,true,true,true,true,,12,true
+model,Model,make,jeep,Wrangler,Wrangler,true,true,true,true,,13,true
+model,Model,make,jeep,Gladiator,Gladiator,true,true,true,true,,14,true
+model,Model,make,jeep,Grand Cherokee,Grand Cherokee,true,true,true,true,,15,true
+model,Model,make,jeep,Avenger,Avenger,true,true,true,true,,16,true
+model,Model,make,bmw,BMW 118i,BMW 118i,true,true,true,true,,10,true
+model,Model,make,bmw,BMW 320i,BMW 320i,true,true,true,true,,11,true
+model,Model,make,bmw,BMW 330e,BMW 330e,true,true,true,true,,12,true
+model,Model,make,bmw,BMW M3,BMW M3,true,true,true,true,,13,true
+model,Model,make,bmw,BMW M4,BMW M4,true,true,true,true,,14,true
+model,Model,make,bmw,BMW X1,BMW X1,true,true,true,true,,15,true
+model,Model,make,bmw,BMW X2,BMW X2,true,true,true,true,,16,true
+model,Model,make,bmw,BMW X3,BMW X3,true,true,true,true,,17,true
+model,Model,make,bmw,BMW X4,BMW X4,true,true,true,true,,18,true
+model,Model,make,bmw,BMW X5,BMW X5,true,true,true,true,,19,true
+model,Model,make,bmw,BMW X6,BMW X6,true,true,true,true,,20,true
+model,Model,make,bmw,BMW X7,BMW X7,true,true,true,true,,21,true
+model,Model,make,bmw,BMW iX1,BMW iX1,true,true,true,true,,22,true
+model,Model,make,bmw,BMW iX2,BMW iX2,true,true,true,true,,23,true
+model,Model,make,bmw,BMW i4,BMW i4,true,true,true,true,,24,true
+model,Model,make,bmw,BMW i5,BMW i5,true,true,true,true,,25,true
+model,Model,make,bmw,BMW i7,BMW i7,true,true,true,true,,26,true
+model,Model,make,bmw,BMW iX,BMW iX,true,true,true,true,,27,true
+model,Model,make,mercedes-benz,A-Class,A-Class,true,true,true,true,,10,true
+model,Model,make,mercedes-benz,C-Class,C-Class,true,true,true,true,,11,true
+model,Model,make,mercedes-benz,E-Class,E-Class,true,true,true,true,,12,true
+model,Model,make,mercedes-benz,S-Class,S-Class,true,true,true,true,,13,true
+model,Model,make,mercedes-benz,CLA,CLA,true,true,true,true,,14,true
+model,Model,make,mercedes-benz,CLE,CLE,true,true,true,true,,15,true
+model,Model,make,mercedes-benz,GLA,GLA,true,true,true,true,,16,true
+model,Model,make,mercedes-benz,GLB,GLB,true,true,true,true,,17,true
+model,Model,make,mercedes-benz,GLC,GLC,true,true,true,true,,18,true
+model,Model,make,mercedes-benz,GLE,GLE,true,true,true,true,,19,true
+model,Model,make,mercedes-benz,GLS,GLS,true,true,true,true,,20,true
+model,Model,make,mercedes-benz,G-Class,G-Class,true,true,true,true,,21,true
+model,Model,make,mercedes-benz,EQA,EQA,true,true,true,true,,22,true
+model,Model,make,mercedes-benz,EQB,EQB,true,true,true,true,,23,true
+model,Model,make,mercedes-benz,EQE,EQE,true,true,true,true,,24,true
+model,Model,make,mercedes-benz,EQS,EQS,true,true,true,true,,25,true
+model,Model,make,audi,A3 Sedan,A3 Sedan,true,true,true,true,,10,true
+model,Model,make,audi,A4,A4,true,true,true,true,,11,true
+model,Model,make,audi,A5,A5,true,true,true,true,,12,true
+model,Model,make,audi,A6,A6,true,true,true,true,,13,true
+model,Model,make,audi,A7,A7,true,true,true,true,,14,true
+model,Model,make,audi,A8,A8,true,true,true,true,,15,true
+model,Model,make,audi,Q3,Q3,true,true,true,true,,16,true
+model,Model,make,audi,Q5,Q5,true,true,true,true,,17,true
+model,Model,make,audi,Q7,Q7,true,true,true,true,,18,true
+model,Model,make,audi,Q8,Q8,true,true,true,true,,19,true
+model,Model,make,audi,Q4 e-tron,Q4 e-tron,true,true,true,true,,20,true
+model,Model,make,audi,Q6 e-tron,Q6 e-tron,true,true,true,true,,21,true
+model,Model,make,audi,e-tron GT,e-tron GT,true,true,true,true,,22,true
+model,Model,make,audi,RS 3,RS 3,true,true,true,true,,23,true
+model,Model,make,audi,RS 5,RS 5,true,true,true,true,,24,true
+model,Model,make,audi,RS 6,RS 6,true,true,true,true,,25,true
+model,Model,make,volvo,EX30,EX30,true,true,true,true,,10,true
+model,Model,make,volvo,EX40,EX40,true,true,true,true,,11,true
+model,Model,make,volvo,EC40,EC40,true,true,true,true,,12,true
+model,Model,make,volvo,EX90,EX90,true,true,true,true,,13,true
+model,Model,make,volvo,XC40,XC40,true,true,true,true,,14,true
+model,Model,make,volvo,XC60,XC60,true,true,true,true,,15,true
+model,Model,make,volvo,XC90,XC90,true,true,true,true,,16,true
+model,Model,make,volvo,S60,S60,true,true,true,true,,17,true
+model,Model,make,volvo,S90,S90,true,true,true,true,,18,true
+model,Model,make,mitsubishi,Eclipse Cross,Eclipse Cross,true,true,true,true,,10,true
+model,Model,make,mitsubishi,Outlander,Outlander,true,true,true,true,,11,true
+model,Model,make,mitsubishi,Pajero Sport,Pajero Sport,true,true,true,true,,12,true
+model,Model,make,mitsubishi,L200 Triton,L200 Triton,true,true,true,true,,13,true
+model,Model,make,mitsubishi,ASX,ASX,true,true,true,true,,14,true
+model,Model,make,mitsubishi,Pajero Full,Pajero Full,true,true,true,true,,15,true
+model,Model,make,kia,Sportage,Sportage,true,true,true,true,,10,true
+model,Model,make,kia,Sorento,Sorento,true,true,true,true,,11,true
+model,Model,make,kia,Carnival,Carnival,true,true,true,true,,12,true
+model,Model,make,kia,Stonic,Stonic,true,true,true,true,,13,true
+model,Model,make,kia,Niro,Niro,true,true,true,true,,14,true
+model,Model,make,kia,EV5,EV5,true,true,true,true,,15,true
+model,Model,make,kia,EV9,EV9,true,true,true,true,,16,true
+model,Model,make,kia,Cerato,Cerato,true,true,true,true,,17,true
+model,Model,make,kia,Soul,Soul,true,true,true,true,,18,true
+model,Model,make,peugeot,208,208,true,true,true,true,,10,true
+model,Model,make,peugeot,2008,2008,true,true,true,true,,11,true
+model,Model,make,peugeot,3008,3008,true,true,true,true,,12,true
+model,Model,make,peugeot,5008,5008,true,true,true,true,,13,true
+model,Model,make,peugeot,Partner,Partner,true,true,true,true,,14,true
+model,Model,make,peugeot,Expert,Expert,true,true,true,true,,15,true
+model,Model,make,citroen,C3,C3,true,true,true,true,,10,true
+model,Model,make,citroen,C3 Aircross,C3 Aircross,true,true,true,true,,11,true
+model,Model,make,citroen,Basalt,Basalt,true,true,true,true,,12,true
+model,Model,make,citroen,Jumpy,Jumpy,true,true,true,true,,13,true
+model,Model,make,citroen,Jumper,Jumper,true,true,true,true,,14,true
+model,Model,make,citroen,C4 Cactus,C4 Cactus,true,true,true,true,,15,true
+model,Model,make,caoa-chery,Tiggo 5X,Tiggo 5X,true,true,true,true,,10,true
+model,Model,make,caoa-chery,Tiggo 7,Tiggo 7,true,true,true,true,,11,true
+model,Model,make,caoa-chery,Tiggo 8,Tiggo 8,true,true,true,true,,12,true
+model,Model,make,caoa-chery,Arrizo 6,Arrizo 6,true,true,true,true,,13,true
+model,Model,make,caoa-chery,iCar,iCar,true,true,true,true,,14,true
+model,Model,make,byd,Dolphin,Dolphin,true,true,true,true,,10,true
+model,Model,make,byd,Dolphin Mini,Dolphin Mini,true,true,true,true,,11,true
+model,Model,make,byd,Dolphin Plus,Dolphin Plus,true,true,true,true,,12,true
+model,Model,make,byd,Song Pro,Song Pro,true,true,true,true,,13,true
+model,Model,make,byd,Song Plus,Song Plus,true,true,true,true,,14,true
+model,Model,make,byd,Yuan Pro,Yuan Pro,true,true,true,true,,15,true
+model,Model,make,byd,Yuan Plus,Yuan Plus,true,true,true,true,,16,true
+model,Model,make,byd,Seal,Seal,true,true,true,true,,17,true
+model,Model,make,byd,King,King,true,true,true,true,,18,true
+model,Model,make,byd,Han,Han,true,true,true,true,,19,true
+model,Model,make,byd,Tan,Tan,true,true,true,true,,20,true
+model,Model,make,byd,Shark,Shark,true,true,true,true,,21,true
+model,Model,make,gwm,Haval H6,Haval H6,true,true,true,true,,10,true
+model,Model,make,gwm,Haval H6 GT,Haval H6 GT,true,true,true,true,,11,true
+model,Model,make,gwm,Haval H6 PHEV,Haval H6 PHEV,true,true,true,true,,12,true
+model,Model,make,gwm,Ora 03,Ora 03,true,true,true,true,,13,true
+model,Model,make,gwm,Tank 300,Tank 300,true,true,true,true,,14,true
+model,Model,make,gwm,Poer,Poer,true,true,true,true,,15,true
+model,Model,make,porsche,718 Cayman,718 Cayman,true,true,true,true,,10,true
+model,Model,make,porsche,718 Boxster,718 Boxster,true,true,true,true,,11,true
+model,Model,make,porsche,911,911,true,true,true,true,,12,true
+model,Model,make,porsche,Taycan,Taycan,true,true,true,true,,13,true
+model,Model,make,porsche,Panamera,Panamera,true,true,true,true,,14,true
+model,Model,make,porsche,Macan,Macan,true,true,true,true,,15,true
+model,Model,make,porsche,Cayenne,Cayenne,true,true,true,true,,16,true
+model,Model,make,land-rover,Range Rover,Range Rover,true,true,true,true,,10,true
+model,Model,make,land-rover,Range Rover Sport,Range Rover Sport,true,true,true,true,,11,true
+model,Model,make,land-rover,Range Rover Velar,Range Rover Velar,true,true,true,true,,12,true
+model,Model,make,land-rover,Range Rover Evoque,Range Rover Evoque,true,true,true,true,,13,true
+model,Model,make,land-rover,Defender,Defender,true,true,true,true,,14,true
+model,Model,make,land-rover,Discovery,Discovery,true,true,true,true,,15,true
+model,Model,make,land-rover,Discovery Sport,Discovery Sport,true,true,true,true,,16,true
+model,Model,make,ram,Rampage,Rampage,true,true,true,true,,10,true
+model,Model,make,ram,1500,1500,true,true,true,true,,11,true
+model,Model,make,ram,1500 Rebel,1500 Rebel,true,true,true,true,,12,true
+model,Model,make,ram,1500 Limited,1500 Limited,true,true,true,true,,13,true
+model,Model,make,ram,2500,2500,true,true,true,true,,14,true
+model,Model,make,ram,3500,3500,true,true,true,true,,15,true

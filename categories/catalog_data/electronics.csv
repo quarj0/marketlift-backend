@@ -1,0 +1,56 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+product_type,Product type,,,Smart TV,Smart TV,true,true,true,true,,10,true
+product_type,Product type,,,Television,Television,true,true,true,true,,11,true
+product_type,Product type,,,Monitor,Monitor,true,true,true,true,,12,true
+product_type,Product type,,,Projector,Projector,true,true,true,true,,13,true
+product_type,Product type,,,Soundbar,Soundbar,true,true,true,true,,14,true
+product_type,Product type,,,Home Theater,Home Theater,true,true,true,true,,15,true
+product_type,Product type,,,Speaker,Speaker,true,true,true,true,,16,true
+product_type,Product type,,,Headphones,Headphones,true,true,true,true,,17,true
+product_type,Product type,,,Earbuds,Earbuds,true,true,true,true,,18,true
+product_type,Product type,,,Camera,Camera,true,true,true,true,,19,true
+product_type,Product type,,,Camcorder,Camcorder,true,true,true,true,,20,true
+product_type,Product type,,,Action Camera,Action Camera,true,true,true,true,,21,true
+product_type,Product type,,,Game Console,Game Console,true,true,true,true,,22,true
+product_type,Product type,,,Streaming Device,Streaming Device,true,true,true,true,,23,true
+product_type,Product type,,,Router,Router,true,true,true,true,,24,true
+product_type,Product type,,,Modem,Modem,true,true,true,true,,25,true
+product_type,Product type,,,Wi-Fi Mesh System,Wi-Fi Mesh System,true,true,true,true,,26,true
+product_type,Product type,,,Printer,Printer,true,true,true,true,,27,true
+product_type,Product type,,,Scanner,Scanner,true,true,true,true,,28,true
+product_type,Product type,,,Drone,Drone,true,true,true,true,,29,true
+product_type,Product type,,,Receiver,Receiver,true,true,true,true,,30,true
+product_type,Product type,,,Amplifier,Amplifier,true,true,true,true,,31,true
+product_type,Product type,,,Microphone,Microphone,true,true,true,true,,32,true
+product_type,Product type,,,DJ Equipment,DJ Equipment,true,true,true,true,,33,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,10,true
+brand,Brand,,,lg,LG,true,true,true,true,,11,true
+brand,Brand,,,sony,Sony,true,true,true,true,,12,true
+brand,Brand,,,tcl,TCL,true,true,true,true,,13,true
+brand,Brand,,,philips,Philips,true,true,true,true,,14,true
+brand,Brand,,,panasonic,Panasonic,true,true,true,true,,15,true
+brand,Brand,,,hisense,Hisense,true,true,true,true,,16,true
+brand,Brand,,,aoc,AOC,true,true,true,true,,17,true
+brand,Brand,,,dell,Dell,true,true,true,true,,18,true
+brand,Brand,,,asus,ASUS,true,true,true,true,,19,true
+brand,Brand,,,acer,Acer,true,true,true,true,,20,true
+brand,Brand,,,benq,BenQ,true,true,true,true,,21,true
+brand,Brand,,,epson,Epson,true,true,true,true,,22,true
+brand,Brand,,,canon,Canon,true,true,true,true,,23,true
+brand,Brand,,,nikon,Nikon,true,true,true,true,,24,true
+brand,Brand,,,fujifilm,Fujifilm,true,true,true,true,,25,true
+brand,Brand,,,gopro,GoPro,true,true,true,true,,26,true
+brand,Brand,,,dji,DJI,true,true,true,true,,27,true
+brand,Brand,,,jbl,JBL,true,true,true,true,,28,true
+brand,Brand,,,bose,Bose,true,true,true,true,,29,true
+brand,Brand,,,yamaha,Yamaha,true,true,true,true,,30,true
+brand,Brand,,,denon,Denon,true,true,true,true,,31,true
+brand,Brand,,,pioneer,Pioneer,true,true,true,true,,32,true
+brand,Brand,,,playstation,PlayStation,true,true,true,true,,33,true
+brand,Brand,,,xbox,Xbox,true,true,true,true,,34,true
+brand,Brand,,,nintendo,Nintendo,true,true,true,true,,35,true
+brand,Brand,,,tp-link,TP-Link,true,true,true,true,,36,true
+brand,Brand,,,ubiquiti,Ubiquiti,true,true,true,true,,37,true
+brand,Brand,,,intelbras,Intelbras,true,true,true,true,,38,true
+brand,Brand,,,hp,HP,true,true,true,true,,39,true
+brand,Brand,,,brother,Brother,true,true,true,true,,40,true

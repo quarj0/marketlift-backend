@@ -1,0 +1,125 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+brand,Brand,,,hp,HP,true,true,true,true,,10,true
+brand,Brand,,,dell,Dell,true,true,true,true,,11,true
+brand,Brand,,,lenovo,Lenovo,true,true,true,true,,12,true
+brand,Brand,,,apple,Apple,true,true,true,true,,13,true
+brand,Brand,,,asus,ASUS,true,true,true,true,,14,true
+brand,Brand,,,acer,Acer,true,true,true,true,,15,true
+brand,Brand,,,msi,MSI,true,true,true,true,,16,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,17,true
+brand,Brand,,,microsoft,Microsoft Surface,true,true,true,true,,18,true
+brand,Brand,,,razer,Razer,true,true,true,true,,19,true
+brand,Brand,,,lg,LG,true,true,true,true,,20,true
+model,Model,brand,hp,OmniBook X 14,OmniBook X 14,false,true,true,true,,10,true
+model,Model,brand,hp,OmniBook Ultra 14,OmniBook Ultra 14,false,true,true,true,,11,true
+model,Model,brand,hp,OmniBook Ultra Flip 14,OmniBook Ultra Flip 14,false,true,true,true,,12,true
+model,Model,brand,hp,EliteBook 840 G11,EliteBook 840 G11,false,true,true,true,,13,true
+model,Model,brand,hp,EliteBook 640 G11,EliteBook 640 G11,false,true,true,true,,14,true
+model,Model,brand,hp,EliteBook 1040 G11,EliteBook 1040 G11,false,true,true,true,,15,true
+model,Model,brand,hp,ProBook 440 G10,ProBook 440 G10,false,true,true,true,,16,true
+model,Model,brand,hp,ProBook 450 G10,ProBook 450 G10,false,true,true,true,,17,true
+model,Model,brand,hp,Victus 15,Victus 15,false,true,true,true,,18,true
+model,Model,brand,hp,Victus 16,Victus 16,false,true,true,true,,19,true
+model,Model,brand,hp,OMEN 16,OMEN 16,false,true,true,true,,20,true
+model,Model,brand,hp,OMEN Transcend 14,OMEN Transcend 14,false,true,true,true,,21,true
+model,Model,brand,hp,OMEN Transcend 16,OMEN Transcend 16,false,true,true,true,,22,true
+model,Model,brand,hp,ZBook Firefly 14,ZBook Firefly 14,false,true,true,true,,23,true
+model,Model,brand,hp,ZBook Power 16,ZBook Power 16,false,true,true,true,,24,true
+model,Model,brand,dell,Inspiron 14 Plus 7441,Inspiron 14 Plus 7441,false,true,true,true,,10,true
+model,Model,brand,dell,Inspiron 14,Inspiron 14,false,true,true,true,,11,true
+model,Model,brand,dell,Inspiron 15,Inspiron 15,false,true,true,true,,12,true
+model,Model,brand,dell,Latitude 5455,Latitude 5455,false,true,true,true,,13,true
+model,Model,brand,dell,Latitude 5450,Latitude 5450,false,true,true,true,,14,true
+model,Model,brand,dell,Latitude 7450,Latitude 7450,false,true,true,true,,15,true
+model,Model,brand,dell,XPS 13 9350,XPS 13 9350,false,true,true,true,,16,true
+model,Model,brand,dell,XPS 14 DA14260,XPS 14 DA14260,false,true,true,true,,17,true
+model,Model,brand,dell,XPS 16,XPS 16,false,true,true,true,,18,true
+model,Model,brand,dell,Alienware 16 Area-51,Alienware 16 Area-51,false,true,true,true,,19,true
+model,Model,brand,dell,Alienware m16 R2,Alienware m16 R2,false,true,true,true,,20,true
+model,Model,brand,dell,Precision 3590,Precision 3590,false,true,true,true,,21,true
+model,Model,brand,dell,Precision 5690,Precision 5690,false,true,true,true,,22,true
+model,Model,brand,lenovo,IdeaPad Slim 3i 15,IdeaPad Slim 3i 15,false,true,true,true,,10,true
+model,Model,brand,lenovo,IdeaPad Slim 5 14,IdeaPad Slim 5 14,false,true,true,true,,11,true
+model,Model,brand,lenovo,IdeaPad 1i 15,IdeaPad 1i 15,false,true,true,true,,12,true
+model,Model,brand,lenovo,Lenovo V14 Intel,Lenovo V14 Intel,false,true,true,true,,13,true
+model,Model,brand,lenovo,Lenovo V14 AMD,Lenovo V14 AMD,false,true,true,true,,14,true
+model,Model,brand,lenovo,Lenovo V15,Lenovo V15,false,true,true,true,,15,true
+model,Model,brand,lenovo,Lenovo LOQ 15 Intel,Lenovo LOQ 15 Intel,false,true,true,true,,16,true
+model,Model,brand,lenovo,Lenovo LOQ Essential 15,Lenovo LOQ Essential 15,false,true,true,true,,17,true
+model,Model,brand,lenovo,ThinkPad T14,ThinkPad T14,false,true,true,true,,18,true
+model,Model,brand,lenovo,ThinkPad T14s,ThinkPad T14s,false,true,true,true,,19,true
+model,Model,brand,lenovo,ThinkPad X1 Carbon,ThinkPad X1 Carbon,false,true,true,true,,20,true
+model,Model,brand,lenovo,ThinkPad X1 2-in-1,ThinkPad X1 2-in-1,false,true,true,true,,21,true
+model,Model,brand,lenovo,ThinkPad E14,ThinkPad E14,false,true,true,true,,22,true
+model,Model,brand,lenovo,ThinkPad L14,ThinkPad L14,false,true,true,true,,23,true
+model,Model,brand,lenovo,ThinkPad P14s,ThinkPad P14s,false,true,true,true,,24,true
+model,Model,brand,lenovo,Yoga Slim 7i,Yoga Slim 7i,false,true,true,true,,25,true
+model,Model,brand,lenovo,Yoga 7i 2-in-1,Yoga 7i 2-in-1,false,true,true,true,,26,true
+model,Model,brand,lenovo,Legion 5,Legion 5,false,true,true,true,,27,true
+model,Model,brand,lenovo,Legion 7,Legion 7,false,true,true,true,,28,true
+model,Model,brand,lenovo,Legion Pro 5,Legion Pro 5,false,true,true,true,,29,true
+model,Model,brand,apple,MacBook Air 13-inch,MacBook Air 13-inch,false,true,true,true,,10,true
+model,Model,brand,apple,MacBook Air 15-inch,MacBook Air 15-inch,false,true,true,true,,11,true
+model,Model,brand,apple,MacBook Pro 14-inch,MacBook Pro 14-inch,false,true,true,true,,12,true
+model,Model,brand,apple,MacBook Pro 16-inch,MacBook Pro 16-inch,false,true,true,true,,13,true
+model,Model,brand,apple,Mac mini,Mac mini,false,true,true,true,,14,true
+model,Model,brand,apple,iMac 24-inch,iMac 24-inch,false,true,true,true,,15,true
+model,Model,brand,apple,Mac Studio,Mac Studio,false,true,true,true,,16,true
+model,Model,brand,apple,Mac Pro,Mac Pro,false,true,true,true,,17,true
+model,Model,brand,asus,Zenbook 14,Zenbook 14,false,true,true,true,,10,true
+model,Model,brand,asus,Zenbook S 14,Zenbook S 14,false,true,true,true,,11,true
+model,Model,brand,asus,Zenbook Duo,Zenbook Duo,false,true,true,true,,12,true
+model,Model,brand,asus,Vivobook 15,Vivobook 15,false,true,true,true,,13,true
+model,Model,brand,asus,Vivobook 16,Vivobook 16,false,true,true,true,,14,true
+model,Model,brand,asus,Vivobook S 14,Vivobook S 14,false,true,true,true,,15,true
+model,Model,brand,asus,Vivobook S 16,Vivobook S 16,false,true,true,true,,16,true
+model,Model,brand,asus,ProArt P16,ProArt P16,false,true,true,true,,17,true
+model,Model,brand,asus,ROG Zephyrus G14,ROG Zephyrus G14,false,true,true,true,,18,true
+model,Model,brand,asus,ROG Zephyrus G16,ROG Zephyrus G16,false,true,true,true,,19,true
+model,Model,brand,asus,ROG Strix G16,ROG Strix G16,false,true,true,true,,20,true
+model,Model,brand,asus,ROG Strix G18,ROG Strix G18,false,true,true,true,,21,true
+model,Model,brand,asus,TUF Gaming A15,TUF Gaming A15,false,true,true,true,,22,true
+model,Model,brand,asus,TUF Gaming A16,TUF Gaming A16,false,true,true,true,,23,true
+model,Model,brand,asus,ExpertBook B5,ExpertBook B5,false,true,true,true,,24,true
+model,Model,brand,acer,Aspire Go 14,Aspire Go 14,false,true,true,true,,10,true
+model,Model,brand,acer,Aspire Go 15,Aspire Go 15,false,true,true,true,,11,true
+model,Model,brand,acer,Aspire 3,Aspire 3,false,true,true,true,,12,true
+model,Model,brand,acer,Aspire 5,Aspire 5,false,true,true,true,,13,true
+model,Model,brand,acer,Swift Go 14,Swift Go 14,false,true,true,true,,14,true
+model,Model,brand,acer,Swift Go 16,Swift Go 16,false,true,true,true,,15,true
+model,Model,brand,acer,Swift X 14,Swift X 14,false,true,true,true,,16,true
+model,Model,brand,acer,Nitro V 15,Nitro V 15,false,true,true,true,,17,true
+model,Model,brand,acer,Nitro V 16,Nitro V 16,false,true,true,true,,18,true
+model,Model,brand,acer,Predator Helios Neo 16,Predator Helios Neo 16,false,true,true,true,,19,true
+model,Model,brand,acer,TravelMate P2,TravelMate P2,false,true,true,true,,20,true
+model,Model,brand,acer,TravelMate P4,TravelMate P4,false,true,true,true,,21,true
+model,Model,brand,msi,Modern 14,Modern 14,false,true,true,true,,10,true
+model,Model,brand,msi,Modern 15,Modern 15,false,true,true,true,,11,true
+model,Model,brand,msi,Prestige 13,Prestige 13,false,true,true,true,,12,true
+model,Model,brand,msi,Prestige 14,Prestige 14,false,true,true,true,,13,true
+model,Model,brand,msi,Prestige 16,Prestige 16,false,true,true,true,,14,true
+model,Model,brand,msi,Stealth 14,Stealth 14,false,true,true,true,,15,true
+model,Model,brand,msi,Stealth 16,Stealth 16,false,true,true,true,,16,true
+model,Model,brand,msi,Katana 15,Katana 15,false,true,true,true,,17,true
+model,Model,brand,msi,Katana 17,Katana 17,false,true,true,true,,18,true
+model,Model,brand,msi,Cyborg 15,Cyborg 15,false,true,true,true,,19,true
+model,Model,brand,msi,Raider 18,Raider 18,false,true,true,true,,20,true
+model,Model,brand,msi,Titan 18,Titan 18,false,true,true,true,,21,true
+model,Model,brand,samsung,Galaxy Book5 Pro,Galaxy Book5 Pro,false,true,true,true,,10,true
+model,Model,brand,samsung,Galaxy Book5 Pro 360,Galaxy Book5 Pro 360,false,true,true,true,,11,true
+model,Model,brand,samsung,Galaxy Book5,Galaxy Book5,false,true,true,true,,12,true
+model,Model,brand,samsung,Galaxy Book4 Ultra,Galaxy Book4 Ultra,false,true,true,true,,13,true
+model,Model,brand,samsung,Galaxy Book4 Pro,Galaxy Book4 Pro,false,true,true,true,,14,true
+model,Model,brand,samsung,Galaxy Book4 Pro 360,Galaxy Book4 Pro 360,false,true,true,true,,15,true
+model,Model,brand,samsung,Galaxy Book4 360,Galaxy Book4 360,false,true,true,true,,16,true
+model,Model,brand,samsung,Galaxy Book4,Galaxy Book4,false,true,true,true,,17,true
+model,Model,brand,microsoft,Surface Laptop 7 13.8-inch,Surface Laptop 7 13.8-inch,false,true,true,true,,10,true
+model,Model,brand,microsoft,Surface Laptop 7 15-inch,Surface Laptop 7 15-inch,false,true,true,true,,11,true
+model,Model,brand,microsoft,Surface Pro 11,Surface Pro 11,false,true,true,true,,12,true
+model,Model,brand,razer,Razer Blade 14,Razer Blade 14,false,true,true,true,,10,true
+model,Model,brand,razer,Razer Blade 16,Razer Blade 16,false,true,true,true,,11,true
+model,Model,brand,razer,Razer Blade 18,Razer Blade 18,false,true,true,true,,12,true
+model,Model,brand,lg,LG gram 14,LG gram 14,false,true,true,true,,10,true
+model,Model,brand,lg,LG gram 16,LG gram 16,false,true,true,true,,11,true
+model,Model,brand,lg,LG gram 17,LG gram 17,false,true,true,true,,12,true
+model,Model,brand,lg,LG gram Pro 16,LG gram Pro 16,false,true,true,true,,13,true
