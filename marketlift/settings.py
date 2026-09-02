@@ -2,8 +2,8 @@
 
 import json
 import os
-import sys
 from pathlib import Path
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 from dotenv import load_dotenv
 
@@ -134,139 +134,52 @@ TEMPLATES = [
 WSGI_APPLICATION = "marketlift.wsgi.application"
 ASGI_APPLICATION = "marketlift.asgi.application"
 
-DATABASES = {
-    "default": {
-        # Provider-neutral runtime database configuration. Production/staging
-        # may point to Neon; test runs are isolated below and never need to
-        # create/drop databases on the runtime endpoint.
-        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
-        "NAME": os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "marketlift")),
-        "USER": os.getenv("DB_USER", os.getenv("POSTGRES_USER", "marketlift")),
-        "PASSWORD": os.getenv(
-            "DB_PASSWORD", os.getenv("POSTGRES_PASSWORD", "marketlift")
-        ),
-        "HOST": os.getenv("DB_HOST", os.getenv("POSTGRES_HOST", "127.0.0.1")),
-        "PORT": os.getenv("DB_PORT", os.getenv("POSTGRES_PORT", "5433")),
-        "CONN_MAX_AGE": int(
-            os.getenv("DB_CONN_MAX_AGE", os.getenv("POSTGRES_CONN_MAX_AGE", "60"))
-        ),
-        "CONN_HEALTH_CHECKS": env_bool("DB_CONN_HEALTH_CHECKS", True),
-    }
-}
+DATABASE_URL = env_text("DATABASE_URL")
 
-DB_SSLMODE = os.getenv("DB_SSLMODE", "").strip()
-if DB_SSLMODE and DATABASES["default"]["ENGINE"] in {
-    "django.db.backends.postgresql",
-    "django.contrib.gis.db.backends.postgis",
-}:
-    DATABASES["default"]["OPTIONS"] = {"sslmode": DB_SSLMODE}
 
-# Django's default test lifecycle creates and drops a sibling database. That is
-# appropriate for local Postgres but is a poor fit for serverless/pooled remote
-# databases such as Neon. Tests therefore use local PostGIS by default. To test
-# against Neon, point TEST_DB_* at a dedicated Neon branch/database and choose
-# MARKETLIFT_TEST_DATABASE_MODE=remote. The custom test runner reuses it.
-RUNNING_TESTS = env_bool("MARKETLIFT_TESTING", False) or any(
-    arg == "test" for arg in sys.argv[1:]
-)
-MARKETLIFT_TEST_DATABASE_MODE = env_text(
-    "MARKETLIFT_TEST_DATABASE_MODE", "local"
-).lower()
-if RUNNING_TESTS:
-    _primary_db = dict(DATABASES["default"])
-    _mode = MARKETLIFT_TEST_DATABASE_MODE
-    if _mode not in {"local", "remote", "primary"}:
-        raise RuntimeError(
-            "MARKETLIFT_TEST_DATABASE_MODE must be local, remote, or primary."
-        )
+def database_config() -> dict:
+    """Build the runtime database config from one provider-neutral URL.
 
-    if _mode == "primary":
-        if not env_bool("MARKETLIFT_ALLOW_PRIMARY_DATABASE_TESTS", False):
-            raise RuntimeError(
-                "Refusing to run tests against the primary database. Use local "
-                "PostGIS (default), a dedicated remote test branch, or explicitly "
-                "set MARKETLIFT_ALLOW_PRIMARY_DATABASE_TESTS=true."
-            )
-    else:
-        if _mode == "local":
-            # Reuse the runtime connection coordinates when runtime Postgres is
-            # already local (for example GitHub Actions on 127.0.0.1:5432).
-            # When runtime points to remote Neon, tests still fall back to the
-            # developer PostGIS service on 127.0.0.1:5433.
-            _primary_host = str(_primary_db.get("HOST") or "").strip().lower()
-            _primary_is_local = _primary_host in {"127.0.0.1", "localhost", "::1"}
-            _test_defaults = {
-                "ENGINE": "django.contrib.gis.db.backends.postgis",
-                "NAME": "marketlift_test",
-                "USER": (
-                    str(_primary_db.get("USER") or "marketlift")
-                    if _primary_is_local
-                    else "marketlift"
-                ),
-                "PASSWORD": (
-                    str(_primary_db.get("PASSWORD") or "marketlift")
-                    if _primary_is_local
-                    else "marketlift"
-                ),
-                "HOST": (
-                    str(_primary_db.get("HOST") or "127.0.0.1")
-                    if _primary_is_local
-                    else "127.0.0.1"
-                ),
-                "PORT": (
-                    str(_primary_db.get("PORT") or "5433")
-                    if _primary_is_local
-                    else "5433"
-                ),
-                "SSLMODE": "",
-            }
-        else:
-            _test_defaults = {
-                "ENGINE": "django.contrib.gis.db.backends.postgis",
-                "NAME": "",
-                "USER": "",
-                "PASSWORD": "",
-                "HOST": "",
-                "PORT": "5432",
-                "SSLMODE": "require",
-            }
-
-        _test_db = {
-            "ENGINE": env_text("TEST_DB_ENGINE", _test_defaults["ENGINE"]),
-            "NAME": env_text("TEST_DB_NAME", _test_defaults["NAME"]),
-            "USER": env_text("TEST_DB_USER", _test_defaults["USER"]),
-            "PASSWORD": os.getenv("TEST_DB_PASSWORD", _test_defaults["PASSWORD"]),
-            "HOST": env_text("TEST_DB_HOST", _test_defaults["HOST"]),
-            "PORT": env_text("TEST_DB_PORT", _test_defaults["PORT"]),
-            "CONN_MAX_AGE": int(os.getenv("TEST_DB_CONN_MAX_AGE", "0")),
+    Production uses Neon via DATABASE_URL. Local development intentionally has
+    a zero-config PostGIS fallback matching docker-compose.
+    """
+    if not DATABASE_URL:
+        return {
+            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "NAME": "marketlift",
+            "USER": "marketlift",
+            "PASSWORD": "marketlift",
+            "HOST": "127.0.0.1",
+            "PORT": "5433",
+            "CONN_MAX_AGE": 60,
             "CONN_HEALTH_CHECKS": True,
         }
-        if _mode == "remote" and not all(
-            _test_db[key] for key in ("NAME", "USER", "PASSWORD", "HOST")
-        ):
-            raise RuntimeError(
-                "Remote test mode requires TEST_DB_NAME, TEST_DB_USER, "
-                "TEST_DB_PASSWORD, and TEST_DB_HOST for a dedicated test branch."
-            )
-        if (
-            _mode == "remote"
-            and _test_db["HOST"] == _primary_db.get("HOST")
-            and _test_db["NAME"] == _primary_db.get("NAME")
-            and not env_bool("MARKETLIFT_ALLOW_PRIMARY_DATABASE_TESTS", False)
-        ):
-            raise RuntimeError(
-                "TEST_DB_* points to the primary database. Use a dedicated Neon "
-                "branch/database or local PostGIS."
-            )
-        _sslmode = env_text("TEST_DB_SSLMODE", _test_defaults["SSLMODE"])
-        if _sslmode:
-            _test_db["OPTIONS"] = {"sslmode": _sslmode}
-        # TEST.NAME prevents Django from silently deriving test_neondb from a
-        # remote runtime name. The custom runner keeps/reuses this DB.
-        _test_db["TEST"] = {"NAME": _test_db["NAME"]}
-        DATABASES["default"] = _test_db
 
-TEST_RUNNER = "marketlift.test_runner.MarketliftTestRunner"
+    parsed = urlsplit(DATABASE_URL)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        raise RuntimeError("DATABASE_URL must be a PostgreSQL URL.")
+
+    options = dict(parse_qsl(parsed.query, keep_blank_values=False))
+    if IS_PRODUCTION:
+        options.setdefault("sslmode", "require")
+
+    config = {
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": parsed.path.lstrip("/"),
+        "USER": unquote(parsed.username or ""),
+        "PASSWORD": unquote(parsed.password or ""),
+        "HOST": parsed.hostname or "",
+        "PORT": str(parsed.port or 5432),
+        "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
+    }
+    if options:
+        config["OPTIONS"] = options
+    return config
+
+
+DATABASES = {"default": database_config()}
+DB_SSLMODE = DATABASES["default"].get("OPTIONS", {}).get("sslmode", "")
 
 
 AUTH_USER_MODEL = "accounts.User"
@@ -296,22 +209,26 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOWED_ORIGINS = env_list(
-    "CORS_ALLOWED_ORIGINS",
-    "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br",
+MARKETLIFT_FRONTEND_URL = env_text("MARKETLIFT_FRONTEND_URL", "https://marketlift.com.br")
+MARKETLIFT_ADMIN_FRONTEND_URL = env_text(
+    "MARKETLIFT_ADMIN_FRONTEND_URL", "https://dash.marketlift.com.br"
 )
+_BROWSER_ORIGINS = f"{MARKETLIFT_FRONTEND_URL},{MARKETLIFT_ADMIN_FRONTEND_URL}"
+
+CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", _BROWSER_ORIGINS)
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = env_list(
-    "CSRF_TRUSTED_ORIGINS",
-    "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br",
-)
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", _BROWSER_ORIGINS)
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+REDIS_URL = env_text("REDIS_URL", "redis://127.0.0.1:6379/0")
 
-# Realtime transport. Redis is an implementation detail of the channel layer and
-# can point at any compatible managed/self-hosted Redis endpoint. Database and
-# object-storage providers remain independent from realtime delivery.
-CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL", "redis://127.0.0.1:6379/3")
+
+def redis_database_url(database: int) -> str:
+    parsed = urlsplit(REDIS_URL)
+    return parsed._replace(path=f"/{database}").geturl()
+
+
+# One Redis endpoint is enough; logical DBs separate cache, Celery and Channels.
+CHANNEL_REDIS_URL = redis_database_url(3)
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": os.getenv(
@@ -345,13 +262,13 @@ MARKETLIFT_ADMIN_SESSION_COOKIE_NAME = os.getenv(
     "MARKETLIFT_ADMIN_SESSION_COOKIE_NAME", "marketlift_admin_sessionid"
 )
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", IS_PRODUCTION)
-SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
-CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", IS_PRODUCTION)
-CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
+SESSION_COOKIE_SECURE = IS_PRODUCTION
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_SAMESITE = "Lax"
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/1")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/2")
+CELERY_BROKER_URL = redis_database_url(1)
+CELERY_RESULT_BACKEND = redis_database_url(2)
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "300"))
 CELERY_TIMEZONE = TIME_ZONE
@@ -389,14 +306,12 @@ R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "").strip()
 R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL", "").strip()
 if not R2_ENDPOINT_URL and R2_ACCOUNT_ID:
     R2_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-R2_PUBLIC_BUCKET = os.getenv("R2_PUBLIC_BUCKET", "").strip()
+R2_PUBLIC_BUCKET = os.getenv("R2_PUBLIC_BUCKET", "marketlift-public").strip()
 # R2_MEDIA_BUCKET remains accepted as a compatibility alias for deployments that
 # adopted the earlier env name before `R2_PRIVATE_BUCKET` was standardized.
-R2_PRIVATE_BUCKET = os.getenv(
-    "R2_PRIVATE_BUCKET", os.getenv("R2_MEDIA_BUCKET", "")
-).strip()
-R2_EVIDENCE_BUCKET = os.getenv("R2_EVIDENCE_BUCKET", "").strip()
-R2_TEMP_BUCKET = os.getenv("R2_TEMP_BUCKET", "").strip()
+R2_PRIVATE_BUCKET = os.getenv("R2_PRIVATE_BUCKET", "marketlift-private").strip()
+R2_EVIDENCE_BUCKET = os.getenv("R2_EVIDENCE_BUCKET", "marketlift-evidence").strip()
+R2_TEMP_BUCKET = os.getenv("R2_TEMP_BUCKET", "marketlift-temp").strip()
 R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "").strip()
 
 MARKETLIFT_S3_ENDPOINT_URL = R2_ENDPOINT_URL
@@ -426,7 +341,9 @@ _r2_required_values = [
     R2_ENDPOINT_URL,
     *_r2_buckets.values(),
 ]
-MARKETLIFT_R2_ANY_CONFIGURED = any(_r2_required_values)
+MARKETLIFT_R2_ANY_CONFIGURED = any(
+    [R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ACCOUNT_ID, R2_ENDPOINT_URL]
+)
 MARKETLIFT_R2_CONFIGURED = all(_r2_required_values)
 if MARKETLIFT_R2_CONFIGURED:
     _s3_backend = "uploads.storage.s3.S3CompatibleStorageBackend"
@@ -469,7 +386,7 @@ EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
     "django.core.mail.backends.smtp.EmailBackend",
 )
-EMAIL_HOST = os.getenv("EMAIL_HOST", "").strip()
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com").strip()
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
@@ -521,11 +438,7 @@ PAYSTACK_CALLBACK_URL = os.getenv("PAYSTACK_CALLBACK_URL", "").strip()
 
 # Production/security controls. These stay environment-driven so hosting providers can change.
 DEFAULT_FROM_EMAIL = os.getenv(
-    "DEFAULT_FROM_EMAIL", "Marketlift <noreply@marketlift.local>"
-)
-MARKETLIFT_FRONTEND_URL = os.getenv("MARKETLIFT_FRONTEND_URL", "https://marketlift.com.br")
-MARKETLIFT_ADMIN_FRONTEND_URL = os.getenv(
-    "MARKETLIFT_ADMIN_FRONTEND_URL", "https://dash.marketlift.com.br"
+    "DEFAULT_FROM_EMAIL", "Marketlift <noreply@marketlift.com.br>"
 )
 MARKETLIFT_ADMIN_SESSION_ORIGINS = env_list(
     "MARKETLIFT_ADMIN_SESSION_ORIGINS", MARKETLIFT_ADMIN_FRONTEND_URL
@@ -543,22 +456,22 @@ if not IS_PRODUCTION:
                 origin.replace("//127.0.0.1:", "//localhost:")
             )
 MARKETLIFT_ADMIN_SESSION_ORIGINS = list(dict.fromkeys(MARKETLIFT_ADMIN_SESSION_ORIGINS))
-MARKETLIFT_ADMIN_MFA_REQUIRED = env_bool("MARKETLIFT_ADMIN_MFA_REQUIRED", IS_PRODUCTION)
+MARKETLIFT_ADMIN_MFA_REQUIRED = IS_PRODUCTION
 MARKETLIFT_ADMIN_MFA_TTL_SECONDS = int(
     os.getenv("MARKETLIFT_ADMIN_MFA_TTL_SECONDS", "600")
 )
-SESSION_COOKIE_AGE = int(os.getenv("SESSION_COOKIE_AGE", "1209600"))
-SESSION_SAVE_EVERY_REQUEST = env_bool("SESSION_SAVE_EVERY_REQUEST", False)
-SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", IS_PRODUCTION)
-SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
-SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
+SESSION_COOKIE_AGE = 1209600
+SESSION_SAVE_EVERY_REQUEST = False
+SECURE_SSL_REDIRECT = IS_PRODUCTION
+SECURE_HSTS_SECONDS = 31536000 if IS_PRODUCTION else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PRODUCTION
+SECURE_HSTS_PRELOAD = IS_PRODUCTION
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
-USE_X_FORWARDED_HOST = env_bool("USE_X_FORWARDED_HOST", False)
-MARKETLIFT_TRUST_PROXY_HEADERS = env_bool("MARKETLIFT_TRUST_PROXY_HEADERS", False)
+USE_X_FORWARDED_HOST = False
+MARKETLIFT_TRUST_PROXY_HEADERS = IS_PRODUCTION
 MARKETLIFT_GRAPHQL_RATE_LIMIT_PER_MINUTE = int(
     os.getenv("MARKETLIFT_GRAPHQL_RATE_LIMIT_PER_MINUTE", "120")
 )
@@ -606,9 +519,7 @@ MARKETLIFT_LOCATION_QUERY_MAX_LENGTH = int(
 MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS = int(
     os.getenv("MARKETLIFT_LOCATION_TOKEN_MAX_AGE_SECONDS", "86400")
 )
-MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION = env_bool(
-    "MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION", False
-)
+MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION = IS_PRODUCTION
 MARKETLIFT_GEOCODER_BACKEND = os.getenv(
     "MARKETLIFT_GEOCODER_BACKEND",
     "marketlift.location.providers.nominatim.NominatimGeocoder",
@@ -639,7 +550,7 @@ MARKETLIFT_LOCATION_CATALOG_TIMEOUT_SECONDS = float(
     os.getenv("MARKETLIFT_LOCATION_CATALOG_TIMEOUT_SECONDS", "5")
 )
 
-if env_bool("SECURE_PROXY_SSL_HEADER_ENABLED", False):
+if IS_PRODUCTION:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(
     os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", str(2 * 1024 * 1024))
