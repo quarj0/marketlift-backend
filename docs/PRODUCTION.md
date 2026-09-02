@@ -31,7 +31,7 @@ Marketplace:
 NEXT_PUBLIC_SITE_URL=https://marketlift.com
 NEXT_PUBLIC_MARKETLIFT_API_URL=https://api.marketlift.com
 NEXT_PUBLIC_MARKETPLACE_URL=https://marketlift.com
-NEXT_PUBLIC_ADMIN_URL=https://admin.marketlift.com
+NEXT_PUBLIC_ADMIN_URL=https://dash.marketlift.com.br
 # Set only if public media is served from a separate CDN/storage origin.
 NEXT_PUBLIC_MARKETLIFT_MEDIA_ORIGIN=https://assets.marketlift.com
 ```
@@ -41,7 +41,7 @@ Admin:
 ```dotenv
 NEXT_PUBLIC_MARKETLIFT_API_URL=https://api.marketlift.com
 NEXT_PUBLIC_MARKETPLACE_URL=https://marketlift.com
-NEXT_PUBLIC_ADMIN_URL=https://admin.marketlift.com
+NEXT_PUBLIC_ADMIN_URL=https://dash.marketlift.com.br
 NEXT_PUBLIC_MARKETLIFT_ENVIRONMENT=production
 ```
 
