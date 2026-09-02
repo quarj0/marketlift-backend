@@ -80,6 +80,14 @@ class CategoryField(UUIDTimeStampedModel):
     # For SELECT fields, options are strict by default. When enabled, options
     # become suggestions and sellers may submit another non-empty scalar value.
     allow_custom_value = models.BooleanField(default=False)
+    depends_on = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="dependent_fields",
+    )
+    lazy_options = models.BooleanField(default=False)
     placeholder = models.CharField(max_length=200, blank=True)
     help_text = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
@@ -113,6 +121,21 @@ class CategoryField(UUIDTimeStampedModel):
             raise ValidationError(
                 {"max_value": "Maximum must be greater than minimum."}
             )
+        if self.depends_on_id:
+            if self.depends_on.category_id != self.category_id:
+                raise ValidationError(
+                    {"depends_on": "Dependent fields must belong to the same category."}
+                )
+            if self.depends_on_id == self.id:
+                raise ValidationError({"depends_on": "A field cannot depend on itself."})
+            if self.field_type != self.FieldType.SELECT:
+                raise ValidationError(
+                    {"depends_on": "Only choice fields can depend on another answer."}
+                )
+            if self.depends_on.field_type != self.FieldType.SELECT:
+                raise ValidationError(
+                    {"depends_on": "The parent answer must also be a choice field."}
+                )
 
     @property
     def custom_values_allowed(self) -> bool:
@@ -132,6 +155,7 @@ class CategoryFieldOption(UUIDTimeStampedModel):
     )
     value = models.CharField(max_length=120)
     label = models.CharField(max_length=120)
+    active = models.BooleanField(default=True, db_index=True)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -145,3 +169,41 @@ class CategoryFieldOption(UUIDTimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.field}: {self.label}"
+
+
+class CategoryFieldOptionDependency(UUIDTimeStampedModel):
+    option = models.ForeignKey(
+        CategoryFieldOption,
+        on_delete=models.CASCADE,
+        related_name="allowed_parent_links",
+    )
+    parent_option = models.ForeignKey(
+        CategoryFieldOption,
+        on_delete=models.CASCADE,
+        related_name="child_option_links",
+    )
+
+    class Meta:
+        ordering = ("option_id", "parent_option_id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("option", "parent_option"),
+                name="categories_unique_option_parent",
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.option_id and self.parent_option_id:
+            if self.option.field_id == self.parent_option.field_id:
+                raise ValidationError(
+                    {"parent_option": "A dependent option must belong to the parent field."}
+                )
+            expected = self.option.field.depends_on_id
+            if expected and self.parent_option.field_id != expected:
+                raise ValidationError(
+                    {"parent_option": "Parent option belongs to the wrong field."}
+                )
+
+    def __str__(self) -> str:
+        return f"{self.parent_option} -> {self.option}"

@@ -4,6 +4,7 @@ from django.utils.text import slugify
 
 from audit.services import record_audit_event
 from categories.models import Category, CategoryField
+from categories.catalogs import import_category_catalog
 from categories.services import (
     create_category_field,
     delete_category_field,
@@ -18,6 +19,7 @@ from marketlift.graphql.errors import domain_error, not_found_error, validation_
 from .mappers import category_to_type
 from .types import (
     CategoryAdminInput,
+    CategoryCatalogImportPayload,
     CategoryFieldAdminInput,
     CategoryFieldDefinitionType,
     CategoryType,
@@ -27,7 +29,7 @@ from .types import (
 
 
 def _category_qs():
-    return Category.objects.select_related("image_upload").prefetch_related("fields__options", "image_upload__variants", "subcategories__image_upload__variants")
+    return Category.objects.select_related("image_upload").prefetch_related("fields__options", "fields__depends_on", "image_upload__variants", "subcategories__image_upload__variants")
 
 
 def _field_to_type(field: CategoryField) -> CategoryFieldDefinitionType:
@@ -213,6 +215,8 @@ class CategoryMutation:
                 required=input.required,
                 filterable=input.filterable,
                 allow_custom_value=input.allow_custom_value,
+                depends_on_key=input.depends_on,
+                lazy_options=input.lazy_options,
                 placeholder=input.placeholder or "",
                 help_text=input.help_text or "",
                 unit=input.unit or "",
@@ -261,6 +265,8 @@ class CategoryMutation:
                 required=input.required,
                 filterable=input.filterable,
                 allow_custom_value=input.allow_custom_value,
+                depends_on_key=input.depends_on,
+                lazy_options=input.lazy_options,
                 placeholder=input.placeholder or "",
                 help_text=input.help_text or "",
                 unit=input.unit or "",
@@ -289,6 +295,58 @@ class CategoryMutation:
             ) from exc
         except ValidationError as exc:
             raise validation_error(exc, code="CATEGORY_VALIDATION_ERROR") from exc
+
+    @strawberry.mutation
+    def import_category_catalog_csv(
+        self,
+        info: strawberry.Info,
+        category_id: str,
+        csv_text: str,
+        replace_current: bool = True,
+    ) -> CategoryCatalogImportPayload:
+        actor = require_staff(info, roles={"admin"})
+        try:
+            category = Category.objects.get(slug=category_id)
+            result = import_category_catalog(
+                category=category,
+                csv_text=csv_text,
+                replace_current=replace_current,
+            )
+            category.refresh_from_db(fields=("schema_version",))
+            record_audit_event(
+                actor=actor,
+                action="category.catalog_imported",
+                target=category,
+                target_type="category",
+                target_label=category.name,
+                metadata={
+                    "rows": result.rows,
+                    "fieldsCreated": result.fields_created,
+                    "fieldsUpdated": result.fields_updated,
+                    "optionsCreated": result.options_created,
+                    "optionsUpdated": result.options_updated,
+                    "optionsDeactivated": result.options_deactivated,
+                    "dependenciesCreated": result.dependencies_created,
+                    "schemaVersion": category.schema_version,
+                },
+                request=request_from_info(info),
+            )
+            return CategoryCatalogImportPayload(
+                rows=result.rows,
+                fields_created=result.fields_created,
+                fields_updated=result.fields_updated,
+                options_created=result.options_created,
+                options_updated=result.options_updated,
+                options_deactivated=result.options_deactivated,
+                dependencies_created=result.dependencies_created,
+                schema_version=category.schema_version,
+            )
+        except Category.DoesNotExist as exc:
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
+        except ValidationError as exc:
+            raise validation_error(
+                exc, code="CATEGORY_CATALOG_VALIDATION_ERROR"
+            ) from exc
 
     @strawberry.mutation
     def delete_category_field(

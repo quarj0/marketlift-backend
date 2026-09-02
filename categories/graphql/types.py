@@ -15,6 +15,9 @@ class CategoryFieldDefinitionType:
     required: bool
     filterable: bool
     allow_custom_value: bool
+    depends_on: str | None
+    lazy_options: bool
+    option_count: int
     placeholder: str | None
     help_text: str | None
     unit: str | None
@@ -108,6 +111,8 @@ class CategoryFieldAdminInput:
     required: bool = False
     filterable: bool = False
     allow_custom_value: bool = False
+    depends_on: str | None = None
+    lazy_options: bool = False
     placeholder: str | None = None
     help_text: str | None = None
     unit: str | None = None
@@ -116,3 +121,15 @@ class CategoryFieldAdminInput:
     step: float | None = None
     sort_order: int = 0
     options: list[CategoryFieldOptionAdminInput] | None = None
+
+
+@strawberry.type
+class CategoryCatalogImportPayload:
+    rows: int
+    fields_created: int
+    fields_updated: int
+    options_created: int
+    options_updated: int
+    options_deactivated: int
+    dependencies_created: int
+    schema_version: int

@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction, models
 from django.utils import timezone
 
-from categories.models import Category, CategoryField
+from categories.models import Category, CategoryField, CategoryFieldOptionDependency
 from subscriptions.services import get_effective_plan
 from uploads.models import UploadAsset
 from uploads.services import claim_upload, retire_upload
@@ -101,7 +101,7 @@ def _validate_scalar(field: CategoryField, value):
 
         # Normalize a typed option label/value back to the canonical option value.
         # Example: typing "Apple" stores "apple" when that option exists.
-        options = list(field.options.values_list("value", "label"))
+        options = list(field.options.filter(active=True).values_list("value", "label"))
         candidate_folded = candidate.casefold()
         for option_value, option_label in options:
             if candidate_folded in {option_value.casefold(), option_label.casefold()}:
@@ -154,7 +154,11 @@ def validate_listing_payload(
         errors["condition"] = "Condition is disabled for this category."
 
     attributes = attributes or {}
-    fields = list(category.fields.prefetch_related("options").all())
+    fields = list(
+        category.fields.select_related("depends_on").prefetch_related(
+            "options", "depends_on__options"
+        ).all()
+    )
     known_keys = {field.key for field in fields}
     unknown = set(attributes) - known_keys
     if unknown:
@@ -174,6 +178,40 @@ def validate_listing_payload(
                 errors[key] = (
                     messages[0] if isinstance(messages, list) else str(messages)
                 )
+
+    # Enforce cascading relationships after scalar normalization.
+    for field in fields:
+        if not field.depends_on_id or field.key not in normalized:
+            continue
+
+        child_value = str(normalized[field.key][1])
+        child_option = field.options.filter(active=True, value=child_value).first()
+        if child_option is None:
+            # Explicitly allowed custom values are not constrained by catalog links.
+            continue
+
+        parent_field = field.depends_on
+        parent_entry = normalized.get(parent_field.key)
+        if parent_entry is None:
+            errors[field.key] = f"Choose {parent_field.label} before {field.label}."
+            continue
+
+        parent_value = str(parent_entry[1])
+        parent_option = parent_field.options.filter(
+            active=True, value=parent_value
+        ).first()
+        if parent_option is None:
+            errors[field.key] = (
+                f"Choose a valid {field.label} for the selected {parent_field.label}."
+            )
+            continue
+
+        if not CategoryFieldOptionDependency.objects.filter(
+            option=child_option, parent_option=parent_option
+        ).exists():
+            errors[field.key] = (
+                f"Invalid combination for {parent_field.label} and {field.label}."
+            )
 
     if errors:
         raise ValidationError(errors)

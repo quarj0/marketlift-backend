@@ -46,7 +46,11 @@ def _normalize_options(options: list[dict] | None) -> list[dict]:
 
 
 def _validate_field_configuration(
-    *, field_type: str, allow_custom_value: bool, options: list[dict]
+    *,
+    field_type: str,
+    allow_custom_value: bool,
+    options: list[dict],
+    lazy_options: bool = False,
 ):
     if field_type not in CategoryField.FieldType.values:
         raise ValidationError({"type": "Unsupported category field type."})
@@ -58,6 +62,7 @@ def _validate_field_configuration(
         field_type == CategoryField.FieldType.SELECT
         and not allow_custom_value
         and not options
+        and not lazy_options
     ):
         raise ValidationError(
             {"options": "A strict select field must have at least one option."}
@@ -101,6 +106,7 @@ def _replace_options(field: CategoryField, options: list[dict]) -> None:
             defaults={
                 "label": item["label"],
                 "sort_order": item["sort_order"],
+                "active": True,
             },
         )
     field.options.exclude(value__in=requested_values).delete()
@@ -116,6 +122,8 @@ def create_category_field(
     required: bool = False,
     filterable: bool = False,
     allow_custom_value: bool = False,
+    depends_on_key: str | None = None,
+    lazy_options: bool = False,
     placeholder: str = "",
     help_text: str = "",
     unit: str = "",
@@ -135,7 +143,17 @@ def create_category_field(
         field_type=field_type,
         allow_custom_value=allow_custom_value,
         options=normalized_options,
+        lazy_options=lazy_options,
     )
+
+    depends_on = None
+    if depends_on_key:
+        try:
+            depends_on = category.fields.get(key=depends_on_key)
+        except CategoryField.DoesNotExist as exc:
+            raise ValidationError(
+                {"depends_on": "The selected parent question does not exist."}
+            ) from exc
 
     field = CategoryField(
         category=category,
@@ -148,6 +166,10 @@ def create_category_field(
             allow_custom_value
             if field_type == CategoryField.FieldType.SELECT
             else False
+        ),
+        depends_on=depends_on,
+        lazy_options=(
+            bool(lazy_options) if field_type == CategoryField.FieldType.SELECT else False
         ),
         placeholder=placeholder.strip(),
         help_text=help_text.strip(),
@@ -174,6 +196,8 @@ def update_category_field(
     required: bool = False,
     filterable: bool = False,
     allow_custom_value: bool = False,
+    depends_on_key: str | None = None,
+    lazy_options: bool = False,
     placeholder: str = "",
     help_text: str = "",
     unit: str = "",
@@ -218,7 +242,19 @@ def update_category_field(
         field_type=field_type,
         allow_custom_value=allow_custom_value,
         options=normalized_options,
+        lazy_options=lazy_options,
     )
+
+    depends_on = None
+    if depends_on_key:
+        try:
+            depends_on = field.category.fields.exclude(pk=field.pk).get(
+                key=depends_on_key
+            )
+        except CategoryField.DoesNotExist as exc:
+            raise ValidationError(
+                {"depends_on": "The selected parent question does not exist."}
+            ) from exc
 
     field.key = clean_key
     field.label = clean_label
@@ -227,6 +263,10 @@ def update_category_field(
     field.filterable = filterable
     field.allow_custom_value = (
         allow_custom_value if field_type == CategoryField.FieldType.SELECT else False
+    )
+    field.depends_on = depends_on
+    field.lazy_options = (
+        bool(lazy_options) if field_type == CategoryField.FieldType.SELECT else False
     )
     field.placeholder = placeholder.strip()
     field.help_text = help_text.strip()

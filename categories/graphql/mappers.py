@@ -45,16 +45,24 @@ def category_to_type(category) -> CategoryType:
                 required=field.required,
                 filterable=field.filterable,
                 allow_custom_value=field.custom_values_allowed,
+                depends_on=field.depends_on.key if field.depends_on_id else None,
+                lazy_options=field.lazy_options,
+                option_count=sum(1 for option in field.options.all() if option.active),
                 placeholder=field.placeholder or None,
                 help_text=field.help_text or None,
                 unit=field.unit or None,
                 min=float(field.min_value) if field.min_value is not None else None,
                 max=float(field.max_value) if field.max_value is not None else None,
                 step=float(field.step_value) if field.step_value is not None else None,
-                options=[
-                    CategoryFieldOptionType(value=o.value, label=o.label)
-                    for o in field.options.all()
-                ],
+                options=(
+                    []
+                    if field.lazy_options or field.depends_on_id
+                    else [
+                        CategoryFieldOptionType(value=o.value, label=o.label)
+                        for o in field.options.all()
+                        if o.active
+                    ]
+                ),
             )
             for field in category.fields.all()
         ],
