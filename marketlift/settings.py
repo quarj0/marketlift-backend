@@ -3,8 +3,10 @@
 import json
 import os
 from pathlib import Path
-from urllib.parse import parse_qsl, unquote, urlsplit
+from urllib.parse import urlsplit
 
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 from marketlift.markets.profiles import get_market_profile, market_profiles_for_codes
@@ -140,49 +142,33 @@ ASGI_APPLICATION = "marketlift.asgi.application"
 
 DATABASE_URL = env_text("DATABASE_URL")
 
+LOCAL_DATABASE_URL = "postgresql://127.0.0.1:5433/marketlift"
 
-def database_config() -> dict:
-    """Build the runtime database config from one provider-neutral URL.
+
+def database_config(database_url: str, *, is_production: bool) -> dict:
+    """Build the runtime PostGIS config from a provider-neutral URL.
 
     Production uses Neon via DATABASE_URL. Local development intentionally has
     a zero-config PostGIS fallback matching docker-compose.
     """
-    if not DATABASE_URL:
-        return {
-            "ENGINE": "django.contrib.gis.db.backends.postgis",
-            "NAME": "marketlift",
-            "USER": "marketlift",
-            "PASSWORD": "marketlift",
-            "HOST": "127.0.0.1",
-            "PORT": "5433",
-            "CONN_MAX_AGE": 60,
-            "CONN_HEALTH_CHECKS": True,
-        }
+    if not database_url and is_production:
+        raise ImproperlyConfigured("DATABASE_URL is required in production.")
 
-    parsed = urlsplit(DATABASE_URL)
-    if parsed.scheme not in {"postgres", "postgresql"}:
-        raise RuntimeError("DATABASE_URL must be a PostgreSQL URL.")
-
-    options = dict(parse_qsl(parsed.query, keep_blank_values=False))
-    if IS_PRODUCTION:
-        options.setdefault("sslmode", "require")
-
-    config = {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": parsed.path.lstrip("/"),
-        "USER": unquote(parsed.username or ""),
-        "PASSWORD": unquote(parsed.password or ""),
-        "HOST": parsed.hostname or "",
-        "PORT": str(parsed.port or 5432),
-        "CONN_MAX_AGE": 60,
-        "CONN_HEALTH_CHECKS": True,
-    }
-    if options:
-        config["OPTIONS"] = options
+    using_local_fallback = not database_url
+    config = dj_database_url.parse(
+        database_url or LOCAL_DATABASE_URL,
+        engine="django.contrib.gis.db.backends.postgis",
+        conn_max_age=60,
+        conn_health_checks=True,
+    )
+    if using_local_fallback:
+        config.update(USER="marketlift", PASSWORD="marketlift")
+    if is_production:
+        config.setdefault("OPTIONS", {}).setdefault("sslmode", "require")
     return config
 
 
-DATABASES = {"default": database_config()}
+DATABASES = {"default": database_config(DATABASE_URL, is_production=IS_PRODUCTION)}
 DB_SSLMODE = DATABASES["default"].get("OPTIONS", {}).get("sslmode", "")
 
 
