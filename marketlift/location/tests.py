@@ -4,6 +4,7 @@ from django.test import SimpleTestCase, override_settings
 from marketlift.location.contracts import LocationCandidate
 from marketlift.location.providers.nominatim import _candidate_from_payload
 from marketlift.location.providers.opencage import _candidate_from_result
+from marketlift.location.providers.geoapify import _candidate_from_result as _geoapify_candidate
 from marketlift.location.tokens import decode_location_token, encode_location_token
 from marketlift.location.validators import validate_coordinates, validate_radius_km
 
@@ -88,3 +89,26 @@ class OpenCagePayloadTests(SimpleTestCase):
         self.assertEqual(candidate.state_code, "SP")
         self.assertEqual(candidate.city, "São Paulo")
         self.assertEqual(candidate.district, "Sé")
+
+
+class GeoapifyPayloadTests(SimpleTestCase):
+    def test_payload_normalizes_brazil_location(self):
+        candidate = _geoapify_candidate(
+            {
+                "country": "Brasil",
+                "country_code": "br",
+                "state": "São Paulo",
+                "state_code": "SP",
+                "city": "São Paulo",
+                "suburb": "Sé",
+                "formatted": "Sé, São Paulo, SP, Brasil",
+                "lat": -23.55052,
+                "lon": -46.63331,
+                "place_id": "geoapify:test",
+            }
+        )
+        self.assertEqual(candidate.country_code, "BR")
+        self.assertEqual(candidate.state_code, "SP")
+        self.assertEqual(candidate.city, "São Paulo")
+        self.assertEqual(candidate.district, "Sé")
+        self.assertEqual(candidate.provider, "geoapify")

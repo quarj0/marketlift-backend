@@ -83,11 +83,16 @@ class SellerQuery:
 
     @strawberry.field
     def verified_sellers(
-        self, info: strawberry.Info, limit: int = 20
+        self,
+        info: strawberry.Info,
+        limit: int = 20,
+        country_code: str | None = None,
     ) -> list[SellerType]:
         qs = seller_queryset(viewer=request_user(info)).filter(
             verified_at__isnull=False
         )
+        if country_code:
+            qs = qs.filter(country_code__iexact=country_code.strip().upper())
         return [seller_to_type(x) for x in qs[: max(1, min(limit, 100))]]
 
     @strawberry.field

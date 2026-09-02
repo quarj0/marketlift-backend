@@ -302,16 +302,21 @@ def marketlift_deploy_checks(app_configs, **kwargs):
             )
         )
     geocoder_backend = getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "")
-    if geocoder_backend.endswith("OpenCageGeocoder") and not getattr(
-        settings, "OPENCAGE_API_KEY", ""
-    ):
-        issues.append(
-            Error(
-                "OpenCage geocoding is selected but OPENCAGE_API_KEY is missing.",
-                hint="Set OPENCAGE_API_KEY on the production service.",
-                id="marketlift.E022",
+    geocoder_credentials = (
+        ("OpenCageGeocoder", "OPENCAGE_API_KEY", "OpenCage", "marketlift.E022"),
+        ("GeoapifyGeocoder", "GEOAPIFY_API_KEY", "Geoapify", "marketlift.E023"),
+    )
+    for backend_suffix, setting_name, provider_name, check_id in geocoder_credentials:
+        if geocoder_backend.endswith(backend_suffix) and not getattr(
+            settings, setting_name, ""
+        ):
+            issues.append(
+                Error(
+                    f"{provider_name} geocoding is selected but {setting_name} is missing.",
+                    hint=f"Set {setting_name} on the production service.",
+                    id=check_id,
+                )
             )
-        )
     if (
         getattr(settings, "MARKETLIFT_GEOCODER_BACKEND", "").endswith(
             "NominatimGeocoder"

@@ -130,10 +130,15 @@ class ListingQuery:
             return None
 
     @strawberry.field
-    def featured_listings(self, limit: int = 8) -> list[ListingType]:
+    def featured_listings(
+        self, limit: int = 8, country_code: str | None = None
+    ) -> list[ListingType]:
         now = timezone.now()
+        base = listing_queryset(Listing.objects.public())
+        if country_code:
+            base = base.filter(country_code__iexact=country_code.strip().upper())
         qs = (
-            listing_queryset(Listing.objects.public())
+            base
             .filter(
                 promotions__product__code=PromotionProduct.Code.FEATURED,
                 promotions__cancelled_at__isnull=True,
@@ -146,10 +151,13 @@ class ListingQuery:
         return [listing_to_type(x) for x in qs[: max(1, min(limit, 50))]]
 
     @strawberry.field
-    def recent_listings(self, limit: int = 12) -> list[ListingType]:
-        qs = listing_queryset(Listing.objects.public()).order_by(
-            "-published_at", "-created_at"
-        )
+    def recent_listings(
+        self, limit: int = 12, country_code: str | None = None
+    ) -> list[ListingType]:
+        qs = listing_queryset(Listing.objects.public())
+        if country_code:
+            qs = qs.filter(country_code__iexact=country_code.strip().upper())
+        qs = qs.order_by("-published_at", "-created_at")
         return [listing_to_type(x) for x in qs[: max(1, min(limit, 50))]]
 
     @strawberry.field

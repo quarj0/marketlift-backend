@@ -538,6 +538,11 @@ MARKETLIFT_OPENCAGE_BASE_URL = os.getenv(
     "MARKETLIFT_OPENCAGE_BASE_URL",
     "https://api.opencagedata.com/geocode/v1/json",
 )
+GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY", "").strip()
+MARKETLIFT_GEOAPIFY_BASE_URL = os.getenv(
+    "MARKETLIFT_GEOAPIFY_BASE_URL",
+    "https://api.geoapify.com/v1/geocode",
+)
 MARKETLIFT_GEOCODER_TIMEOUT_SECONDS = float(
     os.getenv("MARKETLIFT_GEOCODER_TIMEOUT_SECONDS", "4")
 )
