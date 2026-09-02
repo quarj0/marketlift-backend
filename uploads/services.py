@@ -48,6 +48,11 @@ PURPOSE_RULES = {
         5 * 1024 * 1024,
         UploadAsset.Visibility.PUBLIC,
     ),
+    UploadAsset.Purpose.CATEGORY_IMAGE: (
+        IMAGE_TYPES,
+        5 * 1024 * 1024,
+        UploadAsset.Visibility.PUBLIC,
+    ),
     UploadAsset.Purpose.SUPPORT_ATTACHMENT: (
         DOCUMENT_TYPES,
         15 * 1024 * 1024,
@@ -335,7 +340,8 @@ def retire_upload(*, asset):
 
 def can_access_upload(*, asset, user=None) -> bool:
     if (
-        asset.purpose == UploadAsset.Purpose.AVATAR
+        asset.purpose
+        in {UploadAsset.Purpose.AVATAR, UploadAsset.Purpose.CATEGORY_IMAGE}
         and asset.visibility == UploadAsset.Visibility.PUBLIC
         and asset.status == UploadAsset.Status.ATTACHED
     ):

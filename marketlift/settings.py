@@ -390,6 +390,7 @@ if MARKETLIFT_R2_CONFIGURED:
     MARKETLIFT_UPLOAD_PURPOSE_ALIASES = {
         "listing_image": "public",
         "avatar": "public",
+        "category_image": "public",
         "message_image": "private",
         "support_attachment": "private",
         "verification_document": "evidence",
@@ -404,6 +405,7 @@ else:
         for purpose in (
             "listing_image",
             "avatar",
+            "category_image",
             "message_image",
             "support_attachment",
             "verification_document",

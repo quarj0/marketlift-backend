@@ -6,7 +6,7 @@ from .types import CategoryType
 
 
 def _qs():
-    return Category.objects.prefetch_related("fields__options", "subcategories")
+    return Category.objects.select_related("image_upload").prefetch_related("fields__options", "image_upload__variants", "subcategories__image_upload__variants")
 
 
 @strawberry.type

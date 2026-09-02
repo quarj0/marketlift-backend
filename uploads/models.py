@@ -15,6 +15,7 @@ class UploadAsset(UUIDTimeStampedModel):
         VERIFICATION_SELFIE = "verification_selfie", "Verification selfie"
         REPORT_EVIDENCE = "report_evidence", "Report evidence"
         AVATAR = "avatar", "Avatar"
+        CATEGORY_IMAGE = "category_image", "Category image"
         SUPPORT_ATTACHMENT = "support_attachment", "Support attachment"
 
     class Status(models.TextChoices):

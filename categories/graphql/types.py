@@ -42,6 +42,7 @@ class CategorySummaryType:
     id: str
     name: str
     icon: str
+    image_url: str | None
     active: bool
 
 
@@ -50,6 +51,7 @@ class CategoryType:
     id: str
     name: str
     icon: str
+    image_url: str | None
     active: bool
     schema_version: int
     description: str
@@ -78,6 +80,8 @@ class CategoryAdminInput:
     name: str
     slug: str | None = None
     icon: str | None = None
+    image_upload_id: strawberry.ID | None = None
+    remove_image: bool = False
     description: str | None = None
     parent_id: str | None = None
     active: bool = True

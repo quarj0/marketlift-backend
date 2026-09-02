@@ -1,3 +1,5 @@
+from uploads.storage import get_storage_backend
+
 from .types import (
     CategoryConditionType,
     CategoryFieldDefinitionType,
@@ -8,11 +10,22 @@ from .types import (
 )
 
 
+def _category_image_url(category) -> str | None:
+    asset = getattr(category, "image_upload", None)
+    if asset is None:
+        return None
+    variant = asset.variants.filter(kind="card").first()
+    target = variant or asset
+    url = get_storage_backend(target.storage_alias).access_url(target)
+    return str(url) if url else target.content_url
+
+
 def category_to_type(category) -> CategoryType:
     return CategoryType(
         id=category.slug,
         name=category.name,
         icon=category.icon,
+        image_url=_category_image_url(category),
         active=category.active,
         schema_version=category.schema_version,
         description=category.description,
@@ -46,7 +59,13 @@ def category_to_type(category) -> CategoryType:
             for field in category.fields.all()
         ],
         subcategories=[
-            CategorySummaryType(id=c.slug, name=c.name, icon=c.icon, active=c.active)
+            CategorySummaryType(
+                id=c.slug,
+                name=c.name,
+                icon=c.icon,
+                image_url=_category_image_url(c),
+                active=c.active,
+            )
             for c in category.subcategories.all()
         ],
     )

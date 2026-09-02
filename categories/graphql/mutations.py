@@ -10,6 +10,8 @@ from categories.services import (
     update_category_field,
 )
 from marketlift.graphql.auth import request_from_info, require_staff
+from uploads.models import UploadAsset
+from uploads.services import claim_upload, retire_upload
 from marketlift.markets.defaults import default_pricing_label
 from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 
@@ -25,7 +27,7 @@ from .types import (
 
 
 def _category_qs():
-    return Category.objects.prefetch_related("fields__options", "subcategories")
+    return Category.objects.select_related("image_upload").prefetch_related("fields__options", "image_upload__variants", "subcategories__image_upload__variants")
 
 
 def _field_to_type(field: CategoryField) -> CategoryFieldDefinitionType:
@@ -70,6 +72,27 @@ def _category_schema_values(input: CategoryAdminInput):
     }
 
 
+def _apply_category_image(*, category: Category, input: CategoryAdminInput, actor):
+    if input.image_upload_id and input.remove_image:
+        raise ValidationError({"image": "Choose a replacement image or remove the current image, not both."})
+    old_asset = category.image_upload
+    if input.remove_image:
+        category.image_upload = None
+        return old_asset
+    if not input.image_upload_id:
+        return None
+    try:
+        upload = UploadAsset.objects.get(pk=str(input.image_upload_id))
+    except (UploadAsset.DoesNotExist, ValueError) as exc:
+        raise ValidationError({"image": "The selected category image upload was not found."}) from exc
+    category.image_upload = claim_upload(
+        asset=upload,
+        user=actor,
+        purpose=UploadAsset.Purpose.CATEGORY_IMAGE,
+    )
+    return old_asset
+
+
 @strawberry.type
 class CategoryMutation:
     @strawberry.mutation
@@ -102,6 +125,9 @@ class CategoryMutation:
             )
             category.full_clean()
             category.save()
+            if input.image_upload_id:
+                _apply_category_image(category=category, input=input, actor=actor)
+                category.save(update_fields=("image_upload", "updated_at"))
             record_audit_event(
                 actor=actor,
                 action="category.created",
@@ -142,10 +168,15 @@ class CategoryMutation:
             category.sort_order = max(0, input.sort_order)
             for key, value in schema_values.items():
                 setattr(category, key, value)
+            old_image_asset = _apply_category_image(
+                category=category, input=input, actor=actor
+            )
             if schema_changed:
                 category.schema_version += 1
             category.full_clean()
             category.save()
+            if old_image_asset is not None and old_image_asset.pk != category.image_upload_id:
+                retire_upload(asset=old_image_asset)
             record_audit_event(
                 actor=actor,
                 action="category.updated",

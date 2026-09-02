@@ -20,6 +20,13 @@ class Category(UUIDTimeStampedModel):
     slug = models.SlugField(max_length=80, unique=True)
     name = models.CharField(max_length=120)
     icon = models.CharField(max_length=80, blank=True)
+    image_upload = models.ForeignKey(
+        "uploads.UploadAsset",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="category_visuals",
+    )
     description = models.TextField(blank=True)
     active = models.BooleanField(default=True)
     sort_order = models.PositiveIntegerField(default=0)
