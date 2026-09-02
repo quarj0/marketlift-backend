@@ -212,15 +212,21 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-MARKETLIFT_FRONTEND_URL = env_text("MARKETLIFT_FRONTEND_URL", "https://marketlift.com.br")
+MARKETLIFT_FRONTEND_URL = env_text(
+    "MARKETLIFT_FRONTEND_URL", "https://marketlift.com.br"
+)
 MARKETLIFT_ADMIN_FRONTEND_URL = env_text(
     "MARKETLIFT_ADMIN_FRONTEND_URL", "https://dash.marketlift.com.br"
 )
 _BROWSER_ORIGINS = f"{MARKETLIFT_FRONTEND_URL},{MARKETLIFT_ADMIN_FRONTEND_URL}"
 
-CORS_ALLOWED_ORIGINS = "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br"
+CORS_ALLOWED_ORIGINS = [
+    "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br"
+]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br"
+CSRF_TRUSTED_ORIGINS = [
+    "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br"
+]
 
 REDIS_URL = env_text("REDIS_URL", "redis://127.0.0.1:6379/0")
 
