@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "strawberry_django",
+    "anymail",
     "accounts",
     "sellers",
     "listings",
@@ -392,17 +393,16 @@ REST_FRAMEWORK = {
     ],
 }
 
-EMAIL_BACKEND = os.getenv(
-    "EMAIL_BACKEND",
-    "django.core.mail.backends.smtp.EmailBackend",
+EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+
+ANYMAIL = {
+    "RESEND_API_KEY": os.getenv("RESEND_API_KEY", ""),
+}
+
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    "Marketlift <noreply@marketlift.com.br>",
 )
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com").strip()
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
-EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
-EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "15"))
 
 # Provider-backed capabilities are disabled for the initial production release.
 # The frontend flags must only be enabled after these server-side flags and the
