@@ -72,6 +72,11 @@ def conversation_to_type(conversation, user) -> ConversationType:
                 or listing.seller_deleted_at is not None
                 or listing.status in {"removed", "rejected"}
             ),
+            country_code=listing.country_code if listing else "",
+            state=listing.state if listing else "",
+            state_code=listing.state_code if listing else "",
+            city=listing.city if listing else "",
+            district=listing.district if listing else "",
         ),
         last_message=last_message,
         last_message_at=conversation.last_message_at,

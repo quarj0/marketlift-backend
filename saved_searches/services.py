@@ -117,6 +117,22 @@ def create_saved_search(*, user, name, criteria, alerts_enabled=True):
     if not criteria:
         raise ValidationError("Save at least one search filter.")
     _validate_saved_criteria(criteria)
+
+    existing = user.saved_searches.filter(active=True, criteria=criteria).first()
+    if existing is not None:
+        changed = []
+        if alerts_enabled and not existing.alerts_enabled:
+            existing.alerts_enabled = True
+            changed.append("alerts_enabled")
+        next_name = (name or "").strip()[:120]
+        if next_name and next_name != existing.name:
+            existing.name = next_name
+            changed.append("name")
+        if changed:
+            changed.append("updated_at")
+            existing.save(update_fields=tuple(changed))
+        return existing
+
     if user.saved_searches.filter(active=True).count() >= 50:
         raise ValidationError("You can keep up to 50 active saved searches.")
     return SavedSearch.objects.create(

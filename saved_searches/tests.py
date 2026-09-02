@@ -67,3 +67,32 @@ class SavedSearchTests(TestCase):
                 name="invalid",
                 criteria={"attributeFilters": {"not_a_marketplace_field": "x"}},
             )
+
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from saved_searches.services import create_saved_search
+
+
+class SavedSearchIdempotencyTests(TestCase):
+    def test_same_saved_search_is_idempotent(self):
+        user = get_user_model().objects.create_user(
+            email="saved-search-idempotent@example.com",
+            full_name="Saved Search",
+            password="secret123",
+        )
+        criteria = {"q": "Samsung 980 1TB", "countryCode": "BR"}
+        first = create_saved_search(
+            user=user,
+            name="SSD alert",
+            criteria=criteria,
+            alerts_enabled=True,
+        )
+        second = create_saved_search(
+            user=user,
+            name="SSD alert",
+            criteria=criteria,
+            alerts_enabled=True,
+        )
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(user.saved_searches.filter(active=True).count(), 1)

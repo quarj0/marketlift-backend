@@ -33,6 +33,21 @@ def env_text(name: str, default: str = "") -> str:
     return value.strip()
 
 
+def normalize_browser_origin(value: str) -> str:
+    value = (value or "").strip()
+    if not value:
+        return ""
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return ""
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+        return ""
+    host = parsed.hostname.lower()
+    port = f":{parsed.port}" if parsed.port else ""
+    return f"{parsed.scheme.lower()}://{host}{port}"
+
+
 MARKETLIFT_ENV = os.getenv("MARKETLIFT_ENV", "development").strip().lower()
 IS_PRODUCTION = MARKETLIFT_ENV in {"production", "prod"}
 
@@ -253,9 +268,20 @@ CHANNEL_LAYERS = {
         },
     }
 }
-MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS = env_list(
-    "MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS",
-    ",".join(CORS_ALLOWED_ORIGINS),
+_WEBSOCKET_ORIGIN_SOURCES = [
+    MARKETLIFT_FRONTEND_URL,
+    MARKETLIFT_ADMIN_FRONTEND_URL,
+    *env_list("MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS"),
+    *env_list("MARKETLIFT_WEBSOCKET_EXTRA_ALLOWED_ORIGINS"),
+]
+MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS = list(
+    dict.fromkeys(
+        origin
+        for origin in (
+            normalize_browser_origin(value) for value in _WEBSOCKET_ORIGIN_SOURCES
+        )
+        if origin
+    )
 )
 MARKETLIFT_WEBSOCKET_ACTION_RATE_LIMIT_PER_MINUTE = int(
     os.getenv("MARKETLIFT_WEBSOCKET_ACTION_RATE_LIMIT_PER_MINUTE", "180")

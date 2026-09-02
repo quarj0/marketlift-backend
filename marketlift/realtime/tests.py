@@ -68,6 +68,12 @@ class RealtimeWebSocketTests(TransactionTestCase):
             headers.append((b"cookie", value))
         return WebsocketCommunicator(application, "/ws/realtime/", headers=headers)
 
+    def test_configured_marketplace_origin_is_allowed(self):
+        self.assertIn(
+            settings.MARKETLIFT_FRONTEND_URL.rstrip("/"),
+            settings.MARKETLIFT_WEBSOCKET_ALLOWED_ORIGINS,
+        )
+
     async def test_authenticated_socket_returns_recovery_counts(self):
         socket = self._communicator(self.buyer_cookie)
         connected, _ = await socket.connect()

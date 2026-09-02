@@ -21,6 +21,11 @@ class ConversationListingType:
     primary_image: str | None
     status: str | None
     deleted: bool
+    country_code: str
+    state: str
+    state_code: str
+    city: str
+    district: str
 
 
 @strawberry.type
