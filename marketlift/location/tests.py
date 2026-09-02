@@ -3,6 +3,7 @@ from django.test import SimpleTestCase, override_settings
 
 from marketlift.location.contracts import LocationCandidate
 from marketlift.location.providers.nominatim import _candidate_from_payload
+from marketlift.location.providers.opencage import _candidate_from_result
 from marketlift.location.tokens import decode_location_token, encode_location_token
 from marketlift.location.validators import validate_coordinates, validate_radius_km
 
@@ -55,6 +56,28 @@ class LocationValidationTests(SimpleTestCase):
                     "city": "São Paulo",
                     "state": "São Paulo",
                     "ISO3166-2-lvl4": "BR-SP",
+                    "country": "Brasil",
+                    "country_code": "br",
+                    "suburb": "Sé",
+                },
+            }
+        )
+        self.assertEqual(candidate.country_code, "BR")
+        self.assertEqual(candidate.state_code, "SP")
+        self.assertEqual(candidate.city, "São Paulo")
+        self.assertEqual(candidate.district, "Sé")
+
+
+class OpenCagePayloadTests(SimpleTestCase):
+    def test_payload_normalizes_brazil_location(self):
+        candidate = _candidate_from_result(
+            {
+                "formatted": "São Paulo, SP, Brasil",
+                "geometry": {"lat": -23.55052, "lng": -46.63331},
+                "components": {
+                    "city": "São Paulo",
+                    "state": "São Paulo",
+                    "state_code": "SP",
                     "country": "Brasil",
                     "country_code": "br",
                     "suburb": "Sé",

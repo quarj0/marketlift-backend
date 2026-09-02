@@ -533,6 +533,11 @@ MARKETLIFT_GEOCODER_BACKEND = os.getenv(
 MARKETLIFT_NOMINATIM_BASE_URL = os.getenv(
     "MARKETLIFT_NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org"
 )
+OPENCAGE_API_KEY = os.getenv("OPENCAGE_API_KEY", "").strip()
+MARKETLIFT_OPENCAGE_BASE_URL = os.getenv(
+    "MARKETLIFT_OPENCAGE_BASE_URL",
+    "https://api.opencagedata.com/geocode/v1/json",
+)
 MARKETLIFT_GEOCODER_TIMEOUT_SECONDS = float(
     os.getenv("MARKETLIFT_GEOCODER_TIMEOUT_SECONDS", "4")
 )
