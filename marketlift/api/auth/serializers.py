@@ -14,6 +14,13 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 
+class AdminLoginRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+
 class RegisterSerializer(serializers.Serializer):
     fullName = serializers.CharField(max_length=160)
     email = serializers.EmailField()
@@ -110,7 +117,7 @@ def serialize_session_user(user):
     }
 
 
-class AdminMfaVerifySerializer(serializers.Serializer):
+class AdminLoginVerifySerializer(serializers.Serializer):
     challengeId = serializers.UUIDField()
     code = serializers.CharField(min_length=6, max_length=6)
 

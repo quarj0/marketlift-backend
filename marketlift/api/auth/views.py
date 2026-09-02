@@ -1,3 +1,6 @@
+import logging
+import uuid
+
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.db import transaction
@@ -19,12 +22,13 @@ from accounts.auth_services import (
 )
 from accounts.models import User
 from audit.services import record_audit_event
-from marketlift.security.rate_limit import enforce_rate_limit
+from marketlift.security.rate_limit import enforce_identity_rate_limit, enforce_rate_limit
 from platform_settings.models import PlatformConfiguration
 
 from .serializers import (
     AdminInvitationAcceptSerializer,
-    AdminMfaVerifySerializer,
+    AdminLoginRequestSerializer,
+    AdminLoginVerifySerializer,
     LoginSerializer,
     PasswordResetRequestSerializer,
     PasswordResetSerializer,
@@ -32,6 +36,9 @@ from .serializers import (
     VerifySerializer,
     serialize_session_user,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -109,61 +116,90 @@ class LoginView(APIView):
         return Response({"authenticated": True, "user": serialize_session_user(user)})
 
 
-class AdminLoginView(LoginView):
-    require_staff = True
-    audit_action = "auth.admin_login"
+@method_decorator(csrf_protect, name="dispatch")
+class AdminLoginView(APIView):
+    """Start passwordless administrator authentication by email.
+
+    The response is intentionally generic for unknown/non-admin addresses so the
+    public endpoint does not disclose which email addresses have administrator
+    access.
+    """
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
-        if not settings.MARKETLIFT_ADMIN_MFA_REQUIRED:
-            return super().post(request)
-
         enforce_rate_limit(request, "auth-admin-login", limit=8, window=300)
-        serializer = LoginSerializer(data=request.data)
+        serializer = AdminLoginRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        identifier = (
-            serializer.validated_data.get("emailOrPhone")
-            or serializer.validated_data.get("email")
-            or ""
-        ).strip()
-        email = identifier
-        if "@" not in identifier:
-            found = User.objects.filter(phone=identifier).only("email").first()
-            email = found.email if found else ""
-        user = authenticate(
-            request, email=email, password=serializer.validated_data["password"]
+        email = serializer.validated_data["email"]
+        enforce_identity_rate_limit(
+            "auth-admin-login-email",
+            email,
+            limit=5,
+            window=900,
         )
-        if user is None:
-            return Response({"detail": "Invalid credentials."}, status=400)
-        if not user.is_staff:
-            return Response({"detail": "Administrator access required."}, status=403)
-        challenge, _ = create_admin_login_challenge(user=user, request=request)
-        record_audit_event(
-            actor=user,
-            action="auth.admin_mfa_challenge",
-            target=user,
-            target_type="user",
-            target_label=user.full_name or user.email,
-            request=request,
+
+        user = (
+            User.objects.filter(
+                email__iexact=email,
+                is_active=True,
+                is_staff=True,
+            )
+            .only("id", "email", "full_name", "is_staff", "is_active")
+            .first()
         )
+
+        # Use an opaque dummy id for unknown addresses. This keeps the response
+        # shape identical and avoids administrator-account enumeration.
+        challenge_id = uuid.uuid4()
+        if user is not None:
+            try:
+                challenge, _ = create_admin_login_challenge(
+                    user=user, request=request
+                )
+            except Exception:
+                logger.exception(
+                    "Could not deliver administrator sign-in code for user %s",
+                    user.pk,
+                )
+                return Response(
+                    {
+                        "detail": "We could not send the sign-in code. Please try again shortly.",
+                        "code": "ADMIN_LOGIN_EMAIL_UNAVAILABLE",
+                    },
+                    status=503,
+                )
+            challenge_id = challenge.id
+            record_audit_event(
+                actor=user,
+                action="auth.admin_login_challenge",
+                target=user,
+                target_type="user",
+                target_label=user.full_name or user.email,
+                request=request,
+            )
+
         return Response(
             {
                 "authenticated": False,
-                "mfaRequired": True,
-                "challengeId": str(challenge.id),
-                "expiresIn": settings.MARKETLIFT_ADMIN_MFA_TTL_SECONDS,
+                "verificationRequired": True,
+                "challengeId": str(challenge_id),
+                "expiresIn": settings.MARKETLIFT_ADMIN_LOGIN_CODE_TTL_SECONDS,
+                "detail": "If this email belongs to an administrator, a verification code has been sent.",
             },
             status=202,
         )
 
 
 @method_decorator(csrf_protect, name="dispatch")
-class AdminMfaVerifyView(APIView):
+class AdminLoginVerifyView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def post(self, request):
-        enforce_rate_limit(request, "auth-admin-mfa", limit=12, window=900)
-        serializer = AdminMfaVerifySerializer(data=request.data)
+        enforce_rate_limit(request, "auth-admin-login-verify", limit=12, window=900)
+        serializer = AdminLoginVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             user = verify_admin_login_challenge(

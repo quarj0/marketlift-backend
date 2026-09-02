@@ -193,6 +193,16 @@ def marketlift_deploy_checks(app_configs, **kwargs):
                     id="marketlift.E018",
                 )
             )
+    if email_backend == "anymail.backends.resend.EmailBackend":
+        anymail = getattr(settings, "ANYMAIL", {}) or {}
+        if not anymail.get("RESEND_API_KEY"):
+            issues.append(
+                Error(
+                    "Resend email delivery is missing RESEND_API_KEY.",
+                    hint="Set RESEND_API_KEY on the production service.",
+                    id="marketlift.E021",
+                )
+            )
     channel_layer = getattr(settings, "CHANNEL_LAYERS", {}).get("default", {})
     channel_backend = channel_layer.get("BACKEND", "")
     if not channel_backend or channel_backend == "channels.layers.InMemoryChannelLayer":

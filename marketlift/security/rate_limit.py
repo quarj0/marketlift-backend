@@ -25,8 +25,8 @@ def _identity(request):
     return f"ip:{client_ip(request)}"
 
 
-def enforce_rate_limit(request, scope, *, limit, window):
-    raw = f"{scope}:{_identity(request)}".encode()
+def enforce_identity_rate_limit(scope, identity, *, limit, window):
+    raw = f"{scope}:{identity}".encode()
     key = "ml:rl:" + hashlib.sha256(raw).hexdigest()
     try:
         if cache.add(key, 1, timeout=window):
@@ -44,3 +44,9 @@ def enforce_rate_limit(request, scope, *, limit, window):
 
     if count > limit:
         raise Throttled(wait=window, detail="Too many requests. Try again later.")
+
+
+def enforce_rate_limit(request, scope, *, limit, window):
+    enforce_identity_rate_limit(
+        scope, _identity(request), limit=limit, window=window
+    )

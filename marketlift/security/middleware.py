@@ -1,3 +1,5 @@
+import hashlib
+import json
 import logging
 import time
 from urllib.parse import urlsplit
@@ -10,6 +12,7 @@ from django.core.cache import cache
 from django.http import JsonResponse
 from django.utils.cache import patch_vary_headers
 from django.utils.http import http_date
+from graphql import FieldNode, OperationType, get_operation_ast, parse
 
 from .rate_limit import client_ip
 
@@ -139,32 +142,95 @@ class ClientScopedSessionMiddleware(SessionMiddleware):
         return response
 
 
+def _graphql_mutation_scope(request) -> str | None:
+    """Return a stable scope for a GraphQL mutation, otherwise ``None``.
+
+    Dashboard/read-only queries deliberately bypass the request-count limiter.
+    Mutation scopes are based on real root field names (not aliases or operation
+    labels), so clients cannot evade the limiter simply by renaming an operation.
+    """
+
+    if request.method.upper() != "POST":
+        return None
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    query = payload.get("query")
+    if not isinstance(query, str) or not query.strip():
+        return None
+    operation_name = payload.get("operationName")
+    if operation_name is not None and not isinstance(operation_name, str):
+        return None
+    try:
+        document = parse(query)
+        operation = get_operation_ast(document, operation_name)
+    except Exception:
+        # Let the GraphQL view return its normal syntax/validation response.
+        return None
+    if operation is None or operation.operation != OperationType.MUTATION:
+        return None
+
+    fields = sorted(
+        {
+            selection.name.value
+            for selection in operation.selection_set.selections
+            if isinstance(selection, FieldNode)
+        }
+    )
+    return ",".join(fields) if fields else "anonymous"
+
+
 class SecurityRateLimitMiddleware:
+    """Protect GraphQL writes without throttling dashboard/read queries."""
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         if request.path.rstrip("/") == "/graphql":
-            ident = str(
-                getattr(getattr(request, "user", None), "pk", "") or client_ip(request)
-            )
-            key = f"ml:gql:{ident}"
-            try:
-                if cache.add(key, 1, timeout=60):
-                    count = 1
-                else:
-                    try:
-                        count = cache.incr(key)
-                    except ValueError:
+            mutation_scope = _graphql_mutation_scope(request)
+            if mutation_scope:
+                ident = str(
+                    getattr(getattr(request, "user", None), "pk", "")
+                    or client_ip(request)
+                )
+                raw = f"{ident}:{mutation_scope}".encode()
+                key = "ml:gql:mutation:" + hashlib.sha256(raw).hexdigest()
+                try:
+                    if cache.add(key, 1, timeout=60):
                         count = 1
-                        cache.set(key, 1, timeout=60)
-                if count > settings.MARKETLIFT_GRAPHQL_RATE_LIMIT_PER_MINUTE:
-                    return JsonResponse(
-                        {"errors": [{"message": "GraphQL rate limit exceeded."}]},
-                        status=429,
+                    else:
+                        try:
+                            count = cache.incr(key)
+                        except ValueError:
+                            count = 1
+                            cache.set(key, 1, timeout=60)
+                    if (
+                        count
+                        > settings.MARKETLIFT_GRAPHQL_MUTATION_RATE_LIMIT_PER_MINUTE
+                    ):
+                        return JsonResponse(
+                            {
+                                "errors": [
+                                    {
+                                        "message": "Too many attempts for this action. Try again shortly.",
+                                        "extensions": {
+                                            "code": "GRAPHQL_MUTATION_RATE_LIMITED",
+                                            "status": 429,
+                                        },
+                                    }
+                                ]
+                            },
+                            status=429,
+                        )
+                except Exception:
+                    logger.warning(
+                        "GraphQL mutation rate-limit cache unavailable",
+                        exc_info=True,
                     )
-            except Exception:
-                logger.warning("GraphQL rate-limit cache unavailable", exc_info=True)
         return self.get_response(request)
 
 

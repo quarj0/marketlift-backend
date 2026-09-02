@@ -12,6 +12,7 @@ from marketlift.security.checks import marketlift_deploy_checks
 from marketlift.security.middleware import (
     ClientScopedSessionMiddleware,
     MaintenanceModeMiddleware,
+    SecurityRateLimitMiddleware,
 )
 from marketlift.security.rate_limit import client_ip
 from accounts.auth_services import request_password_reset
@@ -128,7 +129,7 @@ class SecurityHardeningTests(TestCase):
         with self.assertRaises(GraphQLError):
             require_staff(info, roles={"admin"})
 
-    def test_admin_mfa_challenge_requires_second_factor(self):
+    def test_admin_login_challenge_requires_email_code(self):
         from accounts.auth_services import (
             create_admin_login_challenge,
             verify_admin_login_challenge,
@@ -267,3 +268,109 @@ class SecurityHardeningTests(TestCase):
             ClientScopedSessionMiddleware.cookie_name_for(request),
             "marketlift_sessionid",
         )
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        MARKETLIFT_ADMIN_LOGIN_CODE_TTL_SECONDS=600,
+    )
+    def test_admin_login_is_passwordless_email_verification(self):
+        User = get_user_model()
+        admin = User.objects.create_user(
+            email="passwordless-admin@example.com",
+            password="Secure-Example-482!",
+            full_name="Passwordless Admin",
+            is_staff=True,
+            is_active=True,
+            admin_role=User.AdminRole.ADMIN,
+        )
+
+        response = self.client.post(
+            "/api/v1/auth/admin-login/",
+            data=json.dumps({"email": admin.email}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 202)
+        payload = response.json()
+        self.assertTrue(payload["verificationRequired"])
+        self.assertIn("challengeId", payload)
+        self.assertEqual(len(mail.outbox), 1)
+
+        import re
+
+        code = re.search(r"\b(\d{6})\b", mail.outbox[0].body).group(1)
+        verified = self.client.post(
+            "/api/v1/auth/admin-login/verify/",
+            data=json.dumps(
+                {"challengeId": payload["challengeId"], "code": code}
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(verified.status_code, 200)
+        self.assertTrue(verified.json()["authenticated"])
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        MARKETLIFT_ADMIN_LOGIN_CODE_TTL_SECONDS=600,
+    )
+    def test_admin_login_does_not_reveal_unknown_email(self):
+        response = self.client.post(
+            "/api/v1/auth/admin-login/",
+            data=json.dumps({"email": "unknown-admin@example.com"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 202)
+        payload = response.json()
+        self.assertTrue(payload["verificationRequired"])
+        self.assertIn("challengeId", payload)
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(MARKETLIFT_GRAPHQL_MUTATION_RATE_LIMIT_PER_MINUTE=1)
+    def test_graphql_queries_are_not_request_count_rate_limited(self):
+        cache.clear()
+        middleware = SecurityRateLimitMiddleware(
+            lambda request: JsonResponse({"ok": True})
+        )
+        body = json.dumps({"query": "query Dashboard { adminDashboard { counts { totalUsers } } }"})
+        for _ in range(3):
+            response = middleware(
+                self.factory.post(
+                    "/graphql/",
+                    data=body,
+                    content_type="application/json",
+                    REMOTE_ADDR="198.51.100.20",
+                )
+            )
+            self.assertEqual(response.status_code, 200)
+
+    @override_settings(MARKETLIFT_GRAPHQL_MUTATION_RATE_LIMIT_PER_MINUTE=1)
+    def test_graphql_mutations_are_rate_limited_per_action(self):
+        cache.clear()
+        middleware = SecurityRateLimitMiddleware(
+            lambda request: JsonResponse({"ok": True})
+        )
+        body = json.dumps(
+            {"query": "mutation MarkRead { markAllNotificationsRead }"}
+        )
+        first = middleware(
+            self.factory.post(
+                "/graphql/",
+                data=body,
+                content_type="application/json",
+                REMOTE_ADDR="198.51.100.21",
+            )
+        )
+        second = middleware(
+            self.factory.post(
+                "/graphql/",
+                data=body,
+                content_type="application/json",
+                REMOTE_ADDR="198.51.100.21",
+            )
+        )
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 429)
+        self.assertEqual(
+            json.loads(second.content)["errors"][0]["extensions"]["code"],
+            "GRAPHQL_MUTATION_RATE_LIMITED",
+        )
+

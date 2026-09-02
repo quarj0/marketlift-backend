@@ -414,21 +414,28 @@ def deployment_readiness_items() -> list[ReadinessItem]:
             hint="Set MARKETLIFT_FRONTEND_URL, MARKETLIFT_ADMIN_FRONTEND_URL, CORS_ALLOWED_ORIGINS and CSRF_TRUSTED_ORIGINS.",
         )
     )
-    mfa_required = bool(getattr(settings, "MARKETLIFT_ADMIN_MFA_REQUIRED", False))
+    email_backend = str(getattr(settings, "EMAIL_BACKEND", ""))
+    anymail = getattr(settings, "ANYMAIL", {}) or {}
+    admin_email_login_ready = bool(getattr(settings, "DEFAULT_FROM_EMAIL", "")) and (
+        not getattr(settings, "IS_PRODUCTION", False)
+        or (
+            email_backend == "anymail.backends.resend.EmailBackend"
+            and bool(anymail.get("RESEND_API_KEY"))
+        )
+    )
     items.append(
         _item(
-            "admin_mfa",
-            "Administrator MFA policy",
+            "admin_email_login",
+            "Administrator email sign-in",
             "Security",
-            mfa_required,
-            required=False,
-            warning=True,
+            admin_email_login_ready,
+            required=True,
             message=(
-                "Administrator MFA is required."
-                if mfa_required
-                else "Administrator MFA is not required."
+                "Passwordless administrator sign-in email delivery is configured."
+                if admin_email_login_ready
+                else "Administrator sign-in email delivery is not configured."
             ),
-            hint="Enable MARKETLIFT_ADMIN_MFA_REQUIRED in production.",
+            hint="Configure RESEND_API_KEY and DEFAULT_FROM_EMAIL for passwordless admin sign-in.",
         )
     )
 

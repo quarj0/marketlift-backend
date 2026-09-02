@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     AdminInvitationAcceptView,
     AdminLoginView,
-    AdminMfaVerifyView,
+    AdminLoginVerifyView,
     CsrfView,
     LoginView,
     LogoutView,
@@ -21,7 +21,7 @@ urlpatterns = [
     path("admin-login/", AdminLoginView.as_view(), name="auth-admin-login"),
     path(
         "admin-login/verify/",
-        AdminMfaVerifyView.as_view(),
+        AdminLoginVerifyView.as_view(),
         name="auth-admin-login-verify",
     ),
     path(

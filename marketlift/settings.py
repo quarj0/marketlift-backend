@@ -446,10 +446,7 @@ PAYSTACK_API_BASE_URL = os.getenv(
 PAYSTACK_CALLBACK_URL = os.getenv("PAYSTACK_CALLBACK_URL", "").strip()
 
 
-# Production/security controls. These stay environment-driven so hosting providers can change.
-DEFAULT_FROM_EMAIL = os.getenv(
-    "DEFAULT_FROM_EMAIL", "Marketlift <noreply@marketlift.com.br>"
-)
+# Production/security controls.
 MARKETLIFT_ADMIN_SESSION_ORIGINS = env_list(
     "MARKETLIFT_ADMIN_SESSION_ORIGINS", MARKETLIFT_ADMIN_FRONTEND_URL
 )
@@ -466,10 +463,9 @@ if not IS_PRODUCTION:
                 origin.replace("//127.0.0.1:", "//localhost:")
             )
 MARKETLIFT_ADMIN_SESSION_ORIGINS = list(dict.fromkeys(MARKETLIFT_ADMIN_SESSION_ORIGINS))
-MARKETLIFT_ADMIN_MFA_REQUIRED = IS_PRODUCTION
-MARKETLIFT_ADMIN_MFA_TTL_SECONDS = int(
-    os.getenv("MARKETLIFT_ADMIN_MFA_TTL_SECONDS", "600")
-)
+# Admin console authentication is passwordless: a short-lived email code is the
+# sign-in factor. Keep the lifetime fixed instead of adding another deployment env.
+MARKETLIFT_ADMIN_LOGIN_CODE_TTL_SECONDS = 600
 SESSION_COOKIE_AGE = 1209600
 SESSION_SAVE_EVERY_REQUEST = False
 SECURE_SSL_REDIRECT = IS_PRODUCTION
@@ -482,9 +478,9 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 USE_X_FORWARDED_HOST = False
 MARKETLIFT_TRUST_PROXY_HEADERS = IS_PRODUCTION
-MARKETLIFT_GRAPHQL_RATE_LIMIT_PER_MINUTE = int(
-    os.getenv("MARKETLIFT_GRAPHQL_RATE_LIMIT_PER_MINUTE", "120")
-)
+# Read-only GraphQL queries (including the admin dashboard) are not request-count
+# rate limited. State-changing mutations are protected separately in middleware.
+MARKETLIFT_GRAPHQL_MUTATION_RATE_LIMIT_PER_MINUTE = 60
 MARKETLIFT_GRAPHQL_MAX_DEPTH = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_DEPTH", "12"))
 MARKETLIFT_GRAPHQL_MAX_TOKENS = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_TOKENS", "5000"))
 MARKETLIFT_GRAPHQL_MAX_ALIASES = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_ALIASES", "30"))
