@@ -63,7 +63,10 @@ SECRET_KEY = os.getenv(
 )
 SECRET_KEY_FALLBACKS = env_list("DJANGO_SECRET_KEY_FALLBACKS")
 DEBUG = env_bool("DJANGO_DEBUG", not IS_PRODUCTION)
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    "marketlift.com.br,api.marketlift.com.br,dash.marketlift.com.br",
+)
 
 INSTALLED_APPS = [
     "daphne",
@@ -215,9 +218,9 @@ MARKETLIFT_ADMIN_FRONTEND_URL = env_text(
 )
 _BROWSER_ORIGINS = f"{MARKETLIFT_FRONTEND_URL},{MARKETLIFT_ADMIN_FRONTEND_URL}"
 
-CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", _BROWSER_ORIGINS)
+CORS_ALLOWED_ORIGINS = "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br"
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", _BROWSER_ORIGINS)
+CSRF_TRUSTED_ORIGINS = "https://marketlift.com.br,https://api.marketlift.com.br,https://dash.marketlift.com.br"
 
 REDIS_URL = env_text("REDIS_URL", "redis://127.0.0.1:6379/0")
 
