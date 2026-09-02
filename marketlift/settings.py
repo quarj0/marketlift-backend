@@ -63,10 +63,11 @@ SECRET_KEY = os.getenv(
 )
 SECRET_KEY_FALLBACKS = env_list("DJANGO_SECRET_KEY_FALLBACKS")
 DEBUG = env_bool("DJANGO_DEBUG", not IS_PRODUCTION)
-ALLOWED_HOSTS = env_list(
-    "DJANGO_ALLOWED_HOSTS",
-    "marketlift.com.br,api.marketlift.com.br,dash.marketlift.com.br",
-)
+ALLOWED_HOSTS = [
+    "api.marketlift.com.br",
+    "marketlift.com.br",
+    "dash.marketlift.com.br",
+]
 
 INSTALLED_APPS = [
     "daphne",
