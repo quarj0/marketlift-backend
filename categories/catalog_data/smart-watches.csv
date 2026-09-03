@@ -1,0 +1,52 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+brand,Brand,,,apple,Apple,true,true,true,true,,10,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,11,true
+brand,Brand,,,garmin,Garmin,true,true,true,true,,12,true
+brand,Brand,,,huawei,Huawei,true,true,true,true,,13,true
+brand,Brand,,,xiaomi,Xiaomi / Redmi,true,true,true,true,,14,true
+brand,Brand,,,amazfit,Amazfit,true,true,true,true,,15,true
+brand,Brand,,,fitbit,Fitbit,true,true,true,true,,16,true
+model,Model,brand,apple,Apple Watch Series 11,Apple Watch Series 11,true,true,true,true,,10,true
+model,Model,brand,apple,Apple Watch Ultra 3,Apple Watch Ultra 3,true,true,true,true,,11,true
+model,Model,brand,apple,Apple Watch SE 3,Apple Watch SE 3,true,true,true,true,,12,true
+model,Model,brand,apple,Apple Watch Series 10,Apple Watch Series 10,true,true,true,true,,13,true
+model,Model,brand,apple,Apple Watch Ultra 2,Apple Watch Ultra 2,true,true,true,true,,14,true
+model,Model,brand,apple,Apple Watch Series 9,Apple Watch Series 9,true,true,true,true,,15,true
+model,Model,brand,apple,Apple Watch SE 2,Apple Watch SE 2,true,true,true,true,,16,true
+model,Model,brand,samsung,Galaxy Watch9,Galaxy Watch9,true,true,true,true,,10,true
+model,Model,brand,samsung,Galaxy Watch Ultra2,Galaxy Watch Ultra2,true,true,true,true,,11,true
+model,Model,brand,samsung,Galaxy Watch8 Classic,Galaxy Watch8 Classic,true,true,true,true,,12,true
+model,Model,brand,samsung,Galaxy Watch8,Galaxy Watch8,true,true,true,true,,13,true
+model,Model,brand,samsung,Galaxy Watch7,Galaxy Watch7,true,true,true,true,,14,true
+model,Model,brand,samsung,Galaxy Watch Ultra,Galaxy Watch Ultra,true,true,true,true,,15,true
+model,Model,brand,samsung,Galaxy Watch6 Classic,Galaxy Watch6 Classic,true,true,true,true,,16,true
+model,Model,brand,samsung,Galaxy Watch6,Galaxy Watch6,true,true,true,true,,17,true
+model,Model,brand,garmin,fēnix 8,fēnix 8,true,true,true,true,,10,true
+model,Model,brand,garmin,Venu X1,Venu X1,true,true,true,true,,11,true
+model,Model,brand,garmin,Forerunner 970,Forerunner 970,true,true,true,true,,12,true
+model,Model,brand,garmin,Forerunner 570,Forerunner 570,true,true,true,true,,13,true
+model,Model,brand,garmin,Forerunner 965,Forerunner 965,true,true,true,true,,14,true
+model,Model,brand,garmin,Forerunner 265,Forerunner 265,true,true,true,true,,15,true
+model,Model,brand,garmin,Instinct 3,Instinct 3,true,true,true,true,,16,true
+model,Model,brand,garmin,vívoactive 6,vívoactive 6,true,true,true,true,,17,true
+model,Model,brand,garmin,epix Pro (Gen 2),epix Pro (Gen 2),true,true,true,true,,18,true
+model,Model,brand,huawei,HUAWEI WATCH 5,HUAWEI WATCH 5,true,true,true,true,,10,true
+model,Model,brand,huawei,HUAWEI WATCH GT 5 Pro,HUAWEI WATCH GT 5 Pro,true,true,true,true,,11,true
+model,Model,brand,huawei,HUAWEI WATCH GT 5,HUAWEI WATCH GT 5,true,true,true,true,,12,true
+model,Model,brand,huawei,HUAWEI WATCH FIT 4 Pro,HUAWEI WATCH FIT 4 Pro,true,true,true,true,,13,true
+model,Model,brand,huawei,HUAWEI WATCH FIT 4,HUAWEI WATCH FIT 4,true,true,true,true,,14,true
+model,Model,brand,huawei,HUAWEI WATCH Ultimate,HUAWEI WATCH Ultimate,true,true,true,true,,15,true
+model,Model,brand,xiaomi,Xiaomi Watch S4,Xiaomi Watch S4,true,true,true,true,,10,true
+model,Model,brand,xiaomi,Xiaomi Watch 2 Pro,Xiaomi Watch 2 Pro,true,true,true,true,,11,true
+model,Model,brand,xiaomi,Redmi Watch 5,Redmi Watch 5,true,true,true,true,,12,true
+model,Model,brand,xiaomi,Redmi Watch 5 Active,Redmi Watch 5 Active,true,true,true,true,,13,true
+model,Model,brand,xiaomi,Redmi Watch 4,Redmi Watch 4,true,true,true,true,,14,true
+model,Model,brand,amazfit,Amazfit Balance 2,Amazfit Balance 2,true,true,true,true,,10,true
+model,Model,brand,amazfit,Amazfit Active 2,Amazfit Active 2,true,true,true,true,,11,true
+model,Model,brand,amazfit,Amazfit T-Rex 3 Pro,Amazfit T-Rex 3 Pro,true,true,true,true,,12,true
+model,Model,brand,amazfit,Amazfit T-Rex 3,Amazfit T-Rex 3,true,true,true,true,,13,true
+model,Model,brand,amazfit,Amazfit Balance,Amazfit Balance,true,true,true,true,,14,true
+model,Model,brand,fitbit,Fitbit Sense 2,Fitbit Sense 2,true,true,true,true,,10,true
+model,Model,brand,fitbit,Fitbit Versa 4,Fitbit Versa 4,true,true,true,true,,11,true
+model,Model,brand,fitbit,Fitbit Charge 6,Fitbit Charge 6,true,true,true,true,,12,true
+model,Model,brand,fitbit,Fitbit Inspire 3,Fitbit Inspire 3,true,true,true,true,,13,true

@@ -13,6 +13,14 @@ PACKS = {
     "computers": {"file": "computers.csv", "target": "computers", "fallback": "computers"},
     "vehicles": {"file": "vehicles.csv", "target": "cars", "fallback": "vehicles"},
     "electronics": {"file": "electronics.csv", "target": "other-electronics", "fallback": "electronics"},
+    "printers-scanners": {"file": "printers-scanners.csv", "target": "printers-scanners", "fallback": "printers-scanners"},
+    "networking": {"file": "networking.csv", "target": "networking", "fallback": "networking"},
+    "gaming": {"file": "gaming.csv", "target": "gaming", "fallback": "gaming"},
+    "cameras": {"file": "cameras.csv", "target": "cameras", "fallback": "cameras"},
+    "audio": {"file": "audio.csv", "target": "audio", "fallback": "audio"},
+    "tvs-video": {"file": "tvs-video.csv", "target": "tvs-video", "fallback": "tvs-video"},
+    "smart-watches": {"file": "smart-watches.csv", "target": "smart-watches", "fallback": "smart-watches"},
+    "tablets": {"file": "tablets.csv", "target": "tablets", "fallback": "tablets"},
 }
 
 

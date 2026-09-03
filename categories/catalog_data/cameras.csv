@@ -1,0 +1,68 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+product_type,Product type,,,Mirrorless,Mirrorless,true,true,true,true,,10,true
+product_type,Product type,,,DSLR,DSLR,true,true,true,true,,11,true
+product_type,Product type,,,Compact,Compact,true,true,true,true,,12,true
+product_type,Product type,,,Action Camera,Action Camera,true,true,true,true,,13,true
+product_type,Product type,,,Instant Camera,Instant Camera,true,true,true,true,,14,true
+product_type,Product type,,,Camcorder,Camcorder,true,true,true,true,,15,true
+product_type,Product type,,,Security Camera,Security Camera,true,true,true,true,,16,true
+product_type,Product type,,,Drone Camera,Drone Camera,true,true,true,true,,17,true
+product_type,Product type,,,Other,Other,true,true,true,true,,18,true
+brand,Brand,,,sony,Sony,true,true,true,true,,10,true
+brand,Brand,,,canon,Canon,true,true,true,true,,11,true
+brand,Brand,,,nikon,Nikon,true,true,true,true,,12,true
+brand,Brand,,,fujifilm,Fujifilm,true,true,true,true,,13,true
+brand,Brand,,,panasonic,Panasonic Lumix,true,true,true,true,,14,true
+brand,Brand,,,gopro,GoPro,true,true,true,true,,15,true
+brand,Brand,,,dji,DJI,true,true,true,true,,16,true
+brand,Brand,,,insta360,Insta360,true,true,true,true,,17,true
+model,Model,brand,sony,Alpha 1 II,Alpha 1 II,true,true,true,true,,10,true
+model,Model,brand,sony,Alpha 9 III,Alpha 9 III,true,true,true,true,,11,true
+model,Model,brand,sony,Alpha 7R V,Alpha 7R V,true,true,true,true,,12,true
+model,Model,brand,sony,Alpha 7 IV,Alpha 7 IV,true,true,true,true,,13,true
+model,Model,brand,sony,Alpha 7C II,Alpha 7C II,true,true,true,true,,14,true
+model,Model,brand,sony,Alpha 7CR,Alpha 7CR,true,true,true,true,,15,true
+model,Model,brand,sony,FX3,FX3,true,true,true,true,,16,true
+model,Model,brand,sony,FX30,FX30,true,true,true,true,,17,true
+model,Model,brand,sony,ZV-E10 II,ZV-E10 II,true,true,true,true,,18,true
+model,Model,brand,sony,ZV-1 II,ZV-1 II,true,true,true,true,,19,true
+model,Model,brand,canon,EOS R5 Mark II,EOS R5 Mark II,true,true,true,true,,10,true
+model,Model,brand,canon,EOS R6 Mark II,EOS R6 Mark II,true,true,true,true,,11,true
+model,Model,brand,canon,EOS R8,EOS R8,true,true,true,true,,12,true
+model,Model,brand,canon,EOS R7,EOS R7,true,true,true,true,,13,true
+model,Model,brand,canon,EOS R50 V,EOS R50 V,true,true,true,true,,14,true
+model,Model,brand,canon,EOS R50,EOS R50,true,true,true,true,,15,true
+model,Model,brand,canon,EOS R10,EOS R10,true,true,true,true,,16,true
+model,Model,brand,nikon,Z8,Z8,true,true,true,true,,10,true
+model,Model,brand,nikon,Z6III,Z6III,true,true,true,true,,11,true
+model,Model,brand,nikon,Zf,Zf,true,true,true,true,,12,true
+model,Model,brand,nikon,Z5II,Z5II,true,true,true,true,,13,true
+model,Model,brand,nikon,Z50II,Z50II,true,true,true,true,,14,true
+model,Model,brand,nikon,Z30,Z30,true,true,true,true,,15,true
+model,Model,brand,nikon,Z9,Z9,true,true,true,true,,16,true
+model,Model,brand,fujifilm,X100VI,X100VI,true,true,true,true,,10,true
+model,Model,brand,fujifilm,X-T5,X-T5,true,true,true,true,,11,true
+model,Model,brand,fujifilm,X-T50,X-T50,true,true,true,true,,12,true
+model,Model,brand,fujifilm,X-H2,X-H2,true,true,true,true,,13,true
+model,Model,brand,fujifilm,X-H2S,X-H2S,true,true,true,true,,14,true
+model,Model,brand,fujifilm,X-S20,X-S20,true,true,true,true,,15,true
+model,Model,brand,fujifilm,GFX100 II,GFX100 II,true,true,true,true,,16,true
+model,Model,brand,fujifilm,GFX100S II,GFX100S II,true,true,true,true,,17,true
+model,Model,brand,panasonic,Lumix S1RII,Lumix S1RII,true,true,true,true,,10,true
+model,Model,brand,panasonic,Lumix S5IIX,Lumix S5IIX,true,true,true,true,,11,true
+model,Model,brand,panasonic,Lumix S5II,Lumix S5II,true,true,true,true,,12,true
+model,Model,brand,panasonic,Lumix GH7,Lumix GH7,true,true,true,true,,13,true
+model,Model,brand,panasonic,Lumix G9II,Lumix G9II,true,true,true,true,,14,true
+model,Model,brand,gopro,HERO13 Black,HERO13 Black,true,true,true,true,,10,true
+model,Model,brand,gopro,HERO12 Black,HERO12 Black,true,true,true,true,,11,true
+model,Model,brand,gopro,HERO11 Black,HERO11 Black,true,true,true,true,,12,true
+model,Model,brand,gopro,HERO,HERO,true,true,true,true,,13,true
+model,Model,brand,dji,Osmo Pocket 3,Osmo Pocket 3,true,true,true,true,,10,true
+model,Model,brand,dji,Osmo Action 5 Pro,Osmo Action 5 Pro,true,true,true,true,,11,true
+model,Model,brand,dji,Osmo Action 4,Osmo Action 4,true,true,true,true,,12,true
+model,Model,brand,dji,DJI Neo,DJI Neo,true,true,true,true,,13,true
+model,Model,brand,dji,DJI Mini 4 Pro,DJI Mini 4 Pro,true,true,true,true,,14,true
+model,Model,brand,insta360,Insta360 X5,Insta360 X5,true,true,true,true,,10,true
+model,Model,brand,insta360,Insta360 X4,Insta360 X4,true,true,true,true,,11,true
+model,Model,brand,insta360,Insta360 Ace Pro 2,Insta360 Ace Pro 2,true,true,true,true,,12,true
+model,Model,brand,insta360,Insta360 GO 3S,Insta360 GO 3S,true,true,true,true,,13,true

@@ -1,0 +1,55 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+product_type,Product type,,,Speaker,Speaker,true,true,true,true,,10,true
+product_type,Product type,,,Soundbar,Soundbar,true,true,true,true,,11,true
+product_type,Product type,,,Home Theater,Home Theater,true,true,true,true,,12,true
+product_type,Product type,,,Headphones,Headphones,true,true,true,true,,13,true
+product_type,Product type,,,Earbuds,Earbuds,true,true,true,true,,14,true
+product_type,Product type,,,Amplifier,Amplifier,true,true,true,true,,15,true
+product_type,Product type,,,Receiver,Receiver,true,true,true,true,,16,true
+product_type,Product type,,,Microphone,Microphone,true,true,true,true,,17,true
+product_type,Product type,,,DJ Equipment,DJ Equipment,true,true,true,true,,18,true
+product_type,Product type,,,Other,Other,true,true,true,true,,19,true
+brand,Brand,,,jbl,JBL,true,true,true,true,,10,true
+brand,Brand,,,sony,Sony,true,true,true,true,,11,true
+brand,Brand,,,bose,Bose,true,true,true,true,,12,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,13,true
+brand,Brand,,,apple,Apple,true,true,true,true,,14,true
+brand,Brand,,,yamaha,Yamaha,true,true,true,true,,15,true
+model,Model,brand,jbl,Flip 7,Flip 7,true,true,true,true,,10,true
+model,Model,brand,jbl,Charge 6,Charge 6,true,true,true,true,,11,true
+model,Model,brand,jbl,Xtreme 4,Xtreme 4,true,true,true,true,,12,true
+model,Model,brand,jbl,Boombox 3,Boombox 3,true,true,true,true,,13,true
+model,Model,brand,jbl,PartyBox Stage 320,PartyBox Stage 320,true,true,true,true,,14,true
+model,Model,brand,jbl,PartyBox Club 120,PartyBox Club 120,true,true,true,true,,15,true
+model,Model,brand,jbl,Tour Pro 3,Tour Pro 3,true,true,true,true,,16,true
+model,Model,brand,jbl,Live Beam 3,Live Beam 3,true,true,true,true,,17,true
+model,Model,brand,sony,WH-1000XM6,WH-1000XM6,true,true,true,true,,10,true
+model,Model,brand,sony,WH-1000XM5,WH-1000XM5,true,true,true,true,,11,true
+model,Model,brand,sony,WF-1000XM5,WF-1000XM5,true,true,true,true,,12,true
+model,Model,brand,sony,ULT FIELD 7,ULT FIELD 7,true,true,true,true,,13,true
+model,Model,brand,sony,ULT FIELD 5,ULT FIELD 5,true,true,true,true,,14,true
+model,Model,brand,sony,ULT FIELD 3,ULT FIELD 3,true,true,true,true,,15,true
+model,Model,brand,sony,HT-A9000,HT-A9000,true,true,true,true,,16,true
+model,Model,brand,sony,BRAVIA Theatre Bar 9,BRAVIA Theatre Bar 9,true,true,true,true,,17,true
+model,Model,brand,bose,QuietComfort Ultra Headphones,QuietComfort Ultra Headphones,true,true,true,true,,10,true
+model,Model,brand,bose,QuietComfort Headphones,QuietComfort Headphones,true,true,true,true,,11,true
+model,Model,brand,bose,QuietComfort Ultra Earbuds,QuietComfort Ultra Earbuds,true,true,true,true,,12,true
+model,Model,brand,bose,SoundLink Max,SoundLink Max,true,true,true,true,,13,true
+model,Model,brand,bose,SoundLink Flex (2nd Gen),SoundLink Flex (2nd Gen),true,true,true,true,,14,true
+model,Model,brand,bose,Smart Ultra Soundbar,Smart Ultra Soundbar,true,true,true,true,,15,true
+model,Model,brand,samsung,Galaxy Buds3 Pro,Galaxy Buds3 Pro,true,true,true,true,,10,true
+model,Model,brand,samsung,Galaxy Buds3,Galaxy Buds3,true,true,true,true,,11,true
+model,Model,brand,samsung,Galaxy Buds FE,Galaxy Buds FE,true,true,true,true,,12,true
+model,Model,brand,samsung,Music Frame,Music Frame,true,true,true,true,,13,true
+model,Model,brand,samsung,HW-Q990F,HW-Q990F,true,true,true,true,,14,true
+model,Model,brand,samsung,HW-Q930F,HW-Q930F,true,true,true,true,,15,true
+model,Model,brand,apple,AirPods 4,AirPods 4,true,true,true,true,,10,true
+model,Model,brand,apple,AirPods 4 with Active Noise Cancellation,AirPods 4 with Active Noise Cancellation,true,true,true,true,,11,true
+model,Model,brand,apple,AirPods Pro 2,AirPods Pro 2,true,true,true,true,,12,true
+model,Model,brand,apple,AirPods Max (USB-C),AirPods Max (USB-C),true,true,true,true,,13,true
+model,Model,brand,yamaha,HS5,HS5,true,true,true,true,,10,true
+model,Model,brand,yamaha,HS7,HS7,true,true,true,true,,11,true
+model,Model,brand,yamaha,HS8,HS8,true,true,true,true,,12,true
+model,Model,brand,yamaha,RX-V6A,RX-V6A,true,true,true,true,,13,true
+model,Model,brand,yamaha,RX-A4A,RX-A4A,true,true,true,true,,14,true
+model,Model,brand,yamaha,MG10XU,MG10XU,true,true,true,true,,15,true

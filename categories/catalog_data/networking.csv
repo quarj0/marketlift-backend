@@ -1,0 +1,50 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+product_type,Product type,,,Router,Router,true,true,true,true,,10,true
+product_type,Product type,,,Modem,Modem,true,true,true,true,,11,true
+product_type,Product type,,,Wi-Fi Mesh,Wi-Fi Mesh,true,true,true,true,,12,true
+product_type,Product type,,,Access Point,Access Point,true,true,true,true,,13,true
+product_type,Product type,,,Network Switch,Network Switch,true,true,true,true,,14,true
+product_type,Product type,,,Range Extender,Range Extender,true,true,true,true,,15,true
+product_type,Product type,,,Other,Other,true,true,true,true,,16,true
+brand,Brand,,,tp-link,TP-Link,true,true,true,true,,10,true
+brand,Brand,,,ubiquiti,Ubiquiti,true,true,true,true,,11,true
+brand,Brand,,,mikrotik,MikroTik,true,true,true,true,,12,true
+brand,Brand,,,intelbras,Intelbras,true,true,true,true,,13,true
+brand,Brand,,,huawei,Huawei,true,true,true,true,,14,true
+brand,Brand,,,d-link,D-Link,true,true,true,true,,15,true
+model,Model,brand,tp-link,Deco BE65,Deco BE65,true,true,true,true,,10,true
+model,Model,brand,tp-link,Deco BE85,Deco BE85,true,true,true,true,,11,true
+model,Model,brand,tp-link,Deco BE65-5G,Deco BE65-5G,true,true,true,true,,12,true
+model,Model,brand,tp-link,Archer BE800,Archer BE800,true,true,true,true,,13,true
+model,Model,brand,tp-link,Archer BE550,Archer BE550,true,true,true,true,,14,true
+model,Model,brand,tp-link,Archer AX80,Archer AX80,true,true,true,true,,15,true
+model,Model,brand,tp-link,Archer AX73,Archer AX73,true,true,true,true,,16,true
+model,Model,brand,tp-link,Deco X50,Deco X50,true,true,true,true,,17,true
+model,Model,brand,tp-link,Deco X60,Deco X60,true,true,true,true,,18,true
+model,Model,brand,ubiquiti,Dream Machine Pro,Dream Machine Pro,true,true,true,true,,10,true
+model,Model,brand,ubiquiti,Dream Machine SE,Dream Machine SE,true,true,true,true,,11,true
+model,Model,brand,ubiquiti,Dream Machine Pro Max,Dream Machine Pro Max,true,true,true,true,,12,true
+model,Model,brand,ubiquiti,Cloud Gateway Ultra,Cloud Gateway Ultra,true,true,true,true,,13,true
+model,Model,brand,ubiquiti,Cloud Gateway Max,Cloud Gateway Max,true,true,true,true,,14,true
+model,Model,brand,ubiquiti,UniFi Express,UniFi Express,true,true,true,true,,15,true
+model,Model,brand,ubiquiti,U7 Pro,U7 Pro,true,true,true,true,,16,true
+model,Model,brand,ubiquiti,U7 Pro Max,U7 Pro Max,true,true,true,true,,17,true
+model,Model,brand,mikrotik,hAP ax3,hAP ax3,true,true,true,true,,10,true
+model,Model,brand,mikrotik,hAP ax2,hAP ax2,true,true,true,true,,11,true
+model,Model,brand,mikrotik,RB5009UG+S+IN,RB5009UG+S+IN,true,true,true,true,,12,true
+model,Model,brand,mikrotik,CCR2004-1G-12S+2XS,CCR2004-1G-12S+2XS,true,true,true,true,,13,true
+model,Model,brand,mikrotik,Chateau 5G ax,Chateau 5G ax,true,true,true,true,,14,true
+model,Model,brand,mikrotik,L009UiGS-RM,L009UiGS-RM,true,true,true,true,,15,true
+model,Model,brand,intelbras,Twibi Force AX,Twibi Force AX,true,true,true,true,,10,true
+model,Model,brand,intelbras,Twibi Giga+,Twibi Giga+,true,true,true,true,,11,true
+model,Model,brand,intelbras,Action RG 1200,Action RG 1200,true,true,true,true,,12,true
+model,Model,brand,intelbras,RF 301K,RF 301K,true,true,true,true,,13,true
+model,Model,brand,intelbras,WiFiber 121 AC,WiFiber 121 AC,true,true,true,true,,14,true
+model,Model,brand,huawei,WiFi BE3,WiFi BE3,true,true,true,true,,10,true
+model,Model,brand,huawei,WiFi AX3,WiFi AX3,true,true,true,true,,11,true
+model,Model,brand,huawei,WiFi Mesh 7,WiFi Mesh 7,true,true,true,true,,12,true
+model,Model,brand,huawei,5G CPE Pro 2,5G CPE Pro 2,true,true,true,true,,13,true
+model,Model,brand,d-link,AQUILA PRO AI M30,AQUILA PRO AI M30,true,true,true,true,,10,true
+model,Model,brand,d-link,EAGLE PRO AI R15,EAGLE PRO AI R15,true,true,true,true,,11,true
+model,Model,brand,d-link,EAGLE PRO AI M15,EAGLE PRO AI M15,true,true,true,true,,12,true
+model,Model,brand,d-link,DIR-X3000Z,DIR-X3000Z,true,true,true,true,,13,true

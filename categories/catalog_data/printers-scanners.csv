@@ -1,0 +1,47 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+product_type,Product type,,,Inkjet Printer,Inkjet Printer,true,true,true,true,,10,true
+product_type,Product type,,,Laser Printer,Laser Printer,true,true,true,true,,11,true
+product_type,Product type,,,Multifunction Printer,Multifunction Printer,true,true,true,true,,12,true
+product_type,Product type,,,Photo Printer,Photo Printer,true,true,true,true,,13,true
+product_type,Product type,,,Thermal Printer,Thermal Printer,true,true,true,true,,14,true
+product_type,Product type,,,Scanner,Scanner,true,true,true,true,,15,true
+product_type,Product type,,,Other,Other,true,true,true,true,,16,true
+brand,Brand,,,epson,Epson,true,true,true,true,,10,true
+brand,Brand,,,hp,HP,true,true,true,true,,11,true
+brand,Brand,,,canon,Canon,true,true,true,true,,12,true
+brand,Brand,,,brother,Brother,true,true,true,true,,13,true
+brand,Brand,,,xerox,Xerox,true,true,true,true,,14,true
+model,Model,brand,epson,EcoTank L3250,EcoTank L3250,true,true,true,true,,10,true
+model,Model,brand,epson,EcoTank L4260,EcoTank L4260,true,true,true,true,,11,true
+model,Model,brand,epson,EcoTank L5290,EcoTank L5290,true,true,true,true,,12,true
+model,Model,brand,epson,EcoTank L6270,EcoTank L6270,true,true,true,true,,13,true
+model,Model,brand,epson,EcoTank L8180,EcoTank L8180,true,true,true,true,,14,true
+model,Model,brand,epson,WorkForce Pro WF-C5890,WorkForce Pro WF-C5890,true,true,true,true,,15,true
+model,Model,brand,epson,SureColor F170,SureColor F170,true,true,true,true,,16,true
+model,Model,brand,hp,Smart Tank 581,Smart Tank 581,true,true,true,true,,10,true
+model,Model,brand,hp,Smart Tank 584,Smart Tank 584,true,true,true,true,,11,true
+model,Model,brand,hp,Smart Tank 724,Smart Tank 724,true,true,true,true,,12,true
+model,Model,brand,hp,Smart Tank 790,Smart Tank 790,true,true,true,true,,13,true
+model,Model,brand,hp,LaserJet M111w,LaserJet M111w,true,true,true,true,,14,true
+model,Model,brand,hp,LaserJet M140w,LaserJet M140w,true,true,true,true,,15,true
+model,Model,brand,hp,LaserJet M236sdw,LaserJet M236sdw,true,true,true,true,,16,true
+model,Model,brand,hp,OfficeJet Pro 9120e,OfficeJet Pro 9120e,true,true,true,true,,17,true
+model,Model,brand,canon,MegaTank G3110,MegaTank G3110,true,true,true,true,,10,true
+model,Model,brand,canon,MegaTank G3160,MegaTank G3160,true,true,true,true,,11,true
+model,Model,brand,canon,MegaTank G6010,MegaTank G6010,true,true,true,true,,12,true
+model,Model,brand,canon,MegaTank G7010,MegaTank G7010,true,true,true,true,,13,true
+model,Model,brand,canon,PIXMA TS3720,PIXMA TS3720,true,true,true,true,,14,true
+model,Model,brand,canon,imageCLASS MF272dw,imageCLASS MF272dw,true,true,true,true,,15,true
+model,Model,brand,brother,DCP-T420W,DCP-T420W,true,true,true,true,,10,true
+model,Model,brand,brother,DCP-T520W,DCP-T520W,true,true,true,true,,11,true
+model,Model,brand,brother,DCP-T720DW,DCP-T720DW,true,true,true,true,,12,true
+model,Model,brand,brother,MFC-T920DW,MFC-T920DW,true,true,true,true,,13,true
+model,Model,brand,brother,HL-L1232W,HL-L1232W,true,true,true,true,,14,true
+model,Model,brand,brother,DCP-L2540DW,DCP-L2540DW,true,true,true,true,,15,true
+model,Model,brand,brother,MFC-L2802DW,MFC-L2802DW,true,true,true,true,,16,true
+model,Model,brand,xerox,B230,B230,true,true,true,true,,10,true
+model,Model,brand,xerox,B235,B235,true,true,true,true,,11,true
+model,Model,brand,xerox,C230,C230,true,true,true,true,,12,true
+model,Model,brand,xerox,C235,C235,true,true,true,true,,13,true
+model,Model,brand,xerox,VersaLink C415,VersaLink C415,true,true,true,true,,14,true
+model,Model,brand,xerox,VersaLink B415,VersaLink B415,true,true,true,true,,15,true

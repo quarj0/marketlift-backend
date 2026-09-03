@@ -1,0 +1,57 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+product_type,Product type,,,Smart TV,Smart TV,true,true,true,true,,10,true
+product_type,Product type,,,Television,Television,true,true,true,true,,11,true
+product_type,Product type,,,Projector,Projector,true,true,true,true,,12,true
+product_type,Product type,,,Streaming Device,Streaming Device,true,true,true,true,,13,true
+product_type,Product type,,,TV Box,TV Box,true,true,true,true,,14,true
+product_type,Product type,,,Receiver,Receiver,true,true,true,true,,15,true
+product_type,Product type,,,Other,Other,true,true,true,true,,16,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,10,true
+brand,Brand,,,lg,LG,true,true,true,true,,11,true
+brand,Brand,,,sony,Sony,true,true,true,true,,12,true
+brand,Brand,,,tcl,TCL,true,true,true,true,,13,true
+brand,Brand,,,hisense,Hisense,true,true,true,true,,14,true
+brand,Brand,,,philips,Philips,true,true,true,true,,15,true
+brand,Brand,,,epson,Epson,true,true,true,true,,16,true
+model,Model,brand,samsung,OLED S95F,OLED S95F,true,true,true,true,,10,true
+model,Model,brand,samsung,OLED S90F,OLED S90F,true,true,true,true,,11,true
+model,Model,brand,samsung,Neo QLED QN90F,Neo QLED QN90F,true,true,true,true,,12,true
+model,Model,brand,samsung,Neo QLED QN80F,Neo QLED QN80F,true,true,true,true,,13,true
+model,Model,brand,samsung,Neo QLED 8K QN990F,Neo QLED 8K QN990F,true,true,true,true,,14,true
+model,Model,brand,samsung,The Frame Pro,The Frame Pro,true,true,true,true,,15,true
+model,Model,brand,samsung,The Frame,The Frame,true,true,true,true,,16,true
+model,Model,brand,samsung,Crystal UHD U8000F,Crystal UHD U8000F,true,true,true,true,,17,true
+model,Model,brand,lg,OLED evo G5,OLED evo G5,true,true,true,true,,10,true
+model,Model,brand,lg,OLED evo C5,OLED evo C5,true,true,true,true,,11,true
+model,Model,brand,lg,OLED B5,OLED B5,true,true,true,true,,12,true
+model,Model,brand,lg,QNED evo QNED93,QNED evo QNED93,true,true,true,true,,13,true
+model,Model,brand,lg,QNED evo QNED86,QNED evo QNED86,true,true,true,true,,14,true
+model,Model,brand,lg,NanoCell NANO80,NanoCell NANO80,true,true,true,true,,15,true
+model,Model,brand,lg,UT80 4K UHD,UT80 4K UHD,true,true,true,true,,16,true
+model,Model,brand,sony,BRAVIA 9,BRAVIA 9,true,true,true,true,,10,true
+model,Model,brand,sony,BRAVIA 8 II,BRAVIA 8 II,true,true,true,true,,11,true
+model,Model,brand,sony,BRAVIA 8,BRAVIA 8,true,true,true,true,,12,true
+model,Model,brand,sony,BRAVIA 7,BRAVIA 7,true,true,true,true,,13,true
+model,Model,brand,sony,BRAVIA 5,BRAVIA 5,true,true,true,true,,14,true
+model,Model,brand,sony,BRAVIA 3,BRAVIA 3,true,true,true,true,,15,true
+model,Model,brand,tcl,C8K,C8K,true,true,true,true,,10,true
+model,Model,brand,tcl,C7K,C7K,true,true,true,true,,11,true
+model,Model,brand,tcl,C6K,C6K,true,true,true,true,,12,true
+model,Model,brand,tcl,C855,C855,true,true,true,true,,13,true
+model,Model,brand,tcl,C755,C755,true,true,true,true,,14,true
+model,Model,brand,tcl,P755,P755,true,true,true,true,,15,true
+model,Model,brand,tcl,S5K,S5K,true,true,true,true,,16,true
+model,Model,brand,hisense,UX Series,UX Series,true,true,true,true,,10,true
+model,Model,brand,hisense,U8 Series,U8 Series,true,true,true,true,,11,true
+model,Model,brand,hisense,U7 Series,U7 Series,true,true,true,true,,12,true
+model,Model,brand,hisense,U6 Series,U6 Series,true,true,true,true,,13,true
+model,Model,brand,hisense,A7 Series,A7 Series,true,true,true,true,,14,true
+model,Model,brand,philips,OLED+959,OLED+959,true,true,true,true,,10,true
+model,Model,brand,philips,OLED809,OLED809,true,true,true,true,,11,true
+model,Model,brand,philips,The One PUS8909,The One PUS8909,true,true,true,true,,12,true
+model,Model,brand,philips,PUS8510,PUS8510,true,true,true,true,,13,true
+model,Model,brand,philips,PUS7609,PUS7609,true,true,true,true,,14,true
+model,Model,brand,epson,EpiqVision Ultra LS800,EpiqVision Ultra LS800,true,true,true,true,,10,true
+model,Model,brand,epson,EpiqVision Mini EF22,EpiqVision Mini EF22,true,true,true,true,,11,true
+model,Model,brand,epson,EpiqVision Mini EF21,EpiqVision Mini EF21,true,true,true,true,,12,true
+model,Model,brand,epson,Home Cinema 2350,Home Cinema 2350,true,true,true,true,,13,true

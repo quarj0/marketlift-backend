@@ -1,0 +1,112 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+brand,Brand,,,apple,Apple,true,true,true,true,,10,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,11,true
+brand,Brand,,,lenovo,Lenovo,true,true,true,true,,12,true
+brand,Brand,,,xiaomi,Xiaomi / Redmi,true,true,true,true,,13,true
+brand,Brand,,,huawei,Huawei,true,true,true,true,,14,true
+brand,Brand,,,honor,HONOR,true,true,true,true,,15,true
+brand,Brand,,,amazon,Amazon,true,true,true,true,,16,true
+brand,Brand,,,microsoft,Microsoft,true,true,true,true,,17,true
+model,Model,brand,apple,iPad Pro 13-inch (M5),iPad Pro 13-inch (M5),true,true,true,true,,10,true
+model,Model,brand,apple,iPad Pro 11-inch (M5),iPad Pro 11-inch (M5),true,true,true,true,,11,true
+model,Model,brand,apple,iPad Air 13-inch (M4),iPad Air 13-inch (M4),true,true,true,true,,12,true
+model,Model,brand,apple,iPad Air 11-inch (M4),iPad Air 11-inch (M4),true,true,true,true,,13,true
+model,Model,brand,apple,iPad (A16),iPad (A16),true,true,true,true,,14,true
+model,Model,brand,apple,iPad mini (A17 Pro),iPad mini (A17 Pro),true,true,true,true,,15,true
+model,Model,brand,apple,iPad Pro 13-inch (M4),iPad Pro 13-inch (M4),true,true,true,true,,16,true
+model,Model,brand,apple,iPad Pro 11-inch (M4),iPad Pro 11-inch (M4),true,true,true,true,,17,true
+model,Model,brand,apple,iPad Air 13-inch (M3),iPad Air 13-inch (M3),true,true,true,true,,18,true
+model,Model,brand,apple,iPad Air 11-inch (M3),iPad Air 11-inch (M3),true,true,true,true,,19,true
+model,Model,brand,apple,iPad Air 13-inch (M2),iPad Air 13-inch (M2),true,true,true,true,,20,true
+model,Model,brand,apple,iPad Air 11-inch (M2),iPad Air 11-inch (M2),true,true,true,true,,21,true
+model,Model,brand,apple,iPad (10th generation),iPad (10th generation),true,true,true,true,,22,true
+model,Model,brand,apple,iPad mini (6th generation),iPad mini (6th generation),true,true,true,true,,23,true
+model,Model,brand,samsung,Galaxy Tab S11,Galaxy Tab S11,true,true,true,true,,10,true
+model,Model,brand,samsung,Galaxy Tab S11 Ultra,Galaxy Tab S11 Ultra,true,true,true,true,,11,true
+model,Model,brand,samsung,Galaxy Tab S10 FE,Galaxy Tab S10 FE,true,true,true,true,,12,true
+model,Model,brand,samsung,Galaxy Tab S10 FE+,Galaxy Tab S10 FE+,true,true,true,true,,13,true
+model,Model,brand,samsung,Galaxy Tab S10+,Galaxy Tab S10+,true,true,true,true,,14,true
+model,Model,brand,samsung,Galaxy Tab S10 Ultra,Galaxy Tab S10 Ultra,true,true,true,true,,15,true
+model,Model,brand,samsung,Galaxy Tab S9,Galaxy Tab S9,true,true,true,true,,16,true
+model,Model,brand,samsung,Galaxy Tab S9+,Galaxy Tab S9+,true,true,true,true,,17,true
+model,Model,brand,samsung,Galaxy Tab S9 Ultra,Galaxy Tab S9 Ultra,true,true,true,true,,18,true
+model,Model,brand,samsung,Galaxy Tab S9 FE,Galaxy Tab S9 FE,true,true,true,true,,19,true
+model,Model,brand,samsung,Galaxy Tab S9 FE+,Galaxy Tab S9 FE+,true,true,true,true,,20,true
+model,Model,brand,samsung,Galaxy Tab A9,Galaxy Tab A9,true,true,true,true,,21,true
+model,Model,brand,samsung,Galaxy Tab A9+,Galaxy Tab A9+,true,true,true,true,,22,true
+model,Model,brand,lenovo,Lenovo Tab,Lenovo Tab,true,true,true,true,,10,true
+model,Model,brand,lenovo,Lenovo Idea Tab Pro,Lenovo Idea Tab Pro,true,true,true,true,,11,true
+model,Model,brand,lenovo,Lenovo Legion Tab,Lenovo Legion Tab,true,true,true,true,,12,true
+model,Model,brand,lenovo,Lenovo Tab Plus,Lenovo Tab Plus,true,true,true,true,,13,true
+model,Model,brand,lenovo,Lenovo Tab P12,Lenovo Tab P12,true,true,true,true,,14,true
+model,Model,brand,lenovo,Lenovo Tab M11,Lenovo Tab M11,true,true,true,true,,15,true
+model,Model,brand,lenovo,Lenovo Yoga Tab Plus,Lenovo Yoga Tab Plus,true,true,true,true,,16,true
+model,Model,brand,xiaomi,Xiaomi Pad 7,Xiaomi Pad 7,true,true,true,true,,10,true
+model,Model,brand,xiaomi,Xiaomi Pad 7 Pro,Xiaomi Pad 7 Pro,true,true,true,true,,11,true
+model,Model,brand,xiaomi,Xiaomi Pad 6S Pro 12.4,Xiaomi Pad 6S Pro 12.4,true,true,true,true,,12,true
+model,Model,brand,xiaomi,Redmi Pad Pro,Redmi Pad Pro,true,true,true,true,,13,true
+model,Model,brand,xiaomi,Redmi Pad SE,Redmi Pad SE,true,true,true,true,,14,true
+model,Model,brand,xiaomi,Redmi Pad SE 8.7,Redmi Pad SE 8.7,true,true,true,true,,15,true
+model,Model,brand,huawei,MatePad Pro 13.2,MatePad Pro 13.2,true,true,true,true,,10,true
+model,Model,brand,huawei,MatePad Pro 12.2,MatePad Pro 12.2,true,true,true,true,,11,true
+model,Model,brand,huawei,MatePad 11.5 S,MatePad 11.5 S,true,true,true,true,,12,true
+model,Model,brand,huawei,MatePad 11.5,MatePad 11.5,true,true,true,true,,13,true
+model,Model,brand,huawei,MatePad SE 11,MatePad SE 11,true,true,true,true,,14,true
+model,Model,brand,honor,HONOR MagicPad 2,HONOR MagicPad 2,true,true,true,true,,10,true
+model,Model,brand,honor,HONOR Pad 10,HONOR Pad 10,true,true,true,true,,11,true
+model,Model,brand,honor,HONOR Pad 9,HONOR Pad 9,true,true,true,true,,12,true
+model,Model,brand,honor,HONOR Pad X9,HONOR Pad X9,true,true,true,true,,13,true
+model,Model,brand,amazon,Fire Max 11,Fire Max 11,true,true,true,true,,10,true
+model,Model,brand,amazon,Fire HD 10,Fire HD 10,true,true,true,true,,11,true
+model,Model,brand,amazon,Fire HD 8,Fire HD 8,true,true,true,true,,12,true
+model,Model,brand,amazon,Fire 7,Fire 7,true,true,true,true,,13,true
+model,Model,brand,microsoft,Surface Pro 11,Surface Pro 11,true,true,true,true,,10,true
+model,Model,brand,microsoft,Surface Pro 10,Surface Pro 10,true,true,true,true,,11,true
+model,Model,brand,microsoft,Surface Go 4,Surface Go 4,true,true,true,true,,12,true
+storage_gb,Storage,model,iPad Pro 13-inch (M5),256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPad Pro 13-inch (M5),512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPad Pro 13-inch (M5),1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPad Pro 13-inch (M5),2048,2 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPad Pro 11-inch (M5),256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPad Pro 11-inch (M5),512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPad Pro 11-inch (M5),1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPad Pro 11-inch (M5),2048,2 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPad Air 13-inch (M4),128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPad Air 13-inch (M4),256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPad Air 13-inch (M4),512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPad Air 13-inch (M4),1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPad Air 11-inch (M4),128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPad Air 11-inch (M4),256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPad Air 11-inch (M4),512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPad Air 11-inch (M4),1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPad (A16),128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPad (A16),256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPad (A16),512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPad mini (A17 Pro),128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPad mini (A17 Pro),256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPad mini (A17 Pro),512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy Tab S11,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab S11,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Tab S11,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy Tab S11 Ultra,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab S11 Ultra,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Tab S11 Ultra,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy Tab S10 FE,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab S10 FE,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Tab S10 FE+,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab S10 FE+,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Tab S10+,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab S10+,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Tab S10 Ultra,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab S10 Ultra,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Tab S10 Ultra,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy Tab A9,64,64 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab A9,128,128 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Tab A9+,64,64 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Tab A9+,128,128 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Lenovo Tab,64,64 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Lenovo Tab,128,128 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Redmi Pad Pro,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Redmi Pad Pro,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Redmi Pad SE,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Redmi Pad SE,256,256 GB,true,true,true,true,GB,11,true
