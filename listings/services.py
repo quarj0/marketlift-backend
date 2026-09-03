@@ -186,12 +186,35 @@ def validate_listing_payload(
 
         child_value = str(normalized[field.key][1])
         child_option = field.options.filter(active=True, value=child_value).first()
-        if child_option is None:
-            # Explicitly allowed custom values are not constrained by catalog links.
-            continue
 
         parent_field = field.depends_on
         parent_entry = normalized.get(parent_field.key)
+
+        if child_option is None:
+            # Unknown values are still allowed through "Other / Not listed", but a
+            # known catalog model cannot be paired with the wrong selected brand.
+            known_option = field.options.filter(
+                models.Q(value__iexact=child_value)
+                | models.Q(label__iexact=child_value)
+            ).first()
+            if known_option is not None and parent_entry is not None:
+                parent_value = str(parent_entry[1])
+                parent_option = parent_field.options.filter(
+                    active=True,
+                    value=parent_value,
+                ).first()
+                if (
+                    parent_option is not None
+                    and not CategoryFieldOptionDependency.objects.filter(
+                        option=known_option,
+                        parent_option=parent_option,
+                    ).exists()
+                ):
+                    errors[field.key] = (
+                        f"{field.label} does not belong to the selected "
+                        f"{parent_field.label}."
+                    )
+            continue
         if parent_entry is None:
             errors[field.key] = f"Choose {parent_field.label} before {field.label}."
             continue

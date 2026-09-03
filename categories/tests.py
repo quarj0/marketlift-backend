@@ -2,7 +2,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from .graphql.mappers import category_to_type
-from .models import Category, CategoryField
+from .models import Category, CategoryField, CategoryFieldOption
 
 
 class CategorySeedTests(TestCase):
@@ -80,4 +80,49 @@ class CategoryGraphQLTreeTests(TestCase):
         self.assertEqual(
             mapped.subcategories[0].subcategories[0].id,
             "smartphones-test",
+        )
+
+
+
+class CatalogSeedSafetyTests(TestCase):
+    def test_force_seed_preserves_catalog_managed_field_shape_and_options(self):
+        call_command("seed_marketplace_domain", verbosity=0)
+
+        phones = Category.objects.get(slug="phones")
+        brand = phones.fields.get(key="brand")
+        model = phones.fields.get(key="model")
+
+        brand.lazy_options = True
+        brand.save(update_fields=("lazy_options", "updated_at"))
+
+        model.field_type = CategoryField.FieldType.SELECT
+        model.lazy_options = True
+        model.depends_on = brand
+        model.save(
+            update_fields=(
+                "field_type",
+                "lazy_options",
+                "depends_on",
+                "updated_at",
+            )
+        )
+        CategoryFieldOption.objects.create(
+            field=model,
+            value="Galaxy Test",
+            label="Galaxy Test",
+            active=True,
+        )
+
+        call_command(
+            "seed_marketplace_domain",
+            force_category_schema=True,
+            verbosity=0,
+        )
+
+        model.refresh_from_db()
+        self.assertEqual(model.field_type, CategoryField.FieldType.SELECT)
+        self.assertTrue(model.lazy_options)
+        self.assertEqual(model.depends_on_id, brand.id)
+        self.assertTrue(
+            model.options.filter(value="Galaxy Test", active=True).exists()
         )
