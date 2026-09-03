@@ -1,6 +1,7 @@
 from django.core.management import call_command
 from django.test import TestCase
 
+from .graphql.mappers import category_to_type
 from .models import Category, CategoryField
 
 
@@ -42,3 +43,41 @@ class CategorySeedTests(TestCase):
         call_command("seed_marketplace_domain", force_category_schema=True, verbosity=0)
         brand.refresh_from_db()
         self.assertEqual(brand.label, "Brand")
+
+
+
+class CategoryGraphQLTreeTests(TestCase):
+    def test_category_mapper_supports_recursive_subcategories(self):
+        root = Category.objects.create(
+            slug="electronics-test",
+            name="Electronics Test",
+            active=True,
+        )
+        child = Category.objects.create(
+            slug="phones-test",
+            name="Phones Test",
+            parent=root,
+            active=True,
+        )
+        Category.objects.create(
+            slug="smartphones-test",
+            name="Smartphones Test",
+            parent=child,
+            active=True,
+        )
+
+        mapped = category_to_type(
+            Category.objects.prefetch_related(
+                "fields__options",
+                "fields__depends_on",
+                "subcategories__subcategories",
+            ).get(pk=root.pk)
+        )
+
+        self.assertEqual(len(mapped.subcategories), 1)
+        self.assertEqual(mapped.subcategories[0].id, "phones-test")
+        self.assertEqual(len(mapped.subcategories[0].subcategories), 1)
+        self.assertEqual(
+            mapped.subcategories[0].subcategories[0].id,
+            "smartphones-test",
+        )
