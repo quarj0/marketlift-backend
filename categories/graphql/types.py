@@ -49,6 +49,7 @@ class CategorySummaryType:
     icon: str
     image_url: str | None
     active: bool
+    subcategories: list["CategorySummaryType"]
 
 
 @strawberry.type
