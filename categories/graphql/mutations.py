@@ -177,7 +177,13 @@ class CategoryMutation:
                 category.schema_version += 1
             category.full_clean()
             category.save()
-            if old_image_asset is not None and old_image_asset.pk != category.image_upload_id:
+            if (
+                old_image_asset is not None
+                and old_image_asset.pk != category.image_upload_id
+                and not Category.objects.filter(
+                    image_upload=old_image_asset
+                ).exclude(pk=category.pk).exists()
+            ):
                 retire_upload(asset=old_image_asset)
             record_audit_event(
                 actor=actor,
