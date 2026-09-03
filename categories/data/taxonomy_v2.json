@@ -1,0 +1,4882 @@
+{
+  "roots": [
+    {
+      "slug": "electronics",
+      "name": "Electronics",
+      "icon": "Cpu",
+      "sort": 10
+    },
+    {
+      "slug": "vehicles",
+      "name": "Vehicles",
+      "icon": "Car",
+      "sort": 20
+    },
+    {
+      "slug": "property",
+      "name": "Property",
+      "icon": "Building2",
+      "sort": 30
+    },
+    {
+      "slug": "home-furniture-appliances",
+      "name": "Home, Furniture & Appliances",
+      "icon": "Sofa",
+      "sort": 40
+    },
+    {
+      "slug": "fashion",
+      "name": "Fashion",
+      "icon": "Shirt",
+      "sort": 50
+    },
+    {
+      "slug": "beauty-personal-care",
+      "name": "Beauty & Personal Care",
+      "icon": "Sparkles",
+      "sort": 60
+    },
+    {
+      "slug": "babies-kids",
+      "name": "Babies & Kids",
+      "icon": "Baby",
+      "sort": 70
+    },
+    {
+      "slug": "animals-pets",
+      "name": "Animals & Pets",
+      "icon": "PawPrint",
+      "sort": 80
+    },
+    {
+      "slug": "food-agriculture-farming",
+      "name": "Food, Agriculture & Farming",
+      "icon": "Tractor",
+      "sort": 90
+    },
+    {
+      "slug": "jobs",
+      "name": "Jobs",
+      "icon": "BriefcaseBusiness",
+      "sort": 100
+    },
+    {
+      "slug": "services",
+      "name": "Services",
+      "icon": "Wrench",
+      "sort": 110
+    },
+    {
+      "slug": "repair-construction",
+      "name": "Repair & Construction",
+      "icon": "HardHat",
+      "sort": 120
+    },
+    {
+      "slug": "business-industry",
+      "name": "Business & Industry",
+      "icon": "Factory",
+      "sort": 130
+    },
+    {
+      "slug": "leisure-activities",
+      "name": "Leisure & Activities",
+      "icon": "Dumbbell",
+      "sort": 140
+    }
+  ],
+  "categories": [
+    {
+      "parent": "electronics",
+      "slug": "phones-tablets",
+      "name": "Phones & Tablets",
+      "icon": "Smartphone",
+      "sort": 10,
+      "fields": []
+    },
+    {
+      "parent": "phones-tablets",
+      "slug": "phones",
+      "name": "Mobile Phones",
+      "icon": "Smartphone",
+      "sort": 10,
+      "fields": []
+    },
+    {
+      "parent": "phones-tablets",
+      "slug": "tablets",
+      "name": "Tablets",
+      "icon": "Tablet",
+      "sort": 20,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "apple",
+              "label": "Apple"
+            },
+            {
+              "value": "samsung",
+              "label": "Samsung"
+            },
+            {
+              "value": "lenovo",
+              "label": "Lenovo"
+            },
+            {
+              "value": "xiaomi",
+              "label": "Xiaomi"
+            },
+            {
+              "value": "huawei",
+              "label": "Huawei"
+            },
+            {
+              "value": "honor",
+              "label": "HONOR"
+            },
+            {
+              "value": "amazon",
+              "label": "Amazon"
+            },
+            {
+              "value": "microsoft",
+              "label": "Microsoft"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "storage_gb",
+          "label": "Storage",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "64",
+              "label": "64 GB"
+            },
+            {
+              "value": "128",
+              "label": "128 GB"
+            },
+            {
+              "value": "256",
+              "label": "256 GB"
+            },
+            {
+              "value": "512",
+              "label": "512 GB"
+            },
+            {
+              "value": "1024",
+              "label": "1 TB"
+            }
+          ],
+          "unit": "GB",
+          "allow_custom": true
+        },
+        {
+          "key": "ram_gb",
+          "label": "RAM",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "GB",
+          "min": 1,
+          "max": 64
+        },
+        {
+          "key": "screen_size",
+          "label": "Screen size",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "in",
+          "min": 6,
+          "max": 20
+        }
+      ]
+    },
+    {
+      "parent": "phones-tablets",
+      "slug": "smart-watches",
+      "name": "Smart Watches & Wearables",
+      "icon": "Watch",
+      "sort": 30,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "apple",
+              "label": "Apple"
+            },
+            {
+              "value": "samsung",
+              "label": "Samsung"
+            },
+            {
+              "value": "garmin",
+              "label": "Garmin"
+            },
+            {
+              "value": "huawei",
+              "label": "Huawei"
+            },
+            {
+              "value": "xiaomi",
+              "label": "Xiaomi"
+            },
+            {
+              "value": "amazfit",
+              "label": "Amazfit"
+            },
+            {
+              "value": "fitbit",
+              "label": "Fitbit"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "connectivity",
+          "label": "Connectivity",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "bluetooth",
+              "label": "Bluetooth"
+            },
+            {
+              "value": "wi-fi",
+              "label": "Wi-Fi"
+            },
+            {
+              "value": "lte---cellular",
+              "label": "LTE / Cellular"
+            },
+            {
+              "value": "gps",
+              "label": "GPS"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "phones-tablets",
+      "slug": "phone-accessories",
+      "name": "Phone & Tablet Accessories",
+      "icon": "ShoppingBag",
+      "sort": 40,
+      "fields": [
+        {
+          "key": "accessory_type",
+          "label": "Accessory type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "case",
+              "label": "Case"
+            },
+            {
+              "value": "screen-protector",
+              "label": "Screen Protector"
+            },
+            {
+              "value": "charger",
+              "label": "Charger"
+            },
+            {
+              "value": "cable",
+              "label": "Cable"
+            },
+            {
+              "value": "power-bank",
+              "label": "Power Bank"
+            },
+            {
+              "value": "earphones",
+              "label": "Earphones"
+            },
+            {
+              "value": "stylus",
+              "label": "Stylus"
+            },
+            {
+              "value": "mount",
+              "label": "Mount"
+            },
+            {
+              "value": "replacement-part",
+              "label": "Replacement Part"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "compatible_brand",
+          "label": "Compatible brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "compatible_model",
+          "label": "Compatible model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "original",
+          "label": "Original / OEM",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "electronics",
+      "slug": "computers",
+      "name": "Computers",
+      "icon": "Laptop",
+      "sort": 20,
+      "fields": []
+    },
+    {
+      "parent": "electronics",
+      "slug": "tvs-video",
+      "name": "TVs & Video",
+      "icon": "Tv",
+      "sort": 30,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "smart-tv",
+              "label": "Smart TV"
+            },
+            {
+              "value": "television",
+              "label": "Television"
+            },
+            {
+              "value": "projector",
+              "label": "Projector"
+            },
+            {
+              "value": "streaming-device",
+              "label": "Streaming Device"
+            },
+            {
+              "value": "tv-box",
+              "label": "TV Box"
+            },
+            {
+              "value": "receiver",
+              "label": "Receiver"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "samsung",
+              "label": "Samsung"
+            },
+            {
+              "value": "lg",
+              "label": "LG"
+            },
+            {
+              "value": "sony",
+              "label": "Sony"
+            },
+            {
+              "value": "tcl",
+              "label": "TCL"
+            },
+            {
+              "value": "philips",
+              "label": "Philips"
+            },
+            {
+              "value": "panasonic",
+              "label": "Panasonic"
+            },
+            {
+              "value": "hisense",
+              "label": "Hisense"
+            },
+            {
+              "value": "aoc",
+              "label": "AOC"
+            },
+            {
+              "value": "epson",
+              "label": "Epson"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "screen_size",
+          "label": "Screen size",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "in",
+          "min": 10,
+          "max": 150
+        },
+        {
+          "key": "resolution",
+          "label": "Resolution",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "hd",
+              "label": "HD"
+            },
+            {
+              "value": "full-hd",
+              "label": "Full HD"
+            },
+            {
+              "value": "4k-uhd",
+              "label": "4K UHD"
+            },
+            {
+              "value": "8k",
+              "label": "8K"
+            }
+          ]
+        },
+        {
+          "key": "smart_enabled",
+          "label": "Smart / connected",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "electronics",
+      "slug": "audio",
+      "name": "Audio",
+      "icon": "Headphones",
+      "sort": 70,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "speaker",
+              "label": "Speaker"
+            },
+            {
+              "value": "soundbar",
+              "label": "Soundbar"
+            },
+            {
+              "value": "home-theater",
+              "label": "Home Theater"
+            },
+            {
+              "value": "headphones",
+              "label": "Headphones"
+            },
+            {
+              "value": "earbuds",
+              "label": "Earbuds"
+            },
+            {
+              "value": "amplifier",
+              "label": "Amplifier"
+            },
+            {
+              "value": "receiver",
+              "label": "Receiver"
+            },
+            {
+              "value": "microphone",
+              "label": "Microphone"
+            },
+            {
+              "value": "dj-equipment",
+              "label": "DJ Equipment"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "electronics",
+      "slug": "cameras",
+      "name": "Cameras & Photography",
+      "icon": "Camera",
+      "sort": 80,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "mirrorless",
+              "label": "Mirrorless"
+            },
+            {
+              "value": "dslr",
+              "label": "DSLR"
+            },
+            {
+              "value": "compact",
+              "label": "Compact"
+            },
+            {
+              "value": "action-camera",
+              "label": "Action Camera"
+            },
+            {
+              "value": "instant-camera",
+              "label": "Instant Camera"
+            },
+            {
+              "value": "camcorder",
+              "label": "Camcorder"
+            },
+            {
+              "value": "security-camera",
+              "label": "Security Camera"
+            },
+            {
+              "value": "drone-camera",
+              "label": "Drone Camera"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "electronics",
+      "slug": "gaming",
+      "name": "Gaming",
+      "icon": "Gamepad2",
+      "sort": 90,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "console",
+              "label": "Console"
+            },
+            {
+              "value": "handheld-console",
+              "label": "Handheld Console"
+            },
+            {
+              "value": "controller",
+              "label": "Controller"
+            },
+            {
+              "value": "game",
+              "label": "Game"
+            },
+            {
+              "value": "vr-headset",
+              "label": "VR Headset"
+            },
+            {
+              "value": "gaming-accessory",
+              "label": "Gaming Accessory"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "electronics",
+      "slug": "networking",
+      "name": "Networking",
+      "icon": "Router",
+      "sort": 100,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "router",
+              "label": "Router"
+            },
+            {
+              "value": "modem",
+              "label": "Modem"
+            },
+            {
+              "value": "wi-fi-mesh",
+              "label": "Wi-Fi Mesh"
+            },
+            {
+              "value": "access-point",
+              "label": "Access Point"
+            },
+            {
+              "value": "network-switch",
+              "label": "Network Switch"
+            },
+            {
+              "value": "range-extender",
+              "label": "Range Extender"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "electronics",
+      "slug": "printers-scanners",
+      "name": "Printers & Scanners",
+      "icon": "Printer",
+      "sort": 110,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "inkjet-printer",
+              "label": "Inkjet Printer"
+            },
+            {
+              "value": "laser-printer",
+              "label": "Laser Printer"
+            },
+            {
+              "value": "multifunction-printer",
+              "label": "Multifunction Printer"
+            },
+            {
+              "value": "photo-printer",
+              "label": "Photo Printer"
+            },
+            {
+              "value": "thermal-printer",
+              "label": "Thermal Printer"
+            },
+            {
+              "value": "scanner",
+              "label": "Scanner"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "electronics",
+      "slug": "other-electronics",
+      "name": "Other Electronics",
+      "icon": "Cpu",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "vehicles",
+      "slug": "cars",
+      "name": "Cars",
+      "icon": "Car",
+      "sort": 10,
+      "fields": []
+    },
+    {
+      "parent": "vehicles",
+      "slug": "motorcycles",
+      "name": "Motorcycles",
+      "icon": "Bike",
+      "sort": 20,
+      "fields": [
+        {
+          "key": "make",
+          "label": "Make",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "honda",
+              "label": "Honda"
+            },
+            {
+              "value": "yamaha",
+              "label": "Yamaha"
+            },
+            {
+              "value": "suzuki",
+              "label": "Suzuki"
+            },
+            {
+              "value": "kawasaki",
+              "label": "Kawasaki"
+            },
+            {
+              "value": "bmw",
+              "label": "BMW"
+            },
+            {
+              "value": "ducati",
+              "label": "Ducati"
+            },
+            {
+              "value": "triumph",
+              "label": "Triumph"
+            },
+            {
+              "value": "royal-enfield",
+              "label": "Royal Enfield"
+            },
+            {
+              "value": "harley-davidson",
+              "label": "Harley-Davidson"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ],
+          "allow_custom": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "year",
+          "label": "Year",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 1950,
+          "max": 2035
+        },
+        {
+          "key": "engine_cc",
+          "label": "Engine capacity",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "cc",
+          "min": 50,
+          "max": 3000
+        },
+        {
+          "key": "mileage_km",
+          "label": "Mileage",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "km",
+          "min": 0,
+          "max": 2000000
+        }
+      ]
+    },
+    {
+      "parent": "vehicles",
+      "slug": "trucks-commercial-vehicles",
+      "name": "Trucks & Commercial Vehicles",
+      "icon": "Truck",
+      "sort": 30,
+      "fields": [
+        {
+          "key": "make",
+          "label": "Make",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "year",
+          "label": "Year",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 1950,
+          "max": 2035
+        },
+        {
+          "key": "mileage_km",
+          "label": "Mileage",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "km",
+          "min": 0,
+          "max": 5000000
+        }
+      ]
+    },
+    {
+      "parent": "vehicles",
+      "slug": "buses-vans",
+      "name": "Buses & Vans",
+      "icon": "BusFront",
+      "sort": 40,
+      "fields": [
+        {
+          "key": "make",
+          "label": "Make",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "year",
+          "label": "Year",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 1950,
+          "max": 2035
+        },
+        {
+          "key": "mileage_km",
+          "label": "Mileage",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "km",
+          "min": 0,
+          "max": 5000000
+        }
+      ]
+    },
+    {
+      "parent": "vehicles",
+      "slug": "vehicle-parts",
+      "name": "Vehicle Parts",
+      "icon": "Wrench",
+      "sort": 50,
+      "fields": [
+        {
+          "key": "part_type",
+          "label": "Part type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "compatible_make",
+          "label": "Compatible make",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "compatible_model",
+          "label": "Compatible model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "part_number",
+          "label": "Part number",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "vehicles",
+      "slug": "vehicle-accessories",
+      "name": "Vehicle Accessories",
+      "icon": "ShoppingBag",
+      "sort": 60,
+      "fields": [
+        {
+          "key": "accessory_type",
+          "label": "Accessory type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "compatible_make",
+          "label": "Compatible make",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "compatible_model",
+          "label": "Compatible model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "apartments-for-sale",
+      "name": "Apartments for Sale",
+      "icon": "House",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "bedrooms",
+          "label": "Bedrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "bathrooms",
+          "label": "Bathrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "area_sqm",
+          "label": "Area",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "m²",
+          "min": 1,
+          "max": 100000
+        },
+        {
+          "key": "parking_spaces",
+          "label": "Parking spaces",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "furnished",
+          "label": "Furnished",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "houses-for-sale",
+      "name": "Houses for Sale",
+      "icon": "House",
+      "sort": 20,
+      "fields": [
+        {
+          "key": "bedrooms",
+          "label": "Bedrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "bathrooms",
+          "label": "Bathrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "area_sqm",
+          "label": "Area",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "m²",
+          "min": 1,
+          "max": 100000
+        },
+        {
+          "key": "parking_spaces",
+          "label": "Parking spaces",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "furnished",
+          "label": "Furnished",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "apartments-for-rent",
+      "name": "Apartments for Rent",
+      "icon": "House",
+      "sort": 30,
+      "fields": [
+        {
+          "key": "bedrooms",
+          "label": "Bedrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "bathrooms",
+          "label": "Bathrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "area_sqm",
+          "label": "Area",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "m²",
+          "min": 1,
+          "max": 100000
+        },
+        {
+          "key": "parking_spaces",
+          "label": "Parking spaces",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "furnished",
+          "label": "Furnished",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "houses-for-rent",
+      "name": "Houses for Rent",
+      "icon": "House",
+      "sort": 40,
+      "fields": [
+        {
+          "key": "bedrooms",
+          "label": "Bedrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "bathrooms",
+          "label": "Bathrooms",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "area_sqm",
+          "label": "Area",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "m²",
+          "min": 1,
+          "max": 100000
+        },
+        {
+          "key": "parking_spaces",
+          "label": "Parking spaces",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "furnished",
+          "label": "Furnished",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "land-plots",
+      "name": "Land & Plots",
+      "icon": "MapPinned",
+      "sort": 50,
+      "fields": [
+        {
+          "key": "area_sqm",
+          "label": "Land area",
+          "type": "number",
+          "required": true,
+          "filterable": true,
+          "unit": "m²",
+          "min": 1,
+          "max": 100000000
+        },
+        {
+          "key": "zoning",
+          "label": "Zoning / use",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "documented",
+          "label": "Documentation available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "commercial-property",
+      "name": "Commercial Property",
+      "icon": "Building2",
+      "sort": 60,
+      "fields": [
+        {
+          "key": "property_type",
+          "label": "Property type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "area_sqm",
+          "label": "Area",
+          "type": "number",
+          "required": false,
+          "filterable": true,
+          "unit": "m²",
+          "min": 1,
+          "max": 1000000
+        },
+        {
+          "key": "bathrooms",
+          "label": "Bathrooms",
+          "type": "number",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "parking_spaces",
+          "label": "Parking spaces",
+          "type": "number",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "rooms-shared",
+      "name": "Rooms & Shared Accommodation",
+      "icon": "BedDouble",
+      "sort": 70,
+      "fields": [
+        {
+          "key": "room_type",
+          "label": "Room type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "furnished",
+          "label": "Furnished",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "bills_included",
+          "label": "Bills included",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "short-lets",
+      "name": "Short Lets",
+      "icon": "BedDouble",
+      "sort": 80,
+      "fields": [
+        {
+          "key": "property_type",
+          "label": "Property type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "bedrooms",
+          "label": "Bedrooms",
+          "type": "number",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "bathrooms",
+          "label": "Bathrooms",
+          "type": "number",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "max_guests",
+          "label": "Maximum guests",
+          "type": "number",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "furnished",
+          "label": "Furnished",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "property",
+      "slug": "other-property",
+      "name": "Other Property",
+      "icon": "Building2",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "home-furniture-appliances",
+      "slug": "furniture",
+      "name": "Furniture",
+      "icon": "Sofa",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "dimensions",
+          "label": "Dimensions",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "home-furniture-appliances",
+      "slug": "kitchen-appliances",
+      "name": "Kitchen Appliances",
+      "icon": "Utensils",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "dimensions",
+          "label": "Dimensions",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "home-furniture-appliances",
+      "slug": "home-appliances",
+      "name": "Home Appliances",
+      "icon": "Sofa",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "dimensions",
+          "label": "Dimensions",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "home-furniture-appliances",
+      "slug": "home-decor",
+      "name": "Home Decor",
+      "icon": "Sparkles",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "dimensions",
+          "label": "Dimensions",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "home-furniture-appliances",
+      "slug": "garden-outdoor",
+      "name": "Garden & Outdoor",
+      "icon": "Wheat",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "dimensions",
+          "label": "Dimensions",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "home-furniture-appliances",
+      "slug": "lighting",
+      "name": "Lighting",
+      "icon": "Sparkles",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "dimensions",
+          "label": "Dimensions",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "home-furniture-appliances",
+      "slug": "other-home-furniture-appliances",
+      "name": "Other Home & Appliances",
+      "icon": "Sofa",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "fashion",
+      "slug": "womens-fashion",
+      "name": "Women's Fashion",
+      "icon": "Shirt",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "fashion",
+      "slug": "mens-fashion",
+      "name": "Men's Fashion",
+      "icon": "Shirt",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "fashion",
+      "slug": "shoes",
+      "name": "Shoes",
+      "icon": "Shirt",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "fashion",
+      "slug": "bags-accessories",
+      "name": "Bags & Accessories",
+      "icon": "Shirt",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "fashion",
+      "slug": "watches-jewelry",
+      "name": "Watches & Jewelry",
+      "icon": "Shirt",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "fashion",
+      "slug": "childrens-clothing",
+      "name": "Children's Clothing",
+      "icon": "Shirt",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "material",
+          "label": "Material",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "fashion",
+      "slug": "other-fashion",
+      "name": "Other Fashion",
+      "icon": "Shirt",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "beauty-personal-care",
+      "slug": "skincare",
+      "name": "Skincare",
+      "icon": "Sparkles",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size / volume",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "beauty-personal-care",
+      "slug": "haircare",
+      "name": "Haircare",
+      "icon": "Sparkles",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size / volume",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "beauty-personal-care",
+      "slug": "makeup",
+      "name": "Makeup",
+      "icon": "Sparkles",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size / volume",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "beauty-personal-care",
+      "slug": "fragrances",
+      "name": "Fragrances",
+      "icon": "Sparkles",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size / volume",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "beauty-personal-care",
+      "slug": "personal-care",
+      "name": "Personal Care",
+      "icon": "Sparkles",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size / volume",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "beauty-personal-care",
+      "slug": "beauty-tools",
+      "name": "Beauty Tools",
+      "icon": "Sparkles",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "size",
+          "label": "Size / volume",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "beauty-personal-care",
+      "slug": "other-beauty-personal-care",
+      "name": "Other Beauty & Personal Care",
+      "icon": "Sparkles",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "babies-kids",
+      "slug": "baby-clothing",
+      "name": "Baby Clothing",
+      "icon": "Baby",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "age_range",
+          "label": "Age range",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "babies-kids",
+      "slug": "baby-gear",
+      "name": "Baby Gear",
+      "icon": "Baby",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "age_range",
+          "label": "Age range",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "babies-kids",
+      "slug": "toys-games",
+      "name": "Toys & Games",
+      "icon": "Baby",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "age_range",
+          "label": "Age range",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "babies-kids",
+      "slug": "maternity",
+      "name": "Maternity",
+      "icon": "Baby",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "age_range",
+          "label": "Age range",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "babies-kids",
+      "slug": "feeding",
+      "name": "Feeding",
+      "icon": "Baby",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "age_range",
+          "label": "Age range",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "babies-kids",
+      "slug": "nursery",
+      "name": "Nursery",
+      "icon": "Baby",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "age_range",
+          "label": "Age range",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "babies-kids",
+      "slug": "other-babies-kids",
+      "name": "Other Babies & Kids",
+      "icon": "Baby",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "animals-pets",
+      "slug": "dogs",
+      "name": "Dogs",
+      "icon": "PawPrint",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "breed_or_type",
+          "label": "Breed / type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "age",
+          "label": "Age",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "sex",
+          "label": "Sex",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "unknown",
+              "label": "Unknown"
+            }
+          ]
+        },
+        {
+          "key": "vaccinated",
+          "label": "Vaccinated",
+          "type": "boolean",
+          "required": false,
+          "filterable": false
+        }
+      ]
+    },
+    {
+      "parent": "animals-pets",
+      "slug": "cats",
+      "name": "Cats",
+      "icon": "PawPrint",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "breed_or_type",
+          "label": "Breed / type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "age",
+          "label": "Age",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "sex",
+          "label": "Sex",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "unknown",
+              "label": "Unknown"
+            }
+          ]
+        },
+        {
+          "key": "vaccinated",
+          "label": "Vaccinated",
+          "type": "boolean",
+          "required": false,
+          "filterable": false
+        }
+      ]
+    },
+    {
+      "parent": "animals-pets",
+      "slug": "birds",
+      "name": "Birds",
+      "icon": "PawPrint",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "breed_or_type",
+          "label": "Breed / type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "age",
+          "label": "Age",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "sex",
+          "label": "Sex",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "unknown",
+              "label": "Unknown"
+            }
+          ]
+        },
+        {
+          "key": "vaccinated",
+          "label": "Vaccinated",
+          "type": "boolean",
+          "required": false,
+          "filterable": false
+        }
+      ]
+    },
+    {
+      "parent": "animals-pets",
+      "slug": "livestock",
+      "name": "Livestock",
+      "icon": "PawPrint",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "breed_or_type",
+          "label": "Breed / type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "age",
+          "label": "Age",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "sex",
+          "label": "Sex",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "unknown",
+              "label": "Unknown"
+            }
+          ]
+        },
+        {
+          "key": "vaccinated",
+          "label": "Vaccinated",
+          "type": "boolean",
+          "required": false,
+          "filterable": false
+        }
+      ]
+    },
+    {
+      "parent": "animals-pets",
+      "slug": "pet-supplies",
+      "name": "Pet Supplies",
+      "icon": "PawPrint",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "breed_or_type",
+          "label": "Breed / type",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "age",
+          "label": "Age",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "sex",
+          "label": "Sex",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "unknown",
+              "label": "Unknown"
+            }
+          ]
+        },
+        {
+          "key": "vaccinated",
+          "label": "Vaccinated",
+          "type": "boolean",
+          "required": false,
+          "filterable": false
+        }
+      ]
+    },
+    {
+      "parent": "animals-pets",
+      "slug": "other-pets",
+      "name": "Other Pets & Animals",
+      "icon": "PawPrint",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "breed_or_type",
+          "label": "Breed / type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "age",
+          "label": "Age",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "sex",
+          "label": "Sex",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "unknown",
+              "label": "Unknown"
+            }
+          ]
+        },
+        {
+          "key": "vaccinated",
+          "label": "Vaccinated",
+          "type": "boolean",
+          "required": false,
+          "filterable": false
+        }
+      ]
+    },
+    {
+      "parent": "food-agriculture-farming",
+      "slug": "food-beverages",
+      "name": "Food & Beverages",
+      "icon": "Utensils",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "food-agriculture-farming",
+      "slug": "crops-produce",
+      "name": "Crops & Produce",
+      "icon": "Wheat",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "food-agriculture-farming",
+      "slug": "farm-machinery",
+      "name": "Farm Machinery",
+      "icon": "Tractor",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "food-agriculture-farming",
+      "slug": "livestock-poultry",
+      "name": "Livestock & Poultry",
+      "icon": "PawPrint",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "food-agriculture-farming",
+      "slug": "seeds-fertilizer",
+      "name": "Seeds & Fertilizer",
+      "icon": "Wheat",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "food-agriculture-farming",
+      "slug": "animal-feed",
+      "name": "Animal Feed",
+      "icon": "Wheat",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "food-agriculture-farming",
+      "slug": "other-food-agriculture-farming",
+      "name": "Other Food & Agriculture",
+      "icon": "Tractor",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "jobs",
+      "slug": "software-it",
+      "name": "Software & IT",
+      "icon": "BriefcaseBusiness",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "sales-marketing",
+      "name": "Sales & Marketing",
+      "icon": "BriefcaseBusiness",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "finance-accounting",
+      "name": "Finance & Accounting",
+      "icon": "BriefcaseBusiness",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "engineering",
+      "name": "Engineering",
+      "icon": "BriefcaseBusiness",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "healthcare",
+      "name": "Healthcare",
+      "icon": "BriefcaseBusiness",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "education",
+      "name": "Education",
+      "icon": "BriefcaseBusiness",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "hospitality",
+      "name": "Hospitality",
+      "icon": "BriefcaseBusiness",
+      "sort": 16,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "trades-labor",
+      "name": "Trades & Labor",
+      "icon": "BriefcaseBusiness",
+      "sort": 17,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "admin-office",
+      "name": "Admin & Office",
+      "icon": "BriefcaseBusiness",
+      "sort": 18,
+      "fields": [
+        {
+          "key": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "required": true,
+          "filterable": true,
+          "options": [
+            {
+              "value": "full-time",
+              "label": "Full-time"
+            },
+            {
+              "value": "part-time",
+              "label": "Part-time"
+            },
+            {
+              "value": "contract",
+              "label": "Contract"
+            },
+            {
+              "value": "internship",
+              "label": "Internship"
+            },
+            {
+              "value": "temporary",
+              "label": "Temporary"
+            },
+            {
+              "value": "remote",
+              "label": "Remote"
+            }
+          ]
+        },
+        {
+          "key": "experience_level",
+          "label": "Experience level",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "entry",
+              "label": "Entry"
+            },
+            {
+              "value": "junior",
+              "label": "Junior"
+            },
+            {
+              "value": "mid-level",
+              "label": "Mid-level"
+            },
+            {
+              "value": "senior",
+              "label": "Senior"
+            },
+            {
+              "value": "manager",
+              "label": "Manager"
+            },
+            {
+              "value": "executive",
+              "label": "Executive"
+            }
+          ]
+        },
+        {
+          "key": "salary_period",
+          "label": "Salary period",
+          "type": "select",
+          "required": false,
+          "filterable": true,
+          "options": [
+            {
+              "value": "monthly",
+              "label": "Monthly"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "project",
+              "label": "Project"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent": "jobs",
+      "slug": "other-jobs",
+      "name": "Other Jobs",
+      "icon": "BriefcaseBusiness",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "services",
+      "slug": "it-services",
+      "name": "IT Services",
+      "icon": "Wrench",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "home-services",
+      "name": "Home Services",
+      "icon": "Wrench",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "automotive-services",
+      "name": "Automotive Services",
+      "icon": "Wrench",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "business-services",
+      "name": "Business Services",
+      "icon": "Wrench",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "event-services",
+      "name": "Event Services",
+      "icon": "Wrench",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "beauty-services",
+      "name": "Beauty Services",
+      "icon": "Wrench",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "lessons-training",
+      "name": "Lessons & Training",
+      "icon": "Wrench",
+      "sort": 16,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "logistics-delivery",
+      "name": "Logistics & Delivery",
+      "icon": "Wrench",
+      "sort": 17,
+      "fields": [
+        {
+          "key": "service_type",
+          "label": "Service type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "coverage_area",
+          "label": "Coverage area",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "remote_available",
+          "label": "Remote available",
+          "type": "boolean",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "services",
+      "slug": "other-services",
+      "name": "Other Services",
+      "icon": "Wrench",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "repair-construction",
+      "slug": "building-materials",
+      "name": "Building Materials",
+      "icon": "HardHat",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "product_or_service",
+          "label": "Product / service",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "repair-construction",
+      "slug": "construction-tools",
+      "name": "Construction Tools",
+      "icon": "Hammer",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "product_or_service",
+          "label": "Product / service",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "repair-construction",
+      "slug": "electrical-plumbing",
+      "name": "Electrical & Plumbing",
+      "icon": "Wrench",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "product_or_service",
+          "label": "Product / service",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "repair-construction",
+      "slug": "doors-windows",
+      "name": "Doors & Windows",
+      "icon": "House",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "product_or_service",
+          "label": "Product / service",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "repair-construction",
+      "slug": "roofing",
+      "name": "Roofing",
+      "icon": "House",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "product_or_service",
+          "label": "Product / service",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "repair-construction",
+      "slug": "construction-services",
+      "name": "Construction Services",
+      "icon": "HardHat",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "product_or_service",
+          "label": "Product / service",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "repair-construction",
+      "slug": "other-repair-construction",
+      "name": "Other Repair & Construction",
+      "icon": "HardHat",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "business-industry",
+      "slug": "commercial-equipments-tools",
+      "name": "Commercial Equipment & Tools",
+      "icon": "Factory",
+      "sort": 10,
+      "fields": []
+    },
+    {
+      "parent": "business-industry",
+      "slug": "industrial-machinery",
+      "name": "Industrial Machinery",
+      "icon": "Factory",
+      "sort": 20,
+      "fields": [
+        {
+          "key": "equipment_type",
+          "label": "Equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "power_source",
+          "label": "Power source",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "business-industry",
+      "slug": "restaurant-equipment",
+      "name": "Restaurant Equipment",
+      "icon": "Factory",
+      "sort": 21,
+      "fields": [
+        {
+          "key": "equipment_type",
+          "label": "Equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "power_source",
+          "label": "Power source",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "business-industry",
+      "slug": "office-equipment",
+      "name": "Office Equipment",
+      "icon": "Factory",
+      "sort": 22,
+      "fields": [
+        {
+          "key": "equipment_type",
+          "label": "Equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "power_source",
+          "label": "Power source",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "business-industry",
+      "slug": "medical-equipment",
+      "name": "Medical Equipment",
+      "icon": "Factory",
+      "sort": 23,
+      "fields": [
+        {
+          "key": "equipment_type",
+          "label": "Equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "power_source",
+          "label": "Power source",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "business-industry",
+      "slug": "printing-equipment",
+      "name": "Printing Equipment",
+      "icon": "Factory",
+      "sort": 24,
+      "fields": [
+        {
+          "key": "equipment_type",
+          "label": "Equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "power_source",
+          "label": "Power source",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "commercial-equipments-tools",
+      "slug": "power-tools",
+      "name": "Power Tools",
+      "icon": "Hammer",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "tool_type",
+          "label": "Tool / equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "commercial-equipments-tools",
+      "slug": "hand-tools",
+      "name": "Hand Tools",
+      "icon": "Hammer",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "tool_type",
+          "label": "Tool / equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "commercial-equipments-tools",
+      "slug": "generators",
+      "name": "Generators",
+      "icon": "Hammer",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "tool_type",
+          "label": "Tool / equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "commercial-equipments-tools",
+      "slug": "safety-equipment",
+      "name": "Safety Equipment",
+      "icon": "Hammer",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "tool_type",
+          "label": "Tool / equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "commercial-equipments-tools",
+      "slug": "measuring-tools",
+      "name": "Measuring Tools",
+      "icon": "Hammer",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "tool_type",
+          "label": "Tool / equipment type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "commercial-equipments-tools",
+      "slug": "other-commercial-equipment",
+      "name": "Other Commercial Equipment",
+      "icon": "Factory",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "business-industry",
+      "slug": "other-business-industry",
+      "name": "Other Business & Industry",
+      "icon": "Factory",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "leisure-activities",
+      "slug": "sports-fitness",
+      "name": "Sports & Fitness",
+      "icon": "Dumbbell",
+      "sort": 10,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "leisure-activities",
+      "slug": "musical-instruments",
+      "name": "Musical Instruments",
+      "icon": "Music",
+      "sort": 11,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "leisure-activities",
+      "slug": "books-media",
+      "name": "Books & Media",
+      "icon": "PackageSearch",
+      "sort": 12,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "leisure-activities",
+      "slug": "hobbies-collectibles",
+      "name": "Hobbies & Collectibles",
+      "icon": "PackageSearch",
+      "sort": 13,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "leisure-activities",
+      "slug": "outdoor-camping",
+      "name": "Outdoor & Camping",
+      "icon": "Plane",
+      "sort": 14,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "leisure-activities",
+      "slug": "tickets-events",
+      "name": "Tickets & Events",
+      "icon": "PackageSearch",
+      "sort": 15,
+      "fields": [
+        {
+          "key": "item_type",
+          "label": "Item type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    },
+    {
+      "parent": "leisure-activities",
+      "slug": "other-leisure-activities",
+      "name": "Other Leisure & Activities",
+      "icon": "Dumbbell",
+      "sort": 90,
+      "fields": []
+    },
+    {
+      "parent": "phones-tablets",
+      "slug": "other-phones-tablets",
+      "name": "Other Phones & Tablets",
+      "icon": "Smartphone",
+      "sort": 90,
+      "fields": [
+        {
+          "key": "product_type",
+          "label": "Product type",
+          "type": "text",
+          "required": true,
+          "filterable": true
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "type": "text",
+          "required": false,
+          "filterable": true
+        }
+      ]
+    }
+  ]
+}

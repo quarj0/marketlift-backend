@@ -20,6 +20,21 @@ def _category_image_url(category) -> str | None:
     return str(url) if url else target.content_url
 
 
+def category_to_summary(category) -> CategorySummaryType:
+    return CategorySummaryType(
+        id=category.slug,
+        name=category.name,
+        icon=category.icon,
+        image_url=_category_image_url(category),
+        active=category.active,
+        subcategories=[
+            category_to_summary(child)
+            for child in category.subcategories.all()
+            if child.active
+        ],
+    )
+
+
 def category_to_type(category) -> CategoryType:
     return CategoryType(
         id=category.slug,
@@ -67,13 +82,8 @@ def category_to_type(category) -> CategoryType:
             for field in category.fields.all()
         ],
         subcategories=[
-            CategorySummaryType(
-                id=c.slug,
-                name=c.name,
-                icon=c.icon,
-                image_url=_category_image_url(c),
-                active=c.active,
-            )
+            category_to_summary(c)
             for c in category.subcategories.all()
+            if c.active
         ],
     )

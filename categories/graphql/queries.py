@@ -6,7 +6,14 @@ from .types import CategoryFieldOptionType, CategoryType
 
 
 def _qs():
-    return Category.objects.select_related("image_upload").prefetch_related("fields__options", "fields__depends_on", "image_upload__variants", "subcategories__image_upload__variants")
+    return Category.objects.select_related("image_upload").prefetch_related(
+        "fields__options",
+        "fields__depends_on",
+        "image_upload__variants",
+        "subcategories__image_upload__variants",
+        "subcategories__subcategories__image_upload__variants",
+        "subcategories__subcategories__subcategories__image_upload__variants",
+    )
 
 
 @strawberry.type
@@ -15,7 +22,7 @@ class CategoryQuery:
     def categories(self, active_only: bool = True) -> list[CategoryType]:
         # Public category discovery never exposes disabled categories. `active_only`
         # remains for backwards compatibility but cannot turn this into an admin query.
-        return [category_to_type(item) for item in _qs().filter(active=True)]
+        return [category_to_type(item) for item in _qs().filter(active=True, parent__isnull=True)]
 
     @strawberry.field
     def category(self, id: str) -> CategoryType | None:
@@ -75,4 +82,18 @@ class CategoryQuery:
     @strawberry.field
     def admin_categories(self, info: strawberry.Info) -> list[CategoryType]:
         require_staff(info, roles={"admin"})
-        return [category_to_type(item) for item in _qs()]
+        return [
+            category_to_type(item)
+            for item in _qs().filter(parent__isnull=True)
+        ]
+
+    @strawberry.field
+    def admin_category(
+        self, info: strawberry.Info, id: str
+    ) -> CategoryType | None:
+        require_staff(info, roles={"admin"})
+        try:
+            item = _qs().get(slug=id)
+        except Category.DoesNotExist:
+            return None
+        return category_to_type(item)
