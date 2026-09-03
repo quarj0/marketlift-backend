@@ -5,6 +5,7 @@ from io import BytesIO
 from pathlib import Path
 import json
 import re
+import time
 
 import httpx
 from django.contrib.auth import get_user_model
@@ -124,7 +125,7 @@ class Command(BaseCommand):
                 "gsrlimit": 20,
                 "prop": "imageinfo",
                 "iiprop": "url|mime|size|extmetadata",
-                "iiurlwidth": 1200,
+                "iiurlwidth": 640,
                 "format": "json",
                 "formatversion": 2,
             },
@@ -165,8 +166,8 @@ class Command(BaseCommand):
             if not source or source in used_sources:
                 continue
 
-            thumb = str(info.get("thumburl") or info.get("url") or "")
-            if not thumb:
+            thumb = str(info.get("thumburl") or "")
+            if not thumb or "thumbnail_unscaled" in thumb:
                 continue
 
             candidates.append(
@@ -194,8 +195,23 @@ class Command(BaseCommand):
         candidate: dict,
         owner,
     ):
-        response = client.get(candidate["download_url"])
-        response.raise_for_status()
+        response = None
+        for attempt in range(4):
+            response = client.get(candidate["download_url"])
+            if response.status_code != 429:
+                response.raise_for_status()
+                break
+            retry_after = response.headers.get("retry-after")
+            try:
+                delay = float(retry_after) if retry_after else (2 ** attempt)
+            except (TypeError, ValueError):
+                delay = 2 ** attempt
+            time.sleep(max(1.0, min(delay, 12.0)))
+        else:
+            raise CommandError(
+                f"{category.slug}: Wikimedia rate limit persisted after retries."
+            )
+
         payload = response.content
         content_type = (
             response.headers.get("content-type", "")
@@ -372,6 +388,7 @@ class Command(BaseCommand):
                     )
                     used_sources.add(candidate["source_url"])
                     succeeded += 1
+                    time.sleep(0.75)
                     self.stdout.write(
                         self.style.SUCCESS(
                             f"{category.slug}: {candidate['title']}"
