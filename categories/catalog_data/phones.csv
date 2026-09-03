@@ -1,1 +1,456 @@
-field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active\nbrand,Brand,,,apple,Apple,true,true,true,true,,10,true\nbrand,Brand,,,samsung,Samsung,true,true,true,true,,11,true\nbrand,Brand,,,motorola,Motorola,true,true,true,true,,12,true\nbrand,Brand,,,xiaomi,Xiaomi / Redmi / POCO,true,true,true,true,,13,true\nbrand,Brand,,,realme,realme,true,true,true,true,,14,true\nbrand,Brand,,,asus,ASUS,true,true,true,true,,15,true\nbrand,Brand,,,google,Google,true,true,true,true,,16,true\nbrand,Brand,,,oneplus,OnePlus,true,true,true,true,,17,true\nbrand,Brand,,,oppo,OPPO,true,true,true,true,,18,true\nbrand,Brand,,,vivo,vivo,true,true,true,true,,19,true\nbrand,Brand,,,honor,HONOR,true,true,true,true,,20,true\nbrand,Brand,,,huawei,Huawei,true,true,true,true,,21,true\nbrand,Brand,,,tecno,TECNO,true,true,true,true,,22,true\nbrand,Brand,,,infinix,Infinix,true,true,true,true,,23,true\nbrand,Brand,,,itel,itel,true,true,true,true,,24,true\nbrand,Brand,,,nothing,Nothing,true,true,true,true,,25,true\nmodel,Model,brand,samsung,Galaxy S26,Galaxy S26,true,true,true,true,,10,true\nmodel,Model,brand,samsung,Galaxy S26+,Galaxy S26+,true,true,true,true,,11,true\nmodel,Model,brand,samsung,Galaxy S26 Ultra,Galaxy S26 Ultra,true,true,true,true,,12,true\nmodel,Model,brand,samsung,Galaxy S25,Galaxy S25,true,true,true,true,,13,true\nmodel,Model,brand,samsung,Galaxy S25+,Galaxy S25+,true,true,true,true,,14,true\nmodel,Model,brand,samsung,Galaxy S25 Ultra,Galaxy S25 Ultra,true,true,true,true,,15,true\nmodel,Model,brand,samsung,Galaxy S25 Edge,Galaxy S25 Edge,true,true,true,true,,16,true\nmodel,Model,brand,samsung,Galaxy S25 FE,Galaxy S25 FE,true,true,true,true,,17,true\nmodel,Model,brand,samsung,Galaxy S24,Galaxy S24,true,true,true,true,,18,true\nmodel,Model,brand,samsung,Galaxy S24+,Galaxy S24+,true,true,true,true,,19,true\nmodel,Model,brand,samsung,Galaxy S24 Ultra,Galaxy S24 Ultra,true,true,true,true,,20,true\nmodel,Model,brand,samsung,Galaxy S24 FE,Galaxy S24 FE,true,true,true,true,,21,true\nmodel,Model,brand,samsung,Galaxy S23,Galaxy S23,true,true,true,true,,22,true\nmodel,Model,brand,samsung,Galaxy S23+,Galaxy S23+,true,true,true,true,,23,true\nmodel,Model,brand,samsung,Galaxy S23 Ultra,Galaxy S23 Ultra,true,true,true,true,,24,true\nmodel,Model,brand,samsung,Galaxy S23 FE,Galaxy S23 FE,true,true,true,true,,25,true\nmodel,Model,brand,samsung,Galaxy Z Fold7,Galaxy Z Fold7,true,true,true,true,,26,true\nmodel,Model,brand,samsung,Galaxy Z Flip7,Galaxy Z Flip7,true,true,true,true,,27,true\nmodel,Model,brand,samsung,Galaxy Z Flip7 FE,Galaxy Z Flip7 FE,true,true,true,true,,28,true\nmodel,Model,brand,samsung,Galaxy Z Fold6,Galaxy Z Fold6,true,true,true,true,,29,true\nmodel,Model,brand,samsung,Galaxy Z Flip6,Galaxy Z Flip6,true,true,true,true,,30,true\nmodel,Model,brand,samsung,Galaxy A56 5G,Galaxy A56 5G,true,true,true,true,,31,true\nmodel,Model,brand,samsung,Galaxy A36 5G,Galaxy A36 5G,true,true,true,true,,32,true\nmodel,Model,brand,samsung,Galaxy A26 5G,Galaxy A26 5G,true,true,true,true,,33,true\nmodel,Model,brand,samsung,Galaxy A55 5G,Galaxy A55 5G,true,true,true,true,,34,true\nmodel,Model,brand,samsung,Galaxy A35 5G,Galaxy A35 5G,true,true,true,true,,35,true\nmodel,Model,brand,samsung,Galaxy A25 5G,Galaxy A25 5G,true,true,true,true,,36,true\nmodel,Model,brand,samsung,Galaxy A15 5G,Galaxy A15 5G,true,true,true,true,,37,true\nmodel,Model,brand,samsung,Galaxy M55 5G,Galaxy M55 5G,true,true,true,true,,38,true\nmodel,Model,brand,samsung,Galaxy M35 5G,Galaxy M35 5G,true,true,true,true,,39,true\nmodel,Model,brand,samsung,Galaxy M15 5G,Galaxy M15 5G,true,true,true,true,,40,true\nmodel,Model,brand,samsung,Galaxy S22,Galaxy S22,true,true,true,true,,33,true\nmodel,Model,brand,samsung,Galaxy S22+,Galaxy S22+,true,true,true,true,,34,true\nmodel,Model,brand,samsung,Galaxy S22 Ultra,Galaxy S22 Ultra,true,true,true,true,,35,true\nmodel,Model,brand,samsung,Galaxy S21,Galaxy S21,true,true,true,true,,36,true\nmodel,Model,brand,samsung,Galaxy S21+,Galaxy S21+,true,true,true,true,,37,true\nmodel,Model,brand,samsung,Galaxy S21 Ultra,Galaxy S21 Ultra,true,true,true,true,,38,true\nmodel,Model,brand,samsung,Galaxy S21 FE,Galaxy S21 FE,true,true,true,true,,39,true\nmodel,Model,brand,samsung,Galaxy S20,Galaxy S20,true,true,true,true,,40,true\nmodel,Model,brand,samsung,Galaxy S20+,Galaxy S20+,true,true,true,true,,41,true\nmodel,Model,brand,samsung,Galaxy S20 Ultra,Galaxy S20 Ultra,true,true,true,true,,42,true\nmodel,Model,brand,samsung,Galaxy S20 FE,Galaxy S20 FE,true,true,true,true,,43,true\nmodel,Model,brand,apple,iPhone 17 Pro,iPhone 17 Pro,true,true,true,true,,10,true\nmodel,Model,brand,apple,iPhone 17 Pro Max,iPhone 17 Pro Max,true,true,true,true,,11,true\nmodel,Model,brand,apple,iPhone Air,iPhone Air,true,true,true,true,,12,true\nmodel,Model,brand,apple,iPhone 17,iPhone 17,true,true,true,true,,13,true\nmodel,Model,brand,apple,iPhone 17e,iPhone 17e,true,true,true,true,,14,true\nmodel,Model,brand,apple,iPhone 16 Pro,iPhone 16 Pro,true,true,true,true,,15,true\nmodel,Model,brand,apple,iPhone 16 Pro Max,iPhone 16 Pro Max,true,true,true,true,,16,true\nmodel,Model,brand,apple,iPhone 16,iPhone 16,true,true,true,true,,17,true\nmodel,Model,brand,apple,iPhone 16 Plus,iPhone 16 Plus,true,true,true,true,,18,true\nmodel,Model,brand,apple,iPhone 16e,iPhone 16e,true,true,true,true,,19,true\nmodel,Model,brand,apple,iPhone 15 Pro,iPhone 15 Pro,true,true,true,true,,20,true\nmodel,Model,brand,apple,iPhone 15 Pro Max,iPhone 15 Pro Max,true,true,true,true,,21,true\nmodel,Model,brand,apple,iPhone 15,iPhone 15,true,true,true,true,,22,true\nmodel,Model,brand,apple,iPhone 15 Plus,iPhone 15 Plus,true,true,true,true,,23,true\nmodel,Model,brand,apple,iPhone 14 Pro,iPhone 14 Pro,true,true,true,true,,24,true\nmodel,Model,brand,apple,iPhone 14 Pro Max,iPhone 14 Pro Max,true,true,true,true,,25,true\nmodel,Model,brand,apple,iPhone 14,iPhone 14,true,true,true,true,,26,true\nmodel,Model,brand,apple,iPhone 14 Plus,iPhone 14 Plus,true,true,true,true,,27,true\nmodel,Model,brand,apple,iPhone 13 Pro,iPhone 13 Pro,true,true,true,true,,28,true\nmodel,Model,brand,apple,iPhone 13 Pro Max,iPhone 13 Pro Max,true,true,true,true,,29,true\nmodel,Model,brand,apple,iPhone 13 mini,iPhone 13 mini,true,true,true,true,,30,true\nmodel,Model,brand,apple,iPhone 13,iPhone 13,true,true,true,true,,31,true\nmodel,Model,brand,apple,iPhone SE (3rd generation),iPhone SE (3rd generation),true,true,true,true,,32,true\nmodel,Model,brand,motorola,Motorola Signature,Motorola Signature,true,true,true,true,,10,true\nmodel,Model,brand,motorola,Razr Fold,Razr Fold,true,true,true,true,,11,true\nmodel,Model,brand,motorola,Razr 70 Ultra,Razr 70 Ultra,true,true,true,true,,12,true\nmodel,Model,brand,motorola,Razr 70,Razr 70,true,true,true,true,,13,true\nmodel,Model,brand,motorola,Razr 60 Ultra,Razr 60 Ultra,true,true,true,true,,14,true\nmodel,Model,brand,motorola,Razr 60,Razr 60,true,true,true,true,,15,true\nmodel,Model,brand,motorola,Razr 50 Ultra,Razr 50 Ultra,true,true,true,true,,16,true\nmodel,Model,brand,motorola,Razr 50,Razr 50,true,true,true,true,,17,true\nmodel,Model,brand,motorola,Edge 70 Pro,Edge 70 Pro,true,true,true,true,,18,true\nmodel,Model,brand,motorola,Edge 70,Edge 70,true,true,true,true,,19,true\nmodel,Model,brand,motorola,Edge 70 Fusion+,Edge 70 Fusion+,true,true,true,true,,20,true\nmodel,Model,brand,motorola,Edge 70 Fusion,Edge 70 Fusion,true,true,true,true,,21,true\nmodel,Model,brand,motorola,Edge 60 Pro,Edge 60 Pro,true,true,true,true,,22,true\nmodel,Model,brand,motorola,Edge 60,Edge 60,true,true,true,true,,23,true\nmodel,Model,brand,motorola,Edge 60 Neo,Edge 60 Neo,true,true,true,true,,24,true\nmodel,Model,brand,motorola,Edge 60 Fusion,Edge 60 Fusion,true,true,true,true,,25,true\nmodel,Model,brand,motorola,Edge 50 Ultra,Edge 50 Ultra,true,true,true,true,,26,true\nmodel,Model,brand,motorola,Edge 50 Pro,Edge 50 Pro,true,true,true,true,,27,true\nmodel,Model,brand,motorola,Edge 50,Edge 50,true,true,true,true,,28,true\nmodel,Model,brand,motorola,Edge 50 Neo,Edge 50 Neo,true,true,true,true,,29,true\nmodel,Model,brand,motorola,Edge 50 Fusion,Edge 50 Fusion,true,true,true,true,,30,true\nmodel,Model,brand,motorola,Moto G Max 5G,Moto G Max 5G,true,true,true,true,,31,true\nmodel,Model,brand,motorola,Moto G86 5G,Moto G86 5G,true,true,true,true,,32,true\nmodel,Model,brand,motorola,Moto G77 5G,Moto G77 5G,true,true,true,true,,33,true\nmodel,Model,brand,motorola,Moto G67 5G,Moto G67 5G,true,true,true,true,,34,true\nmodel,Model,brand,motorola,Moto G56 5G,Moto G56 5G,true,true,true,true,,35,true\nmodel,Model,brand,motorola,Moto G47 5G,Moto G47 5G,true,true,true,true,,36,true\nmodel,Model,brand,motorola,Moto G35 5G,Moto G35 5G,true,true,true,true,,37,true\nmodel,Model,brand,motorola,Moto G17,Moto G17,true,true,true,true,,38,true\nmodel,Model,brand,motorola,Moto G15,Moto G15,true,true,true,true,,39,true\nmodel,Model,brand,motorola,Moto G06,Moto G06,true,true,true,true,,40,true\nmodel,Model,brand,motorola,Moto G05,Moto G05,true,true,true,true,,41,true\nmodel,Model,brand,xiaomi,Xiaomi 17T,Xiaomi 17T,true,true,true,true,,10,true\nmodel,Model,brand,xiaomi,Xiaomi 15T Pro,Xiaomi 15T Pro,true,true,true,true,,11,true\nmodel,Model,brand,xiaomi,Xiaomi 15T,Xiaomi 15T,true,true,true,true,,12,true\nmodel,Model,brand,xiaomi,Xiaomi 14 Ultra,Xiaomi 14 Ultra,true,true,true,true,,13,true\nmodel,Model,brand,xiaomi,Xiaomi 14,Xiaomi 14,true,true,true,true,,14,true\nmodel,Model,brand,xiaomi,Xiaomi 14T Pro,Xiaomi 14T Pro,true,true,true,true,,15,true\nmodel,Model,brand,xiaomi,Xiaomi 14T,Xiaomi 14T,true,true,true,true,,16,true\nmodel,Model,brand,xiaomi,Xiaomi 13 Ultra,Xiaomi 13 Ultra,true,true,true,true,,17,true\nmodel,Model,brand,xiaomi,Xiaomi 13 Pro,Xiaomi 13 Pro,true,true,true,true,,18,true\nmodel,Model,brand,xiaomi,Xiaomi 13,Xiaomi 13,true,true,true,true,,19,true\nmodel,Model,brand,xiaomi,Xiaomi 13T Pro,Xiaomi 13T Pro,true,true,true,true,,20,true\nmodel,Model,brand,xiaomi,Xiaomi 13T,Xiaomi 13T,true,true,true,true,,21,true\nmodel,Model,brand,xiaomi,REDMI Note 15 5G,REDMI Note 15 5G,true,true,true,true,,22,true\nmodel,Model,brand,xiaomi,REDMI Note 15,REDMI Note 15,true,true,true,true,,23,true\nmodel,Model,brand,xiaomi,REDMI Note 14 5G,REDMI Note 14 5G,true,true,true,true,,24,true\nmodel,Model,brand,xiaomi,REDMI Note 14S,REDMI Note 14S,true,true,true,true,,25,true\nmodel,Model,brand,xiaomi,REDMI Note 13 Pro+ 5G,REDMI Note 13 Pro+ 5G,true,true,true,true,,26,true\nmodel,Model,brand,xiaomi,REDMI Note 13 Pro 5G,REDMI Note 13 Pro 5G,true,true,true,true,,27,true\nmodel,Model,brand,xiaomi,REDMI Note 13 5G,REDMI Note 13 5G,true,true,true,true,,28,true\nmodel,Model,brand,xiaomi,REDMI 15 5G,REDMI 15 5G,true,true,true,true,,29,true\nmodel,Model,brand,xiaomi,REDMI 15,REDMI 15,true,true,true,true,,30,true\nmodel,Model,brand,xiaomi,REDMI 15C 5G,REDMI 15C 5G,true,true,true,true,,31,true\nmodel,Model,brand,xiaomi,REDMI 15C,REDMI 15C,true,true,true,true,,32,true\nmodel,Model,brand,xiaomi,POCO X8 Pro,POCO X8 Pro,true,true,true,true,,33,true\nmodel,Model,brand,xiaomi,POCO F6 Pro,POCO F6 Pro,true,true,true,true,,34,true\nmodel,Model,brand,xiaomi,POCO F6,POCO F6,true,true,true,true,,35,true\nmodel,Model,brand,xiaomi,POCO X6 Pro,POCO X6 Pro,true,true,true,true,,36,true\nmodel,Model,brand,xiaomi,POCO X6,POCO X6,true,true,true,true,,37,true\nmodel,Model,brand,xiaomi,POCO M7 Pro 5G,POCO M7 Pro 5G,true,true,true,true,,38,true\nmodel,Model,brand,xiaomi,POCO M7,POCO M7,true,true,true,true,,39,true\nmodel,Model,brand,xiaomi,POCO C85,POCO C85,true,true,true,true,,40,true\nmodel,Model,brand,realme,realme 16 Pro+ 5G,realme 16 Pro+ 5G,true,true,true,true,,10,true\nmodel,Model,brand,realme,realme 16 5G,realme 16 5G,true,true,true,true,,11,true\nmodel,Model,brand,realme,realme 16x 5G,realme 16x 5G,true,true,true,true,,12,true\nmodel,Model,brand,realme,realme 15 Pro 5G,realme 15 Pro 5G,true,true,true,true,,13,true\nmodel,Model,brand,realme,realme 15 5G,realme 15 5G,true,true,true,true,,14,true\nmodel,Model,brand,realme,realme 15T,realme 15T,true,true,true,true,,15,true\nmodel,Model,brand,realme,realme 14 Pro+ 5G,realme 14 Pro+ 5G,true,true,true,true,,16,true\nmodel,Model,brand,realme,realme 14 Pro 5G,realme 14 Pro 5G,true,true,true,true,,17,true\nmodel,Model,brand,realme,realme 14 5G,realme 14 5G,true,true,true,true,,18,true\nmodel,Model,brand,realme,realme 14T 5G,realme 14T 5G,true,true,true,true,,19,true\nmodel,Model,brand,realme,realme 13+ 5G,realme 13+ 5G,true,true,true,true,,20,true\nmodel,Model,brand,realme,realme 12 Pro+ 5G,realme 12 Pro+ 5G,true,true,true,true,,21,true\nmodel,Model,brand,realme,realme 12+ 5G,realme 12+ 5G,true,true,true,true,,22,true\nmodel,Model,brand,realme,realme 12 5G,realme 12 5G,true,true,true,true,,23,true\nmodel,Model,brand,realme,realme 12x 5G,realme 12x 5G,true,true,true,true,,24,true\nmodel,Model,brand,realme,realme GT 7,realme GT 7,true,true,true,true,,25,true\nmodel,Model,brand,realme,realme GT 6,realme GT 6,true,true,true,true,,26,true\nmodel,Model,brand,realme,realme P4 Power 5G,realme P4 Power 5G,true,true,true,true,,27,true\nmodel,Model,brand,realme,realme P4 Lite,realme P4 Lite,true,true,true,true,,28,true\nmodel,Model,brand,realme,realme C100x,realme C100x,true,true,true,true,,29,true\nmodel,Model,brand,realme,realme C85 Pro,realme C85 Pro,true,true,true,true,,30,true\nmodel,Model,brand,realme,realme C85,realme C85,true,true,true,true,,31,true\nmodel,Model,brand,realme,realme C75 5G,realme C75 5G,true,true,true,true,,32,true\nmodel,Model,brand,realme,realme C75,realme C75,true,true,true,true,,33,true\nmodel,Model,brand,realme,realme C67,realme C67,true,true,true,true,,34,true\nmodel,Model,brand,realme,realme C63,realme C63,true,true,true,true,,35,true\nmodel,Model,brand,realme,realme C61,realme C61,true,true,true,true,,36,true\nmodel,Model,brand,asus,Zenfone 12 Ultra,Zenfone 12 Ultra,true,true,true,true,,10,true\nmodel,Model,brand,asus,Zenfone 11 Ultra,Zenfone 11 Ultra,true,true,true,true,,11,true\nmodel,Model,brand,asus,Zenfone 10,Zenfone 10,true,true,true,true,,12,true\nmodel,Model,brand,asus,ROG Phone 9 Pro Edition,ROG Phone 9 Pro Edition,true,true,true,true,,13,true\nmodel,Model,brand,asus,ROG Phone 9 Pro,ROG Phone 9 Pro,true,true,true,true,,14,true\nmodel,Model,brand,asus,ROG Phone 9,ROG Phone 9,true,true,true,true,,15,true\nmodel,Model,brand,asus,ROG Phone 8 Pro,ROG Phone 8 Pro,true,true,true,true,,16,true\nmodel,Model,brand,asus,ROG Phone 8,ROG Phone 8,true,true,true,true,,17,true\nmodel,Model,brand,google,Pixel 10 Pro Fold,Pixel 10 Pro Fold,true,true,true,true,,10,true\nmodel,Model,brand,google,Pixel 10 Pro XL,Pixel 10 Pro XL,true,true,true,true,,11,true\nmodel,Model,brand,google,Pixel 10 Pro,Pixel 10 Pro,true,true,true,true,,12,true\nmodel,Model,brand,google,Pixel 10,Pixel 10,true,true,true,true,,13,true\nmodel,Model,brand,google,Pixel 9 Pro Fold,Pixel 9 Pro Fold,true,true,true,true,,14,true\nmodel,Model,brand,google,Pixel 9 Pro XL,Pixel 9 Pro XL,true,true,true,true,,15,true\nmodel,Model,brand,google,Pixel 9 Pro,Pixel 9 Pro,true,true,true,true,,16,true\nmodel,Model,brand,google,Pixel 9,Pixel 9,true,true,true,true,,17,true\nmodel,Model,brand,google,Pixel 9a,Pixel 9a,true,true,true,true,,18,true\nmodel,Model,brand,google,Pixel 8 Pro,Pixel 8 Pro,true,true,true,true,,19,true\nmodel,Model,brand,google,Pixel 8,Pixel 8,true,true,true,true,,20,true\nmodel,Model,brand,google,Pixel 8a,Pixel 8a,true,true,true,true,,21,true\nmodel,Model,brand,google,Pixel 7 Pro,Pixel 7 Pro,true,true,true,true,,22,true\nmodel,Model,brand,google,Pixel 7,Pixel 7,true,true,true,true,,23,true\nmodel,Model,brand,google,Pixel 7a,Pixel 7a,true,true,true,true,,24,true\nmodel,Model,brand,oneplus,OnePlus 15,OnePlus 15,true,true,true,true,,10,true\nmodel,Model,brand,oneplus,OnePlus 13,OnePlus 13,true,true,true,true,,11,true\nmodel,Model,brand,oneplus,OnePlus 13R,OnePlus 13R,true,true,true,true,,12,true\nmodel,Model,brand,oneplus,OnePlus 12,OnePlus 12,true,true,true,true,,13,true\nmodel,Model,brand,oneplus,OnePlus 12R,OnePlus 12R,true,true,true,true,,14,true\nmodel,Model,brand,oneplus,OnePlus Open,OnePlus Open,true,true,true,true,,15,true\nmodel,Model,brand,oneplus,OnePlus Nord 5,OnePlus Nord 5,true,true,true,true,,16,true\nmodel,Model,brand,oneplus,OnePlus Nord 4,OnePlus Nord 4,true,true,true,true,,17,true\nmodel,Model,brand,oneplus,OnePlus Nord CE4,OnePlus Nord CE4,true,true,true,true,,18,true\nmodel,Model,brand,oppo,OPPO Find X8 Pro,OPPO Find X8 Pro,true,true,true,true,,10,true\nmodel,Model,brand,oppo,OPPO Find X8,OPPO Find X8,true,true,true,true,,11,true\nmodel,Model,brand,oppo,OPPO Find N5,OPPO Find N5,true,true,true,true,,12,true\nmodel,Model,brand,oppo,OPPO Reno14 Pro,OPPO Reno14 Pro,true,true,true,true,,13,true\nmodel,Model,brand,oppo,OPPO Reno14,OPPO Reno14,true,true,true,true,,14,true\nmodel,Model,brand,oppo,OPPO Reno13 Pro,OPPO Reno13 Pro,true,true,true,true,,15,true\nmodel,Model,brand,oppo,OPPO Reno13,OPPO Reno13,true,true,true,true,,16,true\nmodel,Model,brand,oppo,OPPO A5 Pro,OPPO A5 Pro,true,true,true,true,,17,true\nmodel,Model,brand,oppo,OPPO A5,OPPO A5,true,true,true,true,,18,true\nmodel,Model,brand,vivo,vivo X200 Pro,vivo X200 Pro,true,true,true,true,,10,true\nmodel,Model,brand,vivo,vivo X200,vivo X200,true,true,true,true,,11,true\nmodel,Model,brand,vivo,vivo X100 Pro,vivo X100 Pro,true,true,true,true,,12,true\nmodel,Model,brand,vivo,vivo X100,vivo X100,true,true,true,true,,13,true\nmodel,Model,brand,vivo,vivo V50,vivo V50,true,true,true,true,,14,true\nmodel,Model,brand,vivo,vivo V40 Pro,vivo V40 Pro,true,true,true,true,,15,true\nmodel,Model,brand,vivo,vivo V40,vivo V40,true,true,true,true,,16,true\nmodel,Model,brand,vivo,vivo V30 Pro,vivo V30 Pro,true,true,true,true,,17,true\nmodel,Model,brand,vivo,vivo V30,vivo V30,true,true,true,true,,18,true\nmodel,Model,brand,vivo,vivo Y39,vivo Y39,true,true,true,true,,19,true\nmodel,Model,brand,vivo,vivo Y29,vivo Y29,true,true,true,true,,20,true\nmodel,Model,brand,honor,HONOR Magic7 Pro,HONOR Magic7 Pro,true,true,true,true,,10,true\nmodel,Model,brand,honor,HONOR Magic7,HONOR Magic7,true,true,true,true,,11,true\nmodel,Model,brand,honor,HONOR Magic V3,HONOR Magic V3,true,true,true,true,,12,true\nmodel,Model,brand,honor,HONOR 400 Pro,HONOR 400 Pro,true,true,true,true,,13,true\nmodel,Model,brand,honor,HONOR 400,HONOR 400,true,true,true,true,,14,true\nmodel,Model,brand,honor,HONOR 200 Pro,HONOR 200 Pro,true,true,true,true,,15,true\nmodel,Model,brand,honor,HONOR 200,HONOR 200,true,true,true,true,,16,true\nmodel,Model,brand,honor,HONOR X9c,HONOR X9c,true,true,true,true,,17,true\nmodel,Model,brand,honor,HONOR X8c,HONOR X8c,true,true,true,true,,18,true\nmodel,Model,brand,huawei,Huawei Pura 80 Ultra,Huawei Pura 80 Ultra,true,true,true,true,,10,true\nmodel,Model,brand,huawei,Huawei Pura 80 Pro,Huawei Pura 80 Pro,true,true,true,true,,11,true\nmodel,Model,brand,huawei,Huawei Pura 80,Huawei Pura 80,true,true,true,true,,12,true\nmodel,Model,brand,huawei,Huawei Pura 70 Ultra,Huawei Pura 70 Ultra,true,true,true,true,,13,true\nmodel,Model,brand,huawei,Huawei Pura 70 Pro,Huawei Pura 70 Pro,true,true,true,true,,14,true\nmodel,Model,brand,huawei,Huawei Pura 70,Huawei Pura 70,true,true,true,true,,15,true\nmodel,Model,brand,huawei,Huawei Mate 70 Pro,Huawei Mate 70 Pro,true,true,true,true,,16,true\nmodel,Model,brand,huawei,Huawei Mate 70,Huawei Mate 70,true,true,true,true,,17,true\nmodel,Model,brand,huawei,Huawei Mate X6,Huawei Mate X6,true,true,true,true,,18,true\nmodel,Model,brand,huawei,Huawei nova 13 Pro,Huawei nova 13 Pro,true,true,true,true,,19,true\nmodel,Model,brand,huawei,Huawei nova 13,Huawei nova 13,true,true,true,true,,20,true\nmodel,Model,brand,tecno,TECNO CAMON 40 Premier 5G,TECNO CAMON 40 Premier 5G,true,true,true,true,,10,true\nmodel,Model,brand,tecno,TECNO CAMON 40 Pro 5G,TECNO CAMON 40 Pro 5G,true,true,true,true,,11,true\nmodel,Model,brand,tecno,TECNO CAMON 40 Pro,TECNO CAMON 40 Pro,true,true,true,true,,12,true\nmodel,Model,brand,tecno,TECNO CAMON 40,TECNO CAMON 40,true,true,true,true,,13,true\nmodel,Model,brand,tecno,TECNO PHANTOM V Fold2 5G,TECNO PHANTOM V Fold2 5G,true,true,true,true,,14,true\nmodel,Model,brand,tecno,TECNO PHANTOM V Flip2 5G,TECNO PHANTOM V Flip2 5G,true,true,true,true,,15,true\nmodel,Model,brand,tecno,TECNO POVA 7 Pro 5G,TECNO POVA 7 Pro 5G,true,true,true,true,,16,true\nmodel,Model,brand,tecno,TECNO POVA 7,TECNO POVA 7,true,true,true,true,,17,true\nmodel,Model,brand,tecno,TECNO SPARK 40 Pro+,TECNO SPARK 40 Pro+,true,true,true,true,,18,true\nmodel,Model,brand,tecno,TECNO SPARK 40 Pro,TECNO SPARK 40 Pro,true,true,true,true,,19,true\nmodel,Model,brand,infinix,Infinix NOTE 50 Pro+ 5G,Infinix NOTE 50 Pro+ 5G,true,true,true,true,,10,true\nmodel,Model,brand,infinix,Infinix NOTE 50 Pro,Infinix NOTE 50 Pro,true,true,true,true,,11,true\nmodel,Model,brand,infinix,Infinix NOTE 50,Infinix NOTE 50,true,true,true,true,,12,true\nmodel,Model,brand,infinix,Infinix GT 30 Pro,Infinix GT 30 Pro,true,true,true,true,,13,true\nmodel,Model,brand,infinix,Infinix GT 20 Pro,Infinix GT 20 Pro,true,true,true,true,,14,true\nmodel,Model,brand,infinix,Infinix ZERO 40 5G,Infinix ZERO 40 5G,true,true,true,true,,15,true\nmodel,Model,brand,infinix,Infinix ZERO 40,Infinix ZERO 40,true,true,true,true,,16,true\nmodel,Model,brand,infinix,Infinix HOT 50 Pro+,Infinix HOT 50 Pro+,true,true,true,true,,17,true\nmodel,Model,brand,infinix,Infinix HOT 50 Pro,Infinix HOT 50 Pro,true,true,true,true,,18,true\nmodel,Model,brand,infinix,Infinix HOT 50,Infinix HOT 50,true,true,true,true,,19,true\nmodel,Model,brand,itel,itel S25 Ultra,itel S25 Ultra,true,true,true,true,,10,true\nmodel,Model,brand,itel,itel S25,itel S25,true,true,true,true,,11,true\nmodel,Model,brand,itel,itel P70,itel P70,true,true,true,true,,12,true\nmodel,Model,brand,itel,itel P65,itel P65,true,true,true,true,,13,true\nmodel,Model,brand,itel,itel A90,itel A90,true,true,true,true,,14,true\nmodel,Model,brand,itel,itel A80,itel A80,true,true,true,true,,15,true\nmodel,Model,brand,nothing,Nothing Phone (3),Nothing Phone (3),true,true,true,true,,10,true\nmodel,Model,brand,nothing,Nothing Phone (3a) Pro,Nothing Phone (3a) Pro,true,true,true,true,,11,true\nmodel,Model,brand,nothing,Nothing Phone (3a),Nothing Phone (3a),true,true,true,true,,12,true\nmodel,Model,brand,nothing,Nothing Phone (2),Nothing Phone (2),true,true,true,true,,13,true\nmodel,Model,brand,nothing,Nothing Phone (2a) Plus,Nothing Phone (2a) Plus,true,true,true,true,,14,true\nmodel,Model,brand,nothing,Nothing Phone (2a),Nothing Phone (2a),true,true,true,true,,15,true\nstorage_gb,Storage,model,Galaxy S26,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S26,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S26+,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S26+,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S26 Ultra,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S26 Ultra,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S26 Ultra,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy S25,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S25,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S25,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy S25+,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S25+,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S25 Ultra,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S25 Ultra,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S25 Ultra,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy S25 Edge,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S25 Edge,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S25 FE,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S24,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S24,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S24+,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S24+,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S24 Ultra,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S24 Ultra,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S24 Ultra,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy S24 FE,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S24 FE,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy Z Fold7,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy Z Fold7,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy Z Fold7,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy Z Flip7,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy Z Flip7,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy Z Flip7 FE,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy Z Flip7 FE,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy Z Fold6,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy Z Fold6,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy Z Fold6,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy Z Flip6,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy Z Flip6,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy A56 5G,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy A56 5G,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy A36 5G,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy A36 5G,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy A26 5G,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 17 Pro,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 17 Pro,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 17 Pro,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 17 Pro,2048,2 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone 17 Pro Max,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 17 Pro Max,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 17 Pro Max,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 17 Pro Max,2048,2 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone Air,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone Air,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone Air,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 17,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 17,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 17e,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 17e,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 16 Pro,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 16 Pro,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 16 Pro,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 16 Pro,1024,1 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone 16 Pro Max,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 16 Pro Max,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 16 Pro Max,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 16,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 16,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 16,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 16 Plus,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 16 Plus,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 16 Plus,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 16e,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 16e,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 16e,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 15 Pro,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 15 Pro,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 15 Pro,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 15 Pro,1024,1 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone 15 Pro Max,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 15 Pro Max,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 15 Pro Max,1024,1 TB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 15,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 15,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 15,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 15 Plus,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 15 Plus,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 15 Plus,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 14 Pro,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 14 Pro,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 14 Pro,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 14 Pro,1024,1 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone 14 Pro Max,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 14 Pro Max,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 14 Pro Max,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 14 Pro Max,1024,1 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone 14,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 14,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 14,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 14 Plus,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 14 Plus,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 14 Plus,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 13 Pro,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 13 Pro,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 13 Pro,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 13 Pro,1024,1 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone 13 Pro Max,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 13 Pro Max,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 13 Pro Max,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 13 Pro Max,1024,1 TB,true,true,true,true,GB,13,true\nstorage_gb,Storage,model,iPhone 13 mini,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 13 mini,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 13 mini,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone 13,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone 13,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone 13,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,iPhone SE (3rd generation),64,64 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,iPhone SE (3rd generation),128,128 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,iPhone SE (3rd generation),256,256 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Motorola Signature,512,512 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Razr Fold,1024,1 TB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Razr 70 Ultra,512,512 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Razr 70,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Razr 60 Ultra,1024,1 TB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Razr 60,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 70 Pro,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 70 Pro,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Edge 70,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 70,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Edge 70 Fusion+,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 70 Fusion+,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Edge 70 Fusion,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 60 Pro,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 60 Pro,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Edge 60,512,512 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 60 Neo,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Edge 60 Neo,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Edge 60 Fusion,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G86 5G,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G86 5G,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Moto G77 5G,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G67 5G,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G67 5G,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Moto G56 5G,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G47 5G,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G47 5G,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Moto G35 5G,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G35 5G,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Moto G17,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G17,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Moto G15,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G06,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Moto G06,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Moto G05,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Zenfone 10,256,256 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Zenfone 10,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,ROG Phone 9 Pro,512,512 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,ROG Phone 9 Pro Edition,1024,1 TB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S22,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S22,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S22+,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S22+,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S22 Ultra,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S22 Ultra,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S22 Ultra,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy S21,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S21,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S21+,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S21+,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S21 Ultra,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S21 Ultra,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S21 Ultra,512,512 GB,true,true,true,true,GB,12,true\nstorage_gb,Storage,model,Galaxy S21 FE,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S21 FE,256,256 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S20,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S20+,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S20 Ultra,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S20 Ultra,512,512 GB,true,true,true,true,GB,11,true\nstorage_gb,Storage,model,Galaxy S20 FE,128,128 GB,true,true,true,true,GB,10,true\nstorage_gb,Storage,model,Galaxy S20 FE,256,256 GB,true,true,true,true,GB,11,true\n
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+brand,Brand,,,apple,Apple,true,true,true,true,,10,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,11,true
+brand,Brand,,,motorola,Motorola,true,true,true,true,,12,true
+brand,Brand,,,xiaomi,Xiaomi / Redmi / POCO,true,true,true,true,,13,true
+brand,Brand,,,realme,realme,true,true,true,true,,14,true
+brand,Brand,,,asus,ASUS,true,true,true,true,,15,true
+brand,Brand,,,google,Google,true,true,true,true,,16,true
+brand,Brand,,,oneplus,OnePlus,true,true,true,true,,17,true
+brand,Brand,,,oppo,OPPO,true,true,true,true,,18,true
+brand,Brand,,,vivo,vivo,true,true,true,true,,19,true
+brand,Brand,,,honor,HONOR,true,true,true,true,,20,true
+brand,Brand,,,huawei,Huawei,true,true,true,true,,21,true
+brand,Brand,,,tecno,TECNO,true,true,true,true,,22,true
+brand,Brand,,,infinix,Infinix,true,true,true,true,,23,true
+brand,Brand,,,itel,itel,true,true,true,true,,24,true
+brand,Brand,,,nothing,Nothing,true,true,true,true,,25,true
+model,Model,brand,samsung,Galaxy S26,Galaxy S26,true,true,true,true,,10,true
+model,Model,brand,samsung,Galaxy S26+,Galaxy S26+,true,true,true,true,,11,true
+model,Model,brand,samsung,Galaxy S26 Ultra,Galaxy S26 Ultra,true,true,true,true,,12,true
+model,Model,brand,samsung,Galaxy S25,Galaxy S25,true,true,true,true,,13,true
+model,Model,brand,samsung,Galaxy S25+,Galaxy S25+,true,true,true,true,,14,true
+model,Model,brand,samsung,Galaxy S25 Ultra,Galaxy S25 Ultra,true,true,true,true,,15,true
+model,Model,brand,samsung,Galaxy S25 Edge,Galaxy S25 Edge,true,true,true,true,,16,true
+model,Model,brand,samsung,Galaxy S25 FE,Galaxy S25 FE,true,true,true,true,,17,true
+model,Model,brand,samsung,Galaxy S24,Galaxy S24,true,true,true,true,,18,true
+model,Model,brand,samsung,Galaxy S24+,Galaxy S24+,true,true,true,true,,19,true
+model,Model,brand,samsung,Galaxy S24 Ultra,Galaxy S24 Ultra,true,true,true,true,,20,true
+model,Model,brand,samsung,Galaxy S24 FE,Galaxy S24 FE,true,true,true,true,,21,true
+model,Model,brand,samsung,Galaxy S23,Galaxy S23,true,true,true,true,,22,true
+model,Model,brand,samsung,Galaxy S23+,Galaxy S23+,true,true,true,true,,23,true
+model,Model,brand,samsung,Galaxy S23 Ultra,Galaxy S23 Ultra,true,true,true,true,,24,true
+model,Model,brand,samsung,Galaxy S23 FE,Galaxy S23 FE,true,true,true,true,,25,true
+model,Model,brand,samsung,Galaxy Z Fold7,Galaxy Z Fold7,true,true,true,true,,26,true
+model,Model,brand,samsung,Galaxy Z Flip7,Galaxy Z Flip7,true,true,true,true,,27,true
+model,Model,brand,samsung,Galaxy Z Flip7 FE,Galaxy Z Flip7 FE,true,true,true,true,,28,true
+model,Model,brand,samsung,Galaxy Z Fold6,Galaxy Z Fold6,true,true,true,true,,29,true
+model,Model,brand,samsung,Galaxy Z Flip6,Galaxy Z Flip6,true,true,true,true,,30,true
+model,Model,brand,samsung,Galaxy A56 5G,Galaxy A56 5G,true,true,true,true,,31,true
+model,Model,brand,samsung,Galaxy A36 5G,Galaxy A36 5G,true,true,true,true,,32,true
+model,Model,brand,samsung,Galaxy A26 5G,Galaxy A26 5G,true,true,true,true,,33,true
+model,Model,brand,samsung,Galaxy A55 5G,Galaxy A55 5G,true,true,true,true,,34,true
+model,Model,brand,samsung,Galaxy A35 5G,Galaxy A35 5G,true,true,true,true,,35,true
+model,Model,brand,samsung,Galaxy A25 5G,Galaxy A25 5G,true,true,true,true,,36,true
+model,Model,brand,samsung,Galaxy A15 5G,Galaxy A15 5G,true,true,true,true,,37,true
+model,Model,brand,samsung,Galaxy M55 5G,Galaxy M55 5G,true,true,true,true,,38,true
+model,Model,brand,samsung,Galaxy M35 5G,Galaxy M35 5G,true,true,true,true,,39,true
+model,Model,brand,samsung,Galaxy M15 5G,Galaxy M15 5G,true,true,true,true,,40,true
+model,Model,brand,samsung,Galaxy S22,Galaxy S22,true,true,true,true,,33,true
+model,Model,brand,samsung,Galaxy S22+,Galaxy S22+,true,true,true,true,,34,true
+model,Model,brand,samsung,Galaxy S22 Ultra,Galaxy S22 Ultra,true,true,true,true,,35,true
+model,Model,brand,samsung,Galaxy S21,Galaxy S21,true,true,true,true,,36,true
+model,Model,brand,samsung,Galaxy S21+,Galaxy S21+,true,true,true,true,,37,true
+model,Model,brand,samsung,Galaxy S21 Ultra,Galaxy S21 Ultra,true,true,true,true,,38,true
+model,Model,brand,samsung,Galaxy S21 FE,Galaxy S21 FE,true,true,true,true,,39,true
+model,Model,brand,samsung,Galaxy S20,Galaxy S20,true,true,true,true,,40,true
+model,Model,brand,samsung,Galaxy S20+,Galaxy S20+,true,true,true,true,,41,true
+model,Model,brand,samsung,Galaxy S20 Ultra,Galaxy S20 Ultra,true,true,true,true,,42,true
+model,Model,brand,samsung,Galaxy S20 FE,Galaxy S20 FE,true,true,true,true,,43,true
+model,Model,brand,apple,iPhone 17 Pro,iPhone 17 Pro,true,true,true,true,,10,true
+model,Model,brand,apple,iPhone 17 Pro Max,iPhone 17 Pro Max,true,true,true,true,,11,true
+model,Model,brand,apple,iPhone Air,iPhone Air,true,true,true,true,,12,true
+model,Model,brand,apple,iPhone 17,iPhone 17,true,true,true,true,,13,true
+model,Model,brand,apple,iPhone 17e,iPhone 17e,true,true,true,true,,14,true
+model,Model,brand,apple,iPhone 16 Pro,iPhone 16 Pro,true,true,true,true,,15,true
+model,Model,brand,apple,iPhone 16 Pro Max,iPhone 16 Pro Max,true,true,true,true,,16,true
+model,Model,brand,apple,iPhone 16,iPhone 16,true,true,true,true,,17,true
+model,Model,brand,apple,iPhone 16 Plus,iPhone 16 Plus,true,true,true,true,,18,true
+model,Model,brand,apple,iPhone 16e,iPhone 16e,true,true,true,true,,19,true
+model,Model,brand,apple,iPhone 15 Pro,iPhone 15 Pro,true,true,true,true,,20,true
+model,Model,brand,apple,iPhone 15 Pro Max,iPhone 15 Pro Max,true,true,true,true,,21,true
+model,Model,brand,apple,iPhone 15,iPhone 15,true,true,true,true,,22,true
+model,Model,brand,apple,iPhone 15 Plus,iPhone 15 Plus,true,true,true,true,,23,true
+model,Model,brand,apple,iPhone 14 Pro,iPhone 14 Pro,true,true,true,true,,24,true
+model,Model,brand,apple,iPhone 14 Pro Max,iPhone 14 Pro Max,true,true,true,true,,25,true
+model,Model,brand,apple,iPhone 14,iPhone 14,true,true,true,true,,26,true
+model,Model,brand,apple,iPhone 14 Plus,iPhone 14 Plus,true,true,true,true,,27,true
+model,Model,brand,apple,iPhone 13 Pro,iPhone 13 Pro,true,true,true,true,,28,true
+model,Model,brand,apple,iPhone 13 Pro Max,iPhone 13 Pro Max,true,true,true,true,,29,true
+model,Model,brand,apple,iPhone 13 mini,iPhone 13 mini,true,true,true,true,,30,true
+model,Model,brand,apple,iPhone 13,iPhone 13,true,true,true,true,,31,true
+model,Model,brand,apple,iPhone SE (3rd generation),iPhone SE (3rd generation),true,true,true,true,,32,true
+model,Model,brand,motorola,Motorola Signature,Motorola Signature,true,true,true,true,,10,true
+model,Model,brand,motorola,Razr Fold,Razr Fold,true,true,true,true,,11,true
+model,Model,brand,motorola,Razr 70 Ultra,Razr 70 Ultra,true,true,true,true,,12,true
+model,Model,brand,motorola,Razr 70,Razr 70,true,true,true,true,,13,true
+model,Model,brand,motorola,Razr 60 Ultra,Razr 60 Ultra,true,true,true,true,,14,true
+model,Model,brand,motorola,Razr 60,Razr 60,true,true,true,true,,15,true
+model,Model,brand,motorola,Razr 50 Ultra,Razr 50 Ultra,true,true,true,true,,16,true
+model,Model,brand,motorola,Razr 50,Razr 50,true,true,true,true,,17,true
+model,Model,brand,motorola,Edge 70 Pro,Edge 70 Pro,true,true,true,true,,18,true
+model,Model,brand,motorola,Edge 70,Edge 70,true,true,true,true,,19,true
+model,Model,brand,motorola,Edge 70 Fusion+,Edge 70 Fusion+,true,true,true,true,,20,true
+model,Model,brand,motorola,Edge 70 Fusion,Edge 70 Fusion,true,true,true,true,,21,true
+model,Model,brand,motorola,Edge 60 Pro,Edge 60 Pro,true,true,true,true,,22,true
+model,Model,brand,motorola,Edge 60,Edge 60,true,true,true,true,,23,true
+model,Model,brand,motorola,Edge 60 Neo,Edge 60 Neo,true,true,true,true,,24,true
+model,Model,brand,motorola,Edge 60 Fusion,Edge 60 Fusion,true,true,true,true,,25,true
+model,Model,brand,motorola,Edge 50 Ultra,Edge 50 Ultra,true,true,true,true,,26,true
+model,Model,brand,motorola,Edge 50 Pro,Edge 50 Pro,true,true,true,true,,27,true
+model,Model,brand,motorola,Edge 50,Edge 50,true,true,true,true,,28,true
+model,Model,brand,motorola,Edge 50 Neo,Edge 50 Neo,true,true,true,true,,29,true
+model,Model,brand,motorola,Edge 50 Fusion,Edge 50 Fusion,true,true,true,true,,30,true
+model,Model,brand,motorola,Moto G Max 5G,Moto G Max 5G,true,true,true,true,,31,true
+model,Model,brand,motorola,Moto G86 5G,Moto G86 5G,true,true,true,true,,32,true
+model,Model,brand,motorola,Moto G77 5G,Moto G77 5G,true,true,true,true,,33,true
+model,Model,brand,motorola,Moto G67 5G,Moto G67 5G,true,true,true,true,,34,true
+model,Model,brand,motorola,Moto G56 5G,Moto G56 5G,true,true,true,true,,35,true
+model,Model,brand,motorola,Moto G47 5G,Moto G47 5G,true,true,true,true,,36,true
+model,Model,brand,motorola,Moto G35 5G,Moto G35 5G,true,true,true,true,,37,true
+model,Model,brand,motorola,Moto G17,Moto G17,true,true,true,true,,38,true
+model,Model,brand,motorola,Moto G15,Moto G15,true,true,true,true,,39,true
+model,Model,brand,motorola,Moto G06,Moto G06,true,true,true,true,,40,true
+model,Model,brand,motorola,Moto G05,Moto G05,true,true,true,true,,41,true
+model,Model,brand,xiaomi,Xiaomi 17T,Xiaomi 17T,true,true,true,true,,10,true
+model,Model,brand,xiaomi,Xiaomi 15T Pro,Xiaomi 15T Pro,true,true,true,true,,11,true
+model,Model,brand,xiaomi,Xiaomi 15T,Xiaomi 15T,true,true,true,true,,12,true
+model,Model,brand,xiaomi,Xiaomi 14 Ultra,Xiaomi 14 Ultra,true,true,true,true,,13,true
+model,Model,brand,xiaomi,Xiaomi 14,Xiaomi 14,true,true,true,true,,14,true
+model,Model,brand,xiaomi,Xiaomi 14T Pro,Xiaomi 14T Pro,true,true,true,true,,15,true
+model,Model,brand,xiaomi,Xiaomi 14T,Xiaomi 14T,true,true,true,true,,16,true
+model,Model,brand,xiaomi,Xiaomi 13 Ultra,Xiaomi 13 Ultra,true,true,true,true,,17,true
+model,Model,brand,xiaomi,Xiaomi 13 Pro,Xiaomi 13 Pro,true,true,true,true,,18,true
+model,Model,brand,xiaomi,Xiaomi 13,Xiaomi 13,true,true,true,true,,19,true
+model,Model,brand,xiaomi,Xiaomi 13T Pro,Xiaomi 13T Pro,true,true,true,true,,20,true
+model,Model,brand,xiaomi,Xiaomi 13T,Xiaomi 13T,true,true,true,true,,21,true
+model,Model,brand,xiaomi,REDMI Note 15 5G,REDMI Note 15 5G,true,true,true,true,,22,true
+model,Model,brand,xiaomi,REDMI Note 15,REDMI Note 15,true,true,true,true,,23,true
+model,Model,brand,xiaomi,REDMI Note 14 5G,REDMI Note 14 5G,true,true,true,true,,24,true
+model,Model,brand,xiaomi,REDMI Note 14S,REDMI Note 14S,true,true,true,true,,25,true
+model,Model,brand,xiaomi,REDMI Note 13 Pro+ 5G,REDMI Note 13 Pro+ 5G,true,true,true,true,,26,true
+model,Model,brand,xiaomi,REDMI Note 13 Pro 5G,REDMI Note 13 Pro 5G,true,true,true,true,,27,true
+model,Model,brand,xiaomi,REDMI Note 13 5G,REDMI Note 13 5G,true,true,true,true,,28,true
+model,Model,brand,xiaomi,REDMI 15 5G,REDMI 15 5G,true,true,true,true,,29,true
+model,Model,brand,xiaomi,REDMI 15,REDMI 15,true,true,true,true,,30,true
+model,Model,brand,xiaomi,REDMI 15C 5G,REDMI 15C 5G,true,true,true,true,,31,true
+model,Model,brand,xiaomi,REDMI 15C,REDMI 15C,true,true,true,true,,32,true
+model,Model,brand,xiaomi,POCO X8 Pro,POCO X8 Pro,true,true,true,true,,33,true
+model,Model,brand,xiaomi,POCO F6 Pro,POCO F6 Pro,true,true,true,true,,34,true
+model,Model,brand,xiaomi,POCO F6,POCO F6,true,true,true,true,,35,true
+model,Model,brand,xiaomi,POCO X6 Pro,POCO X6 Pro,true,true,true,true,,36,true
+model,Model,brand,xiaomi,POCO X6,POCO X6,true,true,true,true,,37,true
+model,Model,brand,xiaomi,POCO M7 Pro 5G,POCO M7 Pro 5G,true,true,true,true,,38,true
+model,Model,brand,xiaomi,POCO M7,POCO M7,true,true,true,true,,39,true
+model,Model,brand,xiaomi,POCO C85,POCO C85,true,true,true,true,,40,true
+model,Model,brand,realme,realme 16 Pro+ 5G,realme 16 Pro+ 5G,true,true,true,true,,10,true
+model,Model,brand,realme,realme 16 5G,realme 16 5G,true,true,true,true,,11,true
+model,Model,brand,realme,realme 16x 5G,realme 16x 5G,true,true,true,true,,12,true
+model,Model,brand,realme,realme 15 Pro 5G,realme 15 Pro 5G,true,true,true,true,,13,true
+model,Model,brand,realme,realme 15 5G,realme 15 5G,true,true,true,true,,14,true
+model,Model,brand,realme,realme 15T,realme 15T,true,true,true,true,,15,true
+model,Model,brand,realme,realme 14 Pro+ 5G,realme 14 Pro+ 5G,true,true,true,true,,16,true
+model,Model,brand,realme,realme 14 Pro 5G,realme 14 Pro 5G,true,true,true,true,,17,true
+model,Model,brand,realme,realme 14 5G,realme 14 5G,true,true,true,true,,18,true
+model,Model,brand,realme,realme 14T 5G,realme 14T 5G,true,true,true,true,,19,true
+model,Model,brand,realme,realme 13+ 5G,realme 13+ 5G,true,true,true,true,,20,true
+model,Model,brand,realme,realme 12 Pro+ 5G,realme 12 Pro+ 5G,true,true,true,true,,21,true
+model,Model,brand,realme,realme 12+ 5G,realme 12+ 5G,true,true,true,true,,22,true
+model,Model,brand,realme,realme 12 5G,realme 12 5G,true,true,true,true,,23,true
+model,Model,brand,realme,realme 12x 5G,realme 12x 5G,true,true,true,true,,24,true
+model,Model,brand,realme,realme GT 7,realme GT 7,true,true,true,true,,25,true
+model,Model,brand,realme,realme GT 6,realme GT 6,true,true,true,true,,26,true
+model,Model,brand,realme,realme P4 Power 5G,realme P4 Power 5G,true,true,true,true,,27,true
+model,Model,brand,realme,realme P4 Lite,realme P4 Lite,true,true,true,true,,28,true
+model,Model,brand,realme,realme C100x,realme C100x,true,true,true,true,,29,true
+model,Model,brand,realme,realme C85 Pro,realme C85 Pro,true,true,true,true,,30,true
+model,Model,brand,realme,realme C85,realme C85,true,true,true,true,,31,true
+model,Model,brand,realme,realme C75 5G,realme C75 5G,true,true,true,true,,32,true
+model,Model,brand,realme,realme C75,realme C75,true,true,true,true,,33,true
+model,Model,brand,realme,realme C67,realme C67,true,true,true,true,,34,true
+model,Model,brand,realme,realme C63,realme C63,true,true,true,true,,35,true
+model,Model,brand,realme,realme C61,realme C61,true,true,true,true,,36,true
+model,Model,brand,asus,Zenfone 12 Ultra,Zenfone 12 Ultra,true,true,true,true,,10,true
+model,Model,brand,asus,Zenfone 11 Ultra,Zenfone 11 Ultra,true,true,true,true,,11,true
+model,Model,brand,asus,Zenfone 10,Zenfone 10,true,true,true,true,,12,true
+model,Model,brand,asus,ROG Phone 9 Pro Edition,ROG Phone 9 Pro Edition,true,true,true,true,,13,true
+model,Model,brand,asus,ROG Phone 9 Pro,ROG Phone 9 Pro,true,true,true,true,,14,true
+model,Model,brand,asus,ROG Phone 9,ROG Phone 9,true,true,true,true,,15,true
+model,Model,brand,asus,ROG Phone 8 Pro,ROG Phone 8 Pro,true,true,true,true,,16,true
+model,Model,brand,asus,ROG Phone 8,ROG Phone 8,true,true,true,true,,17,true
+model,Model,brand,google,Pixel 10 Pro Fold,Pixel 10 Pro Fold,true,true,true,true,,10,true
+model,Model,brand,google,Pixel 10 Pro XL,Pixel 10 Pro XL,true,true,true,true,,11,true
+model,Model,brand,google,Pixel 10 Pro,Pixel 10 Pro,true,true,true,true,,12,true
+model,Model,brand,google,Pixel 10,Pixel 10,true,true,true,true,,13,true
+model,Model,brand,google,Pixel 9 Pro Fold,Pixel 9 Pro Fold,true,true,true,true,,14,true
+model,Model,brand,google,Pixel 9 Pro XL,Pixel 9 Pro XL,true,true,true,true,,15,true
+model,Model,brand,google,Pixel 9 Pro,Pixel 9 Pro,true,true,true,true,,16,true
+model,Model,brand,google,Pixel 9,Pixel 9,true,true,true,true,,17,true
+model,Model,brand,google,Pixel 9a,Pixel 9a,true,true,true,true,,18,true
+model,Model,brand,google,Pixel 8 Pro,Pixel 8 Pro,true,true,true,true,,19,true
+model,Model,brand,google,Pixel 8,Pixel 8,true,true,true,true,,20,true
+model,Model,brand,google,Pixel 8a,Pixel 8a,true,true,true,true,,21,true
+model,Model,brand,google,Pixel 7 Pro,Pixel 7 Pro,true,true,true,true,,22,true
+model,Model,brand,google,Pixel 7,Pixel 7,true,true,true,true,,23,true
+model,Model,brand,google,Pixel 7a,Pixel 7a,true,true,true,true,,24,true
+model,Model,brand,oneplus,OnePlus 15,OnePlus 15,true,true,true,true,,10,true
+model,Model,brand,oneplus,OnePlus 13,OnePlus 13,true,true,true,true,,11,true
+model,Model,brand,oneplus,OnePlus 13R,OnePlus 13R,true,true,true,true,,12,true
+model,Model,brand,oneplus,OnePlus 12,OnePlus 12,true,true,true,true,,13,true
+model,Model,brand,oneplus,OnePlus 12R,OnePlus 12R,true,true,true,true,,14,true
+model,Model,brand,oneplus,OnePlus Open,OnePlus Open,true,true,true,true,,15,true
+model,Model,brand,oneplus,OnePlus Nord 5,OnePlus Nord 5,true,true,true,true,,16,true
+model,Model,brand,oneplus,OnePlus Nord 4,OnePlus Nord 4,true,true,true,true,,17,true
+model,Model,brand,oneplus,OnePlus Nord CE4,OnePlus Nord CE4,true,true,true,true,,18,true
+model,Model,brand,oppo,OPPO Find X8 Pro,OPPO Find X8 Pro,true,true,true,true,,10,true
+model,Model,brand,oppo,OPPO Find X8,OPPO Find X8,true,true,true,true,,11,true
+model,Model,brand,oppo,OPPO Find N5,OPPO Find N5,true,true,true,true,,12,true
+model,Model,brand,oppo,OPPO Reno14 Pro,OPPO Reno14 Pro,true,true,true,true,,13,true
+model,Model,brand,oppo,OPPO Reno14,OPPO Reno14,true,true,true,true,,14,true
+model,Model,brand,oppo,OPPO Reno13 Pro,OPPO Reno13 Pro,true,true,true,true,,15,true
+model,Model,brand,oppo,OPPO Reno13,OPPO Reno13,true,true,true,true,,16,true
+model,Model,brand,oppo,OPPO A5 Pro,OPPO A5 Pro,true,true,true,true,,17,true
+model,Model,brand,oppo,OPPO A5,OPPO A5,true,true,true,true,,18,true
+model,Model,brand,vivo,vivo X200 Pro,vivo X200 Pro,true,true,true,true,,10,true
+model,Model,brand,vivo,vivo X200,vivo X200,true,true,true,true,,11,true
+model,Model,brand,vivo,vivo X100 Pro,vivo X100 Pro,true,true,true,true,,12,true
+model,Model,brand,vivo,vivo X100,vivo X100,true,true,true,true,,13,true
+model,Model,brand,vivo,vivo V50,vivo V50,true,true,true,true,,14,true
+model,Model,brand,vivo,vivo V40 Pro,vivo V40 Pro,true,true,true,true,,15,true
+model,Model,brand,vivo,vivo V40,vivo V40,true,true,true,true,,16,true
+model,Model,brand,vivo,vivo V30 Pro,vivo V30 Pro,true,true,true,true,,17,true
+model,Model,brand,vivo,vivo V30,vivo V30,true,true,true,true,,18,true
+model,Model,brand,vivo,vivo Y39,vivo Y39,true,true,true,true,,19,true
+model,Model,brand,vivo,vivo Y29,vivo Y29,true,true,true,true,,20,true
+model,Model,brand,honor,HONOR Magic7 Pro,HONOR Magic7 Pro,true,true,true,true,,10,true
+model,Model,brand,honor,HONOR Magic7,HONOR Magic7,true,true,true,true,,11,true
+model,Model,brand,honor,HONOR Magic V3,HONOR Magic V3,true,true,true,true,,12,true
+model,Model,brand,honor,HONOR 400 Pro,HONOR 400 Pro,true,true,true,true,,13,true
+model,Model,brand,honor,HONOR 400,HONOR 400,true,true,true,true,,14,true
+model,Model,brand,honor,HONOR 200 Pro,HONOR 200 Pro,true,true,true,true,,15,true
+model,Model,brand,honor,HONOR 200,HONOR 200,true,true,true,true,,16,true
+model,Model,brand,honor,HONOR X9c,HONOR X9c,true,true,true,true,,17,true
+model,Model,brand,honor,HONOR X8c,HONOR X8c,true,true,true,true,,18,true
+model,Model,brand,huawei,Huawei Pura 80 Ultra,Huawei Pura 80 Ultra,true,true,true,true,,10,true
+model,Model,brand,huawei,Huawei Pura 80 Pro,Huawei Pura 80 Pro,true,true,true,true,,11,true
+model,Model,brand,huawei,Huawei Pura 80,Huawei Pura 80,true,true,true,true,,12,true
+model,Model,brand,huawei,Huawei Pura 70 Ultra,Huawei Pura 70 Ultra,true,true,true,true,,13,true
+model,Model,brand,huawei,Huawei Pura 70 Pro,Huawei Pura 70 Pro,true,true,true,true,,14,true
+model,Model,brand,huawei,Huawei Pura 70,Huawei Pura 70,true,true,true,true,,15,true
+model,Model,brand,huawei,Huawei Mate 70 Pro,Huawei Mate 70 Pro,true,true,true,true,,16,true
+model,Model,brand,huawei,Huawei Mate 70,Huawei Mate 70,true,true,true,true,,17,true
+model,Model,brand,huawei,Huawei Mate X6,Huawei Mate X6,true,true,true,true,,18,true
+model,Model,brand,huawei,Huawei nova 13 Pro,Huawei nova 13 Pro,true,true,true,true,,19,true
+model,Model,brand,huawei,Huawei nova 13,Huawei nova 13,true,true,true,true,,20,true
+model,Model,brand,tecno,TECNO CAMON 40 Premier 5G,TECNO CAMON 40 Premier 5G,true,true,true,true,,10,true
+model,Model,brand,tecno,TECNO CAMON 40 Pro 5G,TECNO CAMON 40 Pro 5G,true,true,true,true,,11,true
+model,Model,brand,tecno,TECNO CAMON 40 Pro,TECNO CAMON 40 Pro,true,true,true,true,,12,true
+model,Model,brand,tecno,TECNO CAMON 40,TECNO CAMON 40,true,true,true,true,,13,true
+model,Model,brand,tecno,TECNO PHANTOM V Fold2 5G,TECNO PHANTOM V Fold2 5G,true,true,true,true,,14,true
+model,Model,brand,tecno,TECNO PHANTOM V Flip2 5G,TECNO PHANTOM V Flip2 5G,true,true,true,true,,15,true
+model,Model,brand,tecno,TECNO POVA 7 Pro 5G,TECNO POVA 7 Pro 5G,true,true,true,true,,16,true
+model,Model,brand,tecno,TECNO POVA 7,TECNO POVA 7,true,true,true,true,,17,true
+model,Model,brand,tecno,TECNO SPARK 40 Pro+,TECNO SPARK 40 Pro+,true,true,true,true,,18,true
+model,Model,brand,tecno,TECNO SPARK 40 Pro,TECNO SPARK 40 Pro,true,true,true,true,,19,true
+model,Model,brand,infinix,Infinix NOTE 50 Pro+ 5G,Infinix NOTE 50 Pro+ 5G,true,true,true,true,,10,true
+model,Model,brand,infinix,Infinix NOTE 50 Pro,Infinix NOTE 50 Pro,true,true,true,true,,11,true
+model,Model,brand,infinix,Infinix NOTE 50,Infinix NOTE 50,true,true,true,true,,12,true
+model,Model,brand,infinix,Infinix GT 30 Pro,Infinix GT 30 Pro,true,true,true,true,,13,true
+model,Model,brand,infinix,Infinix GT 20 Pro,Infinix GT 20 Pro,true,true,true,true,,14,true
+model,Model,brand,infinix,Infinix ZERO 40 5G,Infinix ZERO 40 5G,true,true,true,true,,15,true
+model,Model,brand,infinix,Infinix ZERO 40,Infinix ZERO 40,true,true,true,true,,16,true
+model,Model,brand,infinix,Infinix HOT 50 Pro+,Infinix HOT 50 Pro+,true,true,true,true,,17,true
+model,Model,brand,infinix,Infinix HOT 50 Pro,Infinix HOT 50 Pro,true,true,true,true,,18,true
+model,Model,brand,infinix,Infinix HOT 50,Infinix HOT 50,true,true,true,true,,19,true
+model,Model,brand,itel,itel S25 Ultra,itel S25 Ultra,true,true,true,true,,10,true
+model,Model,brand,itel,itel S25,itel S25,true,true,true,true,,11,true
+model,Model,brand,itel,itel P70,itel P70,true,true,true,true,,12,true
+model,Model,brand,itel,itel P65,itel P65,true,true,true,true,,13,true
+model,Model,brand,itel,itel A90,itel A90,true,true,true,true,,14,true
+model,Model,brand,itel,itel A80,itel A80,true,true,true,true,,15,true
+model,Model,brand,nothing,Nothing Phone (3),Nothing Phone (3),true,true,true,true,,10,true
+model,Model,brand,nothing,Nothing Phone (3a) Pro,Nothing Phone (3a) Pro,true,true,true,true,,11,true
+model,Model,brand,nothing,Nothing Phone (3a),Nothing Phone (3a),true,true,true,true,,12,true
+model,Model,brand,nothing,Nothing Phone (2),Nothing Phone (2),true,true,true,true,,13,true
+model,Model,brand,nothing,Nothing Phone (2a) Plus,Nothing Phone (2a) Plus,true,true,true,true,,14,true
+model,Model,brand,nothing,Nothing Phone (2a),Nothing Phone (2a),true,true,true,true,,15,true
+storage_gb,Storage,model,Galaxy S26,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S26,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S26+,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S26+,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S26 Ultra,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S26 Ultra,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S26 Ultra,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy S25,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S25,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S25,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy S25+,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S25+,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S25 Ultra,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S25 Ultra,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S25 Ultra,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy S25 Edge,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S25 Edge,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S25 FE,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S24,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S24,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S24+,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S24+,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S24 Ultra,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S24 Ultra,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S24 Ultra,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy S24 FE,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S24 FE,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Z Fold7,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Z Fold7,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Z Fold7,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy Z Flip7,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Z Flip7,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Z Flip7 FE,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Z Flip7 FE,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Z Fold6,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Z Fold6,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy Z Fold6,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy Z Flip6,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy Z Flip6,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy A56 5G,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy A56 5G,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy A36 5G,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy A36 5G,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy A26 5G,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 17 Pro,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 17 Pro,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 17 Pro,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 17 Pro,2048,2 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone 17 Pro Max,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 17 Pro Max,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 17 Pro Max,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 17 Pro Max,2048,2 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone Air,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone Air,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone Air,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 17,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 17,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 17e,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 17e,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 16 Pro,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 16 Pro,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 16 Pro,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 16 Pro,1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone 16 Pro Max,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 16 Pro Max,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 16 Pro Max,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 16,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 16,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 16,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 16 Plus,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 16 Plus,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 16 Plus,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 16e,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 16e,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 16e,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 15 Pro,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 15 Pro,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 15 Pro,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 15 Pro,1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone 15 Pro Max,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 15 Pro Max,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 15 Pro Max,1024,1 TB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 15,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 15,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 15,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 15 Plus,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 15 Plus,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 15 Plus,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 14 Pro,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 14 Pro,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 14 Pro,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 14 Pro,1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone 14 Pro Max,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 14 Pro Max,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 14 Pro Max,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 14 Pro Max,1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone 14,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 14,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 14,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 14 Plus,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 14 Plus,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 14 Plus,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 13 Pro,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 13 Pro,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 13 Pro,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 13 Pro,1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone 13 Pro Max,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 13 Pro Max,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 13 Pro Max,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 13 Pro Max,1024,1 TB,true,true,true,true,GB,13,true
+storage_gb,Storage,model,iPhone 13 mini,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 13 mini,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 13 mini,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone 13,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone 13,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone 13,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,iPhone SE (3rd generation),64,64 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,iPhone SE (3rd generation),128,128 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,iPhone SE (3rd generation),256,256 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Motorola Signature,512,512 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Razr Fold,1024,1 TB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Razr 70 Ultra,512,512 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Razr 70,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Razr 60 Ultra,1024,1 TB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Razr 60,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 70 Pro,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 70 Pro,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Edge 70,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 70,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Edge 70 Fusion+,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 70 Fusion+,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Edge 70 Fusion,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 60 Pro,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 60 Pro,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Edge 60,512,512 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 60 Neo,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Edge 60 Neo,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Edge 60 Fusion,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G86 5G,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G86 5G,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Moto G77 5G,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G67 5G,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G67 5G,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Moto G56 5G,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G47 5G,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G47 5G,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Moto G35 5G,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G35 5G,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Moto G17,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G17,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Moto G15,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G06,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Moto G06,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Moto G05,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Zenfone 10,256,256 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Zenfone 10,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,ROG Phone 9 Pro,512,512 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,ROG Phone 9 Pro Edition,1024,1 TB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S22,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S22,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S22+,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S22+,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S22 Ultra,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S22 Ultra,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S22 Ultra,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy S21,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S21,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S21+,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S21+,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S21 Ultra,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S21 Ultra,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S21 Ultra,512,512 GB,true,true,true,true,GB,12,true
+storage_gb,Storage,model,Galaxy S21 FE,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S21 FE,256,256 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S20,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S20+,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S20 Ultra,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S20 Ultra,512,512 GB,true,true,true,true,GB,11,true
+storage_gb,Storage,model,Galaxy S20 FE,128,128 GB,true,true,true,true,GB,10,true
+storage_gb,Storage,model,Galaxy S20 FE,256,256 GB,true,true,true,true,GB,11,true
