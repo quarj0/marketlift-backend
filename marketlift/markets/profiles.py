@@ -8,6 +8,7 @@ class MarketProfile:
     code: str
     country_code: str
     country_name: str
+    dial_code: str
     locale: str
     django_language_code: str
     currency: str
@@ -27,6 +28,7 @@ class MarketProfile:
             "code": self.code,
             "countryCode": self.country_code,
             "countryName": self.country_name,
+            "dialCode": self.dial_code,
             "locale": self.locale,
             "languageCode": self.django_language_code,
             "currency": self.currency,
@@ -48,6 +50,7 @@ _MARKETS: dict[str, MarketProfile] = {
     "BR": MarketProfile(
         code="BR",
         country_code="BR",
+        dial_code="+55",
         country_name="Brazil",
         locale="pt-BR",
         django_language_code="pt-br",
@@ -65,6 +68,7 @@ _MARKETS: dict[str, MarketProfile] = {
     "GH": MarketProfile(
         code="GH",
         country_code="GH",
+        dial_code="+233",
         country_name="Ghana",
         locale="en-GH",
         django_language_code="en-gb",
@@ -81,6 +85,7 @@ _MARKETS: dict[str, MarketProfile] = {
     "NG": MarketProfile(
         code="NG",
         country_code="NG",
+        dial_code="+234",
         country_name="Nigeria",
         locale="en-NG",
         django_language_code="en-gb",
@@ -97,6 +102,7 @@ _MARKETS: dict[str, MarketProfile] = {
     "KE": MarketProfile(
         code="KE",
         country_code="KE",
+        dial_code="+254",
         country_name="Kenya",
         locale="en-KE",
         django_language_code="en-gb",
@@ -113,6 +119,7 @@ _MARKETS: dict[str, MarketProfile] = {
     "ZA": MarketProfile(
         code="ZA",
         country_code="ZA",
+        dial_code="+27",
         country_name="South Africa",
         locale="en-ZA",
         django_language_code="en-gb",
@@ -129,6 +136,7 @@ _MARKETS: dict[str, MarketProfile] = {
     "CI": MarketProfile(
         code="CI",
         country_code="CI",
+        dial_code="+225",
         country_name="Côte d’Ivoire",
         locale="fr-CI",
         django_language_code="fr",

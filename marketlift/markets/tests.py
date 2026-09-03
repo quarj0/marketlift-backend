@@ -24,6 +24,12 @@ class MarketProfileTests(SimpleTestCase):
     def tearDown(self):
         invalidate_market_cache()
 
+    def test_market_dial_codes_are_public_configuration(self):
+        self.assertEqual(BR.dial_code, "+55")
+        self.assertEqual(GH.dial_code, "+233")
+        self.assertEqual(BR.as_public_dict()["dialCode"], "+55")
+        self.assertEqual(GH.as_public_dict()["dialCode"], "+233")
+
     def test_ghana_profile(self):
         self.assertEqual(GH.currency, "GHS")
         self.assertEqual(GH.currency_symbol, "GH₵")
