@@ -48,3 +48,28 @@ model,Model,brand,d-link,AQUILA PRO AI M30,AQUILA PRO AI M30,true,true,true,true
 model,Model,brand,d-link,EAGLE PRO AI R15,EAGLE PRO AI R15,true,true,true,true,,11,true
 model,Model,brand,d-link,EAGLE PRO AI M15,EAGLE PRO AI M15,true,true,true,true,,12,true
 model,Model,brand,d-link,DIR-X3000Z,DIR-X3000Z,true,true,true,true,,13,true
+model,Model,brand,tp-link,Archer C6,Archer C6,true,true,true,true,,200,true
+model,Model,brand,tp-link,Archer C7,Archer C7,true,true,true,true,,201,true
+model,Model,brand,tp-link,Archer C20,Archer C20,true,true,true,true,,202,true
+model,Model,brand,tp-link,Archer C50,Archer C50,true,true,true,true,,203,true
+model,Model,brand,tp-link,Archer AX10,Archer AX10,true,true,true,true,,204,true
+model,Model,brand,tp-link,Archer AX20,Archer AX20,true,true,true,true,,205,true
+model,Model,brand,tp-link,Archer AX23,Archer AX23,true,true,true,true,,206,true
+model,Model,brand,tp-link,Archer AX50,Archer AX50,true,true,true,true,,207,true
+model,Model,brand,tp-link,Deco M4,Deco M4,true,true,true,true,,208,true
+model,Model,brand,tp-link,Deco M5,Deco M5,true,true,true,true,,209,true
+model,Model,brand,tp-link,Deco E4,Deco E4,true,true,true,true,,210,true
+model,Model,brand,tp-link,Deco X20,Deco X20,true,true,true,true,,211,true
+model,Model,brand,ubiquiti,UniFi AP AC Lite,UniFi AP AC Lite,true,true,true,true,,200,true
+model,Model,brand,ubiquiti,UniFi AP AC LR,UniFi AP AC LR,true,true,true,true,,201,true
+model,Model,brand,ubiquiti,UniFi AP AC Pro,UniFi AP AC Pro,true,true,true,true,,202,true
+model,Model,brand,ubiquiti,U6 Lite,U6 Lite,true,true,true,true,,203,true
+model,Model,brand,ubiquiti,U6 LR,U6 LR,true,true,true,true,,204,true
+model,Model,brand,ubiquiti,U6 Pro,U6 Pro,true,true,true,true,,205,true
+model,Model,brand,mikrotik,hAP ac2,hAP ac2,true,true,true,true,,200,true
+model,Model,brand,mikrotik,hAP ac3,hAP ac3,true,true,true,true,,201,true
+model,Model,brand,mikrotik,hEX RB750Gr3,hEX RB750Gr3,true,true,true,true,,202,true
+model,Model,brand,mikrotik,RB3011UiAS-RM,RB3011UiAS-RM,true,true,true,true,,203,true
+model,Model,brand,intelbras,Action RF 1200,Action RF 1200,true,true,true,true,,200,true
+model,Model,brand,intelbras,Twibi Fast,Twibi Fast,true,true,true,true,,202,true
+model,Model,brand,intelbras,Twibi Giga,Twibi Giga,true,true,true,true,,203,true

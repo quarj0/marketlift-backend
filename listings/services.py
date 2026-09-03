@@ -30,6 +30,19 @@ PUBLISHABLE_STATUSES = {
 ACTIVE_LIMIT_STATUSES = {Listing.Status.PUBLISHED, Listing.Status.UNDER_REVIEW}
 
 
+def _normalize_listing_condition(value: str) -> str:
+    aliases = {
+        "New": Listing.Condition.NEW,
+        "Like new": Listing.Condition.LIKE_NEW,
+        "Brand New": Listing.Condition.NEW,
+        "Refurbished": Listing.Condition.LIKE_NEW,
+        "Used": Listing.Condition.USED,
+    }
+    candidate = (value or "").strip()
+    return str(aliases.get(candidate, candidate))
+
+
+
 def _resolve_listing_location(
     *,
     state: str = "",
@@ -384,6 +397,7 @@ def create_listing(
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
 ):
+    condition = _normalize_listing_condition(condition)
     if seller.is_suspended:
         raise ValidationError("Selling access is suspended.")
     if not category.active:
@@ -458,6 +472,7 @@ def update_listing(
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
 ):
+    condition = _normalize_listing_condition(condition)
     if listing.seller_deleted_at is not None:
         raise ValidationError("A deleted listing cannot be edited.")
     if listing.status in FINAL_STATUSES:

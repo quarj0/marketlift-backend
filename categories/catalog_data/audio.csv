@@ -53,3 +53,22 @@ model,Model,brand,yamaha,HS8,HS8,true,true,true,true,,12,true
 model,Model,brand,yamaha,RX-V6A,RX-V6A,true,true,true,true,,13,true
 model,Model,brand,yamaha,RX-A4A,RX-A4A,true,true,true,true,,14,true
 model,Model,brand,yamaha,MG10XU,MG10XU,true,true,true,true,,15,true
+model,Model,brand,jbl,Flip 4,Flip 4,true,true,true,true,,200,true
+model,Model,brand,jbl,Flip 5,Flip 5,true,true,true,true,,201,true
+model,Model,brand,jbl,Flip 6,Flip 6,true,true,true,true,,202,true
+model,Model,brand,jbl,Charge 4,Charge 4,true,true,true,true,,203,true
+model,Model,brand,jbl,Charge 5,Charge 5,true,true,true,true,,204,true
+model,Model,brand,jbl,Xtreme 2,Xtreme 2,true,true,true,true,,205,true
+model,Model,brand,jbl,Xtreme 3,Xtreme 3,true,true,true,true,,206,true
+model,Model,brand,sony,WH-1000XM3,WH-1000XM3,true,true,true,true,,200,true
+model,Model,brand,sony,WH-1000XM4,WH-1000XM4,true,true,true,true,,201,true
+model,Model,brand,sony,WF-1000XM3,WF-1000XM3,true,true,true,true,,202,true
+model,Model,brand,sony,WF-1000XM4,WF-1000XM4,true,true,true,true,,203,true
+model,Model,brand,bose,QuietComfort 35 II,QuietComfort 35 II,true,true,true,true,,200,true
+model,Model,brand,bose,QuietComfort 45,QuietComfort 45,true,true,true,true,,201,true
+model,Model,brand,bose,SoundLink Mini II,SoundLink Mini II,true,true,true,true,,202,true
+model,Model,brand,bose,SoundLink Revolve+,SoundLink Revolve+,true,true,true,true,,203,true
+model,Model,brand,apple,AirPods (1st generation),AirPods (1st generation),true,true,true,true,,200,true
+model,Model,brand,apple,AirPods (2nd generation),AirPods (2nd generation),true,true,true,true,,201,true
+model,Model,brand,apple,AirPods (3rd generation),AirPods (3rd generation),true,true,true,true,,202,true
+model,Model,brand,apple,AirPods Pro (1st generation),AirPods Pro (1st generation),true,true,true,true,,203,true

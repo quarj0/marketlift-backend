@@ -33,8 +33,9 @@ class Listing(UUIDTimeStampedModel):
         REMOVED = "removed", "Removed"
 
     class Condition(models.TextChoices):
-        NEW = "New", "New"
-        LIKE_NEW = "Like new", "Like new"
+        # Constant names stay stable internally; public values match the marketplace.
+        NEW = "Brand New", "Brand New"
+        LIKE_NEW = "Refurbished", "Refurbished"
         USED = "Used", "Used"
 
     seller = models.ForeignKey(

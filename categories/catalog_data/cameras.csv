@@ -66,3 +66,26 @@ model,Model,brand,insta360,Insta360 X5,Insta360 X5,true,true,true,true,,10,true
 model,Model,brand,insta360,Insta360 X4,Insta360 X4,true,true,true,true,,11,true
 model,Model,brand,insta360,Insta360 Ace Pro 2,Insta360 Ace Pro 2,true,true,true,true,,12,true
 model,Model,brand,insta360,Insta360 GO 3S,Insta360 GO 3S,true,true,true,true,,13,true
+model,Model,brand,sony,Alpha a6000,Alpha a6000,true,true,true,true,,200,true
+model,Model,brand,sony,Alpha a6100,Alpha a6100,true,true,true,true,,201,true
+model,Model,brand,sony,Alpha a6300,Alpha a6300,true,true,true,true,,202,true
+model,Model,brand,sony,Alpha a6400,Alpha a6400,true,true,true,true,,203,true
+model,Model,brand,sony,Alpha a6500,Alpha a6500,true,true,true,true,,204,true
+model,Model,brand,sony,Alpha a6600,Alpha a6600,true,true,true,true,,205,true
+model,Model,brand,sony,Alpha 7 II,Alpha 7 II,true,true,true,true,,206,true
+model,Model,brand,sony,Alpha 7 III,Alpha 7 III,true,true,true,true,,207,true
+model,Model,brand,sony,Alpha 7R III,Alpha 7R III,true,true,true,true,,208,true
+model,Model,brand,canon,EOS 80D,EOS 80D,true,true,true,true,,200,true
+model,Model,brand,canon,EOS 90D,EOS 90D,true,true,true,true,,201,true
+model,Model,brand,canon,EOS 5D Mark IV,EOS 5D Mark IV,true,true,true,true,,202,true
+model,Model,brand,canon,EOS 6D Mark II,EOS 6D Mark II,true,true,true,true,,203,true
+model,Model,brand,canon,EOS M50,EOS M50,true,true,true,true,,204,true
+model,Model,brand,canon,EOS M50 Mark II,EOS M50 Mark II,true,true,true,true,,205,true
+model,Model,brand,canon,EOS 200D,EOS 200D,true,true,true,true,,206,true
+model,Model,brand,canon,EOS 250D,EOS 250D,true,true,true,true,,207,true
+model,Model,brand,nikon,D3500,D3500,true,true,true,true,,200,true
+model,Model,brand,nikon,D5600,D5600,true,true,true,true,,201,true
+model,Model,brand,nikon,D7500,D7500,true,true,true,true,,202,true
+model,Model,brand,nikon,D750,D750,true,true,true,true,,203,true
+model,Model,brand,nikon,D780,D780,true,true,true,true,,204,true
+model,Model,brand,nikon,D850,D850,true,true,true,true,,205,true

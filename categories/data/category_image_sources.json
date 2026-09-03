@@ -1,0 +1,72 @@
+{
+  "electronics": {
+    "photo_id": 30868621,
+    "source_url": "https://www.pexels.com/photo/smartphone-and-laptop-on-desk-setup-30868621/",
+    "photographer": "Efrem Efre"
+  },
+  "vehicles": {
+    "photo_id": 7144259,
+    "source_url": "https://www.pexels.com/photo/dealer-consulting-client-about-car-in-salon-7144259/",
+    "photographer": "Antoni Shkraba"
+  },
+  "property": {
+    "photo_id": 36355688,
+    "source_url": "https://www.pexels.com/photo/modern-residential-apartment-building-exterior-36355688/",
+    "photographer": "Mahmoud Zakariya"
+  },
+  "home-furniture-appliances": {
+    "photo_id": 10834300,
+    "source_url": "https://www.pexels.com/photo/sofa-in-the-living-room-10834300/",
+    "photographer": "Jordann Player"
+  },
+  "fashion": {
+    "photo_id": 26292716,
+    "source_url": "https://www.pexels.com/photo/clothes-rack-in-store-26292716/",
+    "photographer": "Noora"
+  },
+  "beauty-personal-care": {
+    "photo_id": 3735625,
+    "source_url": "https://www.pexels.com/photo/beauty-products-on-shelves-3735625/",
+    "photographer": "Polina Tankilevitch"
+  },
+  "babies-kids": {
+    "photo_id": 18830376,
+    "source_url": "https://www.pexels.com/photo/children-playing-with-toys-in-a-room-18830376/",
+    "photographer": "Muziyan Du"
+  },
+  "animals-pets": {
+    "photo_id": 35711491,
+    "source_url": "https://www.pexels.com/photo/dog-and-cat-sitting-together-in-sunlight-35711491/",
+    "photographer": "Mehmet Kaynar"
+  },
+  "food-agriculture-farming": {
+    "photo_id": 37201244,
+    "source_url": "https://www.pexels.com/photo/farmers-planting-crops-with-tractor-in-field-37201244/",
+    "photographer": "Mark Stebnicki"
+  },
+  "jobs": {
+    "photo_id": 36733403,
+    "source_url": "https://www.pexels.com/photo/professional-man-working-on-laptop-in-office-36733403/",
+    "photographer": "Vitaly Gariev"
+  },
+  "services": {
+    "photo_id": 3856119,
+    "source_url": "https://www.pexels.com/photo/serious-adult-bearded-worker-working-with-tools-in-workshop-3856119/",
+    "photographer": "Andrea Piacquadio"
+  },
+  "repair-construction": {
+    "photo_id": 11321790,
+    "source_url": "https://www.pexels.com/photo/construction-man-wearing-a-safety-helmet-11321790/",
+    "photographer": "Safari Consoler"
+  },
+  "business-industry": {
+    "photo_id": 38852436,
+    "source_url": "https://www.pexels.com/photo/industrial-manufacturing-machinery-inside-warehouse-38852436/",
+    "photographer": "YIHAI LASER"
+  },
+  "leisure-activities": {
+    "photo_id": 4488764,
+    "source_url": "https://www.pexels.com/photo/sports-equipment-in-a-gym-with-a-mirror-4488764/",
+    "photographer": "Brett Jordan"
+  }
+}

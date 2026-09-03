@@ -45,3 +45,11 @@ model,Model,brand,xerox,C230,C230,true,true,true,true,,12,true
 model,Model,brand,xerox,C235,C235,true,true,true,true,,13,true
 model,Model,brand,xerox,VersaLink C415,VersaLink C415,true,true,true,true,,14,true
 model,Model,brand,xerox,VersaLink B415,VersaLink B415,true,true,true,true,,15,true
+model,Model,brand,epson,EcoTank L3150,EcoTank L3150,true,true,true,true,,200,true
+model,Model,brand,epson,EcoTank L4150,EcoTank L4150,true,true,true,true,,201,true
+model,Model,brand,epson,EcoTank L4160,EcoTank L4160,true,true,true,true,,202,true
+model,Model,brand,epson,EcoTank L5190,EcoTank L5190,true,true,true,true,,203,true
+model,Model,brand,hp,DeskJet Ink Advantage 2774,DeskJet Ink Advantage 2774,true,true,true,true,,200,true
+model,Model,brand,hp,Ink Tank Wireless 416,Ink Tank Wireless 416,true,true,true,true,,201,true
+model,Model,brand,hp,LaserJet Pro M15w,LaserJet Pro M15w,true,true,true,true,,202,true
+model,Model,brand,hp,LaserJet Pro MFP M28w,LaserJet Pro MFP M28w,true,true,true,true,,203,true

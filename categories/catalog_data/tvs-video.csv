@@ -55,3 +55,42 @@ model,Model,brand,epson,EpiqVision Ultra LS800,EpiqVision Ultra LS800,true,true,
 model,Model,brand,epson,EpiqVision Mini EF22,EpiqVision Mini EF22,true,true,true,true,,11,true
 model,Model,brand,epson,EpiqVision Mini EF21,EpiqVision Mini EF21,true,true,true,true,,12,true
 model,Model,brand,epson,Home Cinema 2350,Home Cinema 2350,true,true,true,true,,13,true
+model,Model,brand,samsung,QLED Q60T,QLED Q60T,true,true,true,true,,200,true
+model,Model,brand,samsung,QLED Q70T,QLED Q70T,true,true,true,true,,201,true
+model,Model,brand,samsung,QLED Q80T,QLED Q80T,true,true,true,true,,202,true
+model,Model,brand,samsung,Crystal UHD TU7000,Crystal UHD TU7000,true,true,true,true,,203,true
+model,Model,brand,samsung,QLED Q60A,QLED Q60A,true,true,true,true,,204,true
+model,Model,brand,samsung,QLED Q70A,QLED Q70A,true,true,true,true,,205,true
+model,Model,brand,samsung,Neo QLED QN85A,Neo QLED QN85A,true,true,true,true,,206,true
+model,Model,brand,samsung,Crystal UHD AU7000,Crystal UHD AU7000,true,true,true,true,,207,true
+model,Model,brand,samsung,QLED Q60B,QLED Q60B,true,true,true,true,,208,true
+model,Model,brand,samsung,QLED Q70B,QLED Q70B,true,true,true,true,,209,true
+model,Model,brand,samsung,Neo QLED QN90B,Neo QLED QN90B,true,true,true,true,,210,true
+model,Model,brand,samsung,QLED Q60C,QLED Q60C,true,true,true,true,,211,true
+model,Model,brand,samsung,QLED Q70C,QLED Q70C,true,true,true,true,,212,true
+model,Model,brand,samsung,Neo QLED QN90C,Neo QLED QN90C,true,true,true,true,,213,true
+model,Model,brand,samsung,OLED S90C,OLED S90C,true,true,true,true,,214,true
+model,Model,brand,samsung,OLED S90D,OLED S90D,true,true,true,true,,215,true
+model,Model,brand,lg,OLED CX,OLED CX,true,true,true,true,,200,true
+model,Model,brand,lg,OLED C1,OLED C1,true,true,true,true,,201,true
+model,Model,brand,lg,OLED C2,OLED C2,true,true,true,true,,202,true
+model,Model,brand,lg,OLED C3,OLED C3,true,true,true,true,,203,true
+model,Model,brand,lg,OLED C4,OLED C4,true,true,true,true,,204,true
+model,Model,brand,lg,OLED B1,OLED B1,true,true,true,true,,205,true
+model,Model,brand,lg,OLED B2,OLED B2,true,true,true,true,,206,true
+model,Model,brand,lg,NanoCell NANO75,NanoCell NANO75,true,true,true,true,,207,true
+model,Model,brand,lg,QNED80,QNED80,true,true,true,true,,208,true
+model,Model,brand,sony,X900H,X900H,true,true,true,true,,200,true
+model,Model,brand,sony,X90J,X90J,true,true,true,true,,201,true
+model,Model,brand,sony,X90K,X90K,true,true,true,true,,202,true
+model,Model,brand,sony,X90L,X90L,true,true,true,true,,203,true
+model,Model,brand,sony,A80J,A80J,true,true,true,true,,204,true
+model,Model,brand,sony,A80K,A80K,true,true,true,true,,205,true
+model,Model,brand,sony,A80L,A80L,true,true,true,true,,206,true
+model,Model,brand,tcl,C635,C635,true,true,true,true,,200,true
+model,Model,brand,tcl,C645,C645,true,true,true,true,,201,true
+model,Model,brand,tcl,C735,C735,true,true,true,true,,202,true
+model,Model,brand,tcl,C745,C745,true,true,true,true,,203,true
+model,Model,brand,tcl,P635,P635,true,true,true,true,,204,true
+model,Model,brand,tcl,P635 4K,P635 4K,true,true,true,true,,205,true
+model,Model,brand,tcl,P745,P745,true,true,true,true,,206,true

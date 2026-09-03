@@ -35,3 +35,12 @@ model,Model,brand,valve,Steam Deck LCD,Steam Deck LCD,true,true,true,true,,12,tr
 model,Model,brand,meta,Meta Quest 3,Meta Quest 3,true,true,true,true,,10,true
 model,Model,brand,meta,Meta Quest 3S,Meta Quest 3S,true,true,true,true,,11,true
 model,Model,brand,meta,Meta Quest Pro,Meta Quest Pro,true,true,true,true,,12,true
+model,Model,brand,playstation,PlayStation 3 Slim,PlayStation 3 Slim,true,true,true,true,,200,true
+model,Model,brand,playstation,PlayStation 3 Super Slim,PlayStation 3 Super Slim,true,true,true,true,,201,true
+model,Model,brand,playstation,PlayStation 4,PlayStation 4,true,true,true,true,,202,true
+model,Model,brand,xbox,Xbox 360 S,Xbox 360 S,true,true,true,true,,200,true
+model,Model,brand,xbox,Xbox 360 E,Xbox 360 E,true,true,true,true,,201,true
+model,Model,brand,xbox,Xbox One,Xbox One,true,true,true,true,,202,true
+model,Model,brand,nintendo,Nintendo 3DS,Nintendo 3DS,true,true,true,true,,200,true
+model,Model,brand,nintendo,New Nintendo 3DS XL,New Nintendo 3DS XL,true,true,true,true,,201,true
+model,Model,brand,nintendo,Nintendo Wii U,Nintendo Wii U,true,true,true,true,,202,true

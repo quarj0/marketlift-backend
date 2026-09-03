@@ -123,3 +123,91 @@ model,Model,brand,lg,LG gram 14,LG gram 14,false,true,true,true,,10,true
 model,Model,brand,lg,LG gram 16,LG gram 16,false,true,true,true,,11,true
 model,Model,brand,lg,LG gram 17,LG gram 17,false,true,true,true,,12,true
 model,Model,brand,lg,LG gram Pro 16,LG gram Pro 16,false,true,true,true,,13,true
+model,Model,brand,dell,Latitude 5480,Latitude 5480,true,true,true,true,,200,true
+model,Model,brand,dell,Latitude 5490,Latitude 5490,true,true,true,true,,201,true
+model,Model,brand,dell,Latitude 5400,Latitude 5400,true,true,true,true,,202,true
+model,Model,brand,dell,Latitude 5410,Latitude 5410,true,true,true,true,,203,true
+model,Model,brand,dell,Latitude 5420,Latitude 5420,true,true,true,true,,204,true
+model,Model,brand,dell,Latitude 5430,Latitude 5430,true,true,true,true,,205,true
+model,Model,brand,dell,Latitude 5440,Latitude 5440,true,true,true,true,,206,true
+model,Model,brand,dell,Latitude 7480,Latitude 7480,true,true,true,true,,207,true
+model,Model,brand,dell,Latitude 7490,Latitude 7490,true,true,true,true,,208,true
+model,Model,brand,dell,Latitude 7400,Latitude 7400,true,true,true,true,,209,true
+model,Model,brand,dell,Latitude 7410,Latitude 7410,true,true,true,true,,210,true
+model,Model,brand,dell,Latitude 7420,Latitude 7420,true,true,true,true,,211,true
+model,Model,brand,dell,Latitude 7430,Latitude 7430,true,true,true,true,,212,true
+model,Model,brand,dell,Latitude 7440,Latitude 7440,true,true,true,true,,213,true
+model,Model,brand,dell,XPS 13 9360,XPS 13 9360,true,true,true,true,,214,true
+model,Model,brand,dell,XPS 13 9370,XPS 13 9370,true,true,true,true,,215,true
+model,Model,brand,dell,XPS 13 9380,XPS 13 9380,true,true,true,true,,216,true
+model,Model,brand,dell,XPS 13 7390,XPS 13 7390,true,true,true,true,,217,true
+model,Model,brand,dell,XPS 13 9310,XPS 13 9310,true,true,true,true,,218,true
+model,Model,brand,dell,XPS 15 9560,XPS 15 9560,true,true,true,true,,219,true
+model,Model,brand,dell,XPS 15 9570,XPS 15 9570,true,true,true,true,,220,true
+model,Model,brand,dell,XPS 15 7590,XPS 15 7590,true,true,true,true,,221,true
+model,Model,brand,dell,XPS 15 9500,XPS 15 9500,true,true,true,true,,222,true
+model,Model,brand,dell,XPS 15 9510,XPS 15 9510,true,true,true,true,,223,true
+model,Model,brand,dell,Precision 5520,Precision 5520,true,true,true,true,,224,true
+model,Model,brand,dell,Precision 5530,Precision 5530,true,true,true,true,,225,true
+model,Model,brand,dell,Precision 5540,Precision 5540,true,true,true,true,,226,true
+model,Model,brand,dell,Precision 5550,Precision 5550,true,true,true,true,,227,true
+model,Model,brand,hp,EliteBook 830 G5,EliteBook 830 G5,true,true,true,true,,200,true
+model,Model,brand,hp,EliteBook 830 G6,EliteBook 830 G6,true,true,true,true,,201,true
+model,Model,brand,hp,EliteBook 830 G7,EliteBook 830 G7,true,true,true,true,,202,true
+model,Model,brand,hp,EliteBook 830 G8,EliteBook 830 G8,true,true,true,true,,203,true
+model,Model,brand,hp,EliteBook 840 G5,EliteBook 840 G5,true,true,true,true,,204,true
+model,Model,brand,hp,EliteBook 840 G6,EliteBook 840 G6,true,true,true,true,,205,true
+model,Model,brand,hp,EliteBook 840 G7,EliteBook 840 G7,true,true,true,true,,206,true
+model,Model,brand,hp,EliteBook 840 G8,EliteBook 840 G8,true,true,true,true,,207,true
+model,Model,brand,hp,EliteBook 840 G9,EliteBook 840 G9,true,true,true,true,,208,true
+model,Model,brand,hp,EliteBook 840 G10,EliteBook 840 G10,true,true,true,true,,209,true
+model,Model,brand,hp,EliteBook 850 G5,EliteBook 850 G5,true,true,true,true,,211,true
+model,Model,brand,hp,EliteBook 850 G6,EliteBook 850 G6,true,true,true,true,,212,true
+model,Model,brand,hp,EliteBook 850 G7,EliteBook 850 G7,true,true,true,true,,213,true
+model,Model,brand,hp,EliteBook 850 G8,EliteBook 850 G8,true,true,true,true,,214,true
+model,Model,brand,hp,ProBook 440 G5,ProBook 440 G5,true,true,true,true,,215,true
+model,Model,brand,hp,ProBook 440 G6,ProBook 440 G6,true,true,true,true,,216,true
+model,Model,brand,hp,ProBook 440 G7,ProBook 440 G7,true,true,true,true,,217,true
+model,Model,brand,hp,ProBook 440 G8,ProBook 440 G8,true,true,true,true,,218,true
+model,Model,brand,hp,ProBook 440 G9,ProBook 440 G9,true,true,true,true,,219,true
+model,Model,brand,hp,ProBook 450 G5,ProBook 450 G5,true,true,true,true,,220,true
+model,Model,brand,hp,ProBook 450 G6,ProBook 450 G6,true,true,true,true,,221,true
+model,Model,brand,hp,ProBook 450 G7,ProBook 450 G7,true,true,true,true,,222,true
+model,Model,brand,hp,ProBook 450 G8,ProBook 450 G8,true,true,true,true,,223,true
+model,Model,brand,hp,ProBook 450 G9,ProBook 450 G9,true,true,true,true,,224,true
+model,Model,brand,lenovo,ThinkPad T480,ThinkPad T480,true,true,true,true,,200,true
+model,Model,brand,lenovo,ThinkPad T480s,ThinkPad T480s,true,true,true,true,,201,true
+model,Model,brand,lenovo,ThinkPad T490,ThinkPad T490,true,true,true,true,,202,true
+model,Model,brand,lenovo,ThinkPad T490s,ThinkPad T490s,true,true,true,true,,203,true
+model,Model,brand,lenovo,ThinkPad T14 Gen 1,ThinkPad T14 Gen 1,true,true,true,true,,204,true
+model,Model,brand,lenovo,ThinkPad T14 Gen 2,ThinkPad T14 Gen 2,true,true,true,true,,205,true
+model,Model,brand,lenovo,ThinkPad T14 Gen 3,ThinkPad T14 Gen 3,true,true,true,true,,206,true
+model,Model,brand,lenovo,ThinkPad T14 Gen 4,ThinkPad T14 Gen 4,true,true,true,true,,207,true
+model,Model,brand,lenovo,ThinkPad X1 Carbon Gen 6,ThinkPad X1 Carbon Gen 6,true,true,true,true,,208,true
+model,Model,brand,lenovo,ThinkPad X1 Carbon Gen 7,ThinkPad X1 Carbon Gen 7,true,true,true,true,,209,true
+model,Model,brand,lenovo,ThinkPad X1 Carbon Gen 8,ThinkPad X1 Carbon Gen 8,true,true,true,true,,210,true
+model,Model,brand,lenovo,ThinkPad X1 Carbon Gen 9,ThinkPad X1 Carbon Gen 9,true,true,true,true,,211,true
+model,Model,brand,lenovo,ThinkPad X1 Carbon Gen 10,ThinkPad X1 Carbon Gen 10,true,true,true,true,,212,true
+model,Model,brand,lenovo,ThinkPad X1 Carbon Gen 11,ThinkPad X1 Carbon Gen 11,true,true,true,true,,213,true
+model,Model,brand,lenovo,ThinkPad E480,ThinkPad E480,true,true,true,true,,214,true
+model,Model,brand,lenovo,ThinkPad E490,ThinkPad E490,true,true,true,true,,215,true
+model,Model,brand,lenovo,ThinkPad E14 Gen 1,ThinkPad E14 Gen 1,true,true,true,true,,216,true
+model,Model,brand,lenovo,ThinkPad E14 Gen 2,ThinkPad E14 Gen 2,true,true,true,true,,217,true
+model,Model,brand,lenovo,ThinkPad L480,ThinkPad L480,true,true,true,true,,218,true
+model,Model,brand,lenovo,ThinkPad L490,ThinkPad L490,true,true,true,true,,219,true
+model,Model,brand,lenovo,ThinkPad L14 Gen 1,ThinkPad L14 Gen 1,true,true,true,true,,220,true
+model,Model,brand,lenovo,ThinkPad L14 Gen 2,ThinkPad L14 Gen 2,true,true,true,true,,221,true
+model,Model,brand,apple,MacBook Air 13-inch (2017),MacBook Air 13-inch (2017),true,true,true,true,,200,true
+model,Model,brand,apple,MacBook Air 13-inch (2018),MacBook Air 13-inch (2018),true,true,true,true,,201,true
+model,Model,brand,apple,MacBook Air 13-inch (2019),MacBook Air 13-inch (2019),true,true,true,true,,202,true
+model,Model,brand,apple,MacBook Air 13-inch (2020 Intel),MacBook Air 13-inch (2020 Intel),true,true,true,true,,203,true
+model,Model,brand,apple,"MacBook Air 13-inch (M1, 2020)","MacBook Air 13-inch (M1, 2020)",true,true,true,true,,204,true
+model,Model,brand,apple,"MacBook Air 13-inch (M2, 2022)","MacBook Air 13-inch (M2, 2022)",true,true,true,true,,205,true
+model,Model,brand,apple,MacBook Pro 13-inch (2017),MacBook Pro 13-inch (2017),true,true,true,true,,206,true
+model,Model,brand,apple,MacBook Pro 13-inch (2018),MacBook Pro 13-inch (2018),true,true,true,true,,207,true
+model,Model,brand,apple,MacBook Pro 13-inch (2019),MacBook Pro 13-inch (2019),true,true,true,true,,208,true
+model,Model,brand,apple,MacBook Pro 13-inch (2020 Intel),MacBook Pro 13-inch (2020 Intel),true,true,true,true,,209,true
+model,Model,brand,apple,"MacBook Pro 13-inch (M1, 2020)","MacBook Pro 13-inch (M1, 2020)",true,true,true,true,,210,true
+model,Model,brand,apple,"MacBook Pro 14-inch (M1 Pro, 2021)","MacBook Pro 14-inch (M1 Pro, 2021)",true,true,true,true,,211,true
+model,Model,brand,apple,MacBook Pro 16-inch (2019),MacBook Pro 16-inch (2019),true,true,true,true,,212,true
+model,Model,brand,apple,"MacBook Pro 16-inch (M1 Pro, 2021)","MacBook Pro 16-inch (M1 Pro, 2021)",true,true,true,true,,213,true

@@ -110,3 +110,23 @@ storage_gb,Storage,model,Redmi Pad Pro,128,128 GB,true,true,true,true,GB,10,true
 storage_gb,Storage,model,Redmi Pad Pro,256,256 GB,true,true,true,true,GB,11,true
 storage_gb,Storage,model,Redmi Pad SE,128,128 GB,true,true,true,true,GB,10,true
 storage_gb,Storage,model,Redmi Pad SE,256,256 GB,true,true,true,true,GB,11,true
+model,Model,brand,apple,iPad (5th generation),iPad (5th generation),true,true,true,true,,200,true
+model,Model,brand,apple,iPad (6th generation),iPad (6th generation),true,true,true,true,,201,true
+model,Model,brand,apple,iPad (7th generation),iPad (7th generation),true,true,true,true,,202,true
+model,Model,brand,apple,iPad (8th generation),iPad (8th generation),true,true,true,true,,203,true
+model,Model,brand,apple,iPad (9th generation),iPad (9th generation),true,true,true,true,,204,true
+model,Model,brand,apple,iPad Pro 10.5-inch,iPad Pro 10.5-inch,true,true,true,true,,205,true
+model,Model,brand,apple,iPad Pro 11-inch (1st generation),iPad Pro 11-inch (1st generation),true,true,true,true,,206,true
+model,Model,brand,apple,iPad Pro 11-inch (2nd generation),iPad Pro 11-inch (2nd generation),true,true,true,true,,207,true
+model,Model,brand,apple,iPad Pro 12.9-inch (3rd generation),iPad Pro 12.9-inch (3rd generation),true,true,true,true,,208,true
+model,Model,brand,apple,iPad Pro 12.9-inch (4th generation),iPad Pro 12.9-inch (4th generation),true,true,true,true,,209,true
+model,Model,brand,samsung,Galaxy Tab S6,Galaxy Tab S6,true,true,true,true,,200,true
+model,Model,brand,samsung,Galaxy Tab S6 Lite,Galaxy Tab S6 Lite,true,true,true,true,,201,true
+model,Model,brand,samsung,Galaxy Tab S7,Galaxy Tab S7,true,true,true,true,,202,true
+model,Model,brand,samsung,Galaxy Tab S7+,Galaxy Tab S7+,true,true,true,true,,203,true
+model,Model,brand,samsung,Galaxy Tab S7 FE,Galaxy Tab S7 FE,true,true,true,true,,204,true
+model,Model,brand,samsung,Galaxy Tab S8,Galaxy Tab S8,true,true,true,true,,205,true
+model,Model,brand,samsung,Galaxy Tab S8+,Galaxy Tab S8+,true,true,true,true,,206,true
+model,Model,brand,samsung,Galaxy Tab S8 Ultra,Galaxy Tab S8 Ultra,true,true,true,true,,207,true
+model,Model,brand,samsung,Galaxy Tab A7,Galaxy Tab A7,true,true,true,true,,208,true
+model,Model,brand,samsung,Galaxy Tab A8,Galaxy Tab A8,true,true,true,true,,209,true

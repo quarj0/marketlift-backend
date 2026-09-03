@@ -73,6 +73,10 @@ def apply_listing_filters(qs, filters):
     if district:
         qs = qs.filter(district__icontains=district)
     if condition:
+        condition = {
+            "New": "Brand New",
+            "Like new": "Refurbished",
+        }.get(condition, condition)
         qs = qs.filter(condition=condition)
     if seller_type:
         qs = qs.filter(seller__seller_type=seller_type)

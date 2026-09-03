@@ -50,3 +50,11 @@ model,Model,brand,fitbit,Fitbit Sense 2,Fitbit Sense 2,true,true,true,true,,10,t
 model,Model,brand,fitbit,Fitbit Versa 4,Fitbit Versa 4,true,true,true,true,,11,true
 model,Model,brand,fitbit,Fitbit Charge 6,Fitbit Charge 6,true,true,true,true,,12,true
 model,Model,brand,fitbit,Fitbit Inspire 3,Fitbit Inspire 3,true,true,true,true,,13,true
+model,Model,brand,apple,Apple Watch Series 6,Apple Watch Series 6,true,true,true,true,,200,true
+model,Model,brand,apple,Apple Watch Series 7,Apple Watch Series 7,true,true,true,true,,201,true
+model,Model,brand,apple,Apple Watch Series 8,Apple Watch Series 8,true,true,true,true,,202,true
+model,Model,brand,apple,Apple Watch SE (1st generation),Apple Watch SE (1st generation),true,true,true,true,,203,true
+model,Model,brand,samsung,Galaxy Watch4,Galaxy Watch4,true,true,true,true,,200,true
+model,Model,brand,samsung,Galaxy Watch4 Classic,Galaxy Watch4 Classic,true,true,true,true,,201,true
+model,Model,brand,samsung,Galaxy Watch5,Galaxy Watch5,true,true,true,true,,202,true
+model,Model,brand,samsung,Galaxy Watch5 Pro,Galaxy Watch5 Pro,true,true,true,true,,203,true
