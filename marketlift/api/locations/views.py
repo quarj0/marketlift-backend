@@ -140,7 +140,42 @@ class LocationCitiesView(APIView):
         cities = list(
             qs.order_by("city").values_list("city", flat=True).distinct()[:limit]
         )
-        return Response({"cities": cities, "mode": "inventory", "countryCode": country})
+
+        if query and len(cities) < limit:
+            try:
+                rows = geocode_locations(
+                    query,
+                    limit=min(8, limit),
+                    country_code=country,
+                )
+            except DjangoValidationError:
+                rows = []
+
+            seen = {value.casefold() for value in cities}
+            for row in rows:
+                if (row.country_code or "").upper() != country:
+                    continue
+                if (
+                    state
+                    and row.state_code
+                    and row.state_code.upper() != state
+                ):
+                    continue
+                value = (row.city or "").strip()
+                if not value or value.casefold() in seen:
+                    continue
+                seen.add(value.casefold())
+                cities.append(value)
+                if len(cities) >= limit:
+                    break
+
+        return Response(
+            {
+                "cities": cities,
+                "mode": "inventory+geocoder",
+                "countryCode": country,
+            }
+        )
 
 
 class NeighborhoodSuggestionsView(APIView):
@@ -172,6 +207,40 @@ class NeighborhoodSuggestionsView(APIView):
         values = list(
             qs.order_by("district").values_list("district", flat=True).distinct()[:40]
         )
+
+        if query and len(values) < 40:
+            pieces = [query, city]
+            if state_code:
+                pieces.append(state_code)
+            try:
+                rows = geocode_locations(
+                    ", ".join(piece for piece in pieces if piece),
+                    limit=8,
+                    country_code=country,
+                )
+            except DjangoValidationError:
+                rows = []
+
+            seen = {value.casefold() for value in values}
+            for row in rows:
+                if (row.country_code or "").upper() != country:
+                    continue
+                if (
+                    state_code
+                    and row.state_code
+                    and row.state_code.upper() != state_code
+                ):
+                    continue
+                if row.city and row.city.casefold() != city.casefold():
+                    continue
+                district = (row.district or "").strip()
+                if not district or district.casefold() in seen:
+                    continue
+                seen.add(district.casefold())
+                values.append(district)
+                if len(values) >= 40:
+                    break
+
         return Response({"suggestions": values})
 
 
