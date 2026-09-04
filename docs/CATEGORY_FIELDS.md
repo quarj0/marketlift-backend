@@ -13,6 +13,28 @@ created only from combinations present in the supplied dataset. Marketlift does
 not redistribute third-party FIPE data; production operators must use a source
 licensed for their commercial use.
 
+For Brazil-specific data, `sync_fipe_vehicle_catalog` refreshes cars,
+motorcycles, and trucks from the documented FIPE-compatible API. It supports
+an optional `FIPE_API_TOKEN` environment variable and exact repeatable
+`--brand` selections for quota-friendly incremental refreshes. Full catalog
+refreshes normally require a subscription because the public service has a
+daily request allowance. Although FIPE sources can publish a coming model year
+early, Marketlift discards years later than the server's current calendar year.
+
+For open-data expansion, `sync_open_vehicle_catalog` imports exact model-year
+combinations from the US Department of Transportation NHTSA vPIC service. It
+supports cars, motorcycles, trucks, and buses and never imports a year later
+than the server's current calendar year. This is an open-data global
+alternative; a licensed Brazil-specific dataset remains authoritative for the
+local market.
+
+`sync_wikidata_catalogs` appends CC0 Wikidata brand/model choices for phones,
+computers, tablets, cameras, consoles, televisions, printers, and smartwatches,
+plus dog and cat breeds. These commands import data into Marketlift's database;
+the posting form never depends on a third-party API at request time. Always run
+with `--dry-run` first and retain “Other / Not listed” because no open catalog
+can guarantee every product or lawful pet listing.
+
 ## Field input behavior
 
 - `text`, `textarea`, and `number` fields are free-form by nature. Their `options` may be used by clients as suggestions if present.

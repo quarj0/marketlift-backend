@@ -12,7 +12,7 @@ from django.db import transaction
 from django.utils.text import slugify
 
 from categories.catalogs import import_category_catalog
-from categories.models import Category
+from categories.models import Category, CategoryFieldOptionDependency
 
 TARGETS = {
     "cars": "cars",
@@ -225,6 +225,38 @@ def _catalog_csv(rows: set[tuple[str, str, int]]) -> str:
             ]
         )
     return output.getvalue()
+
+
+def existing_vehicle_rows(category: Category) -> set[tuple[str, str, int]]:
+    """Reconstruct exact make/model/year links already stored for a category."""
+    year_model_links = CategoryFieldOptionDependency.objects.filter(
+        option__field__category=category,
+        option__field__key="year",
+        parent_option__field__key="model",
+        option__active=True,
+        parent_option__active=True,
+    ).select_related("option", "parent_option")
+    model_make = {
+        link.option_id: link.parent_option.label
+        for link in CategoryFieldOptionDependency.objects.filter(
+            option__field__category=category,
+            option__field__key="model",
+            parent_option__field__key="make",
+            option__active=True,
+            parent_option__active=True,
+        ).select_related("parent_option")
+    }
+    rows = set()
+    current_year = date.today().year
+    for link in year_model_links:
+        make = model_make.get(link.parent_option_id)
+        try:
+            year = int(link.option.value)
+        except ValueError:
+            continue
+        if make and 1886 <= year <= current_year:
+            rows.add((make, link.parent_option.label, year))
+    return rows
 
 
 class Command(BaseCommand):
