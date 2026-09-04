@@ -1,6 +1,10 @@
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from .graphql.mappers import category_to_type
 from .models import Category, CategoryField, CategoryFieldOption
@@ -10,6 +14,38 @@ class CategoryImageSeedSafetyTests(SimpleTestCase):
     def test_unreviewed_image_search_requires_explicit_opt_in(self):
         with self.assertRaisesMessage(CommandError, "not visually reviewed"):
             call_command("seed_distinct_subcategory_images", verbosity=0)
+
+
+class ReviewedCategoryArtworkPublishTests(SimpleTestCase):
+    @override_settings(
+        MARKETLIFT_PUBLIC_ASSET_BASE_URL="https://assets.marketlift.com.br"
+    )
+    def test_audit_validates_the_complete_reviewed_set_without_uploading(self):
+        command = __import__(
+            "categories.management.commands.publish_reviewed_category_artwork",
+            fromlist=["Command"],
+        ).Command()
+        manifest = command._manifest()
+        taxonomy_path = Path(__file__).resolve().parent / "data" / "taxonomy_v2.json"
+        taxonomy = json.loads(taxonomy_path.read_text(encoding="utf-8"))
+        taxonomy_slugs = {item["slug"] for item in taxonomy["roots"]}
+        taxonomy_slugs.update(item["slug"] for item in taxonomy["categories"])
+
+        mapped_slugs = [slug for slugs in manifest.values() for slug in slugs]
+        self.assertTrue(taxonomy_slugs.issubset(mapped_slugs))
+        self.assertEqual(len(mapped_slugs), len(set(mapped_slugs)))
+
+        with TemporaryDirectory() as directory:
+            for artwork_key in manifest:
+                (Path(directory) / f"{artwork_key}.webp").write_bytes(
+                    b"RIFF\x04\x00\x00\x00WEBP"
+                )
+            call_command(
+                "publish_reviewed_category_artwork",
+                source_dir=directory,
+                audit_only=True,
+                verbosity=0,
+            )
 
 
 class CategorySeedTests(TestCase):

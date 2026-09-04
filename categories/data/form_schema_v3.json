@@ -1,22 +1,9 @@
 {
   "conditions": {
-    "goods_full": [
-      "Brand New",
-      "Refurbished",
-      "Used"
-    ],
-    "goods_simple": [
-      "Brand New",
-      "Used"
-    ],
-    "beauty": [
-      "Brand New"
-    ],
-    "vehicles": [
-      "Brand New",
-      "Foreign Used",
-      "Local Used"
-    ],
+    "goods_full": ["Brand New", "Refurbished", "Used"],
+    "goods_simple": ["Brand New", "Used"],
+    "beauty": ["Brand New"],
+    "vehicles": ["Brand New", "Foreign Used", "Local Used"],
     "property": [
       "Fairly Used",
       "Newly-Built",
@@ -37,10 +24,7 @@
     "business-industry": "goods_full",
     "leisure-activities": "goods_simple"
   },
-  "condition_disabled_roots": [
-    "jobs",
-    "services"
-  ],
+  "condition_disabled_roots": ["jobs", "services"],
   "condition_overrides": {
     "cars": "vehicles",
     "motorcycles": "vehicles",
