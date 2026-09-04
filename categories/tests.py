@@ -7,7 +7,12 @@ from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase, override_settings
 
 from .graphql.mappers import category_to_type
-from .models import Category, CategoryField, CategoryFieldOption
+from .models import (
+    Category,
+    CategoryField,
+    CategoryFieldOption,
+    CategoryFieldOptionDependency,
+)
 
 
 class CategoryTaxonomyCurationTests(TestCase):
@@ -159,6 +164,71 @@ class CategoryGraphQLTreeTests(TestCase):
 
 
 class CatalogSeedSafetyTests(TestCase):
+    def test_vehicle_catalog_cascades_make_model_and_year(self):
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+        call_command(
+            "seed_listing_form_schema_v3",
+            verbosity=0,
+        )
+        call_command(
+            "import_product_catalog_pack",
+            category=["vehicles"],
+            verbosity=0,
+        )
+
+        cars = Category.objects.get(slug="cars")
+        make = cars.fields.get(key="make")
+        model = cars.fields.get(key="model")
+        year = cars.fields.get(key="year")
+        honda = make.options.get(value="honda", active=True)
+        civic = model.options.get(value="Civic", active=True)
+        model_year = year.options.get(value="2020", active=True)
+
+        self.assertEqual(model.depends_on_id, make.id)
+        self.assertEqual(year.depends_on_id, model.id)
+        self.assertTrue(year.lazy_options)
+        self.assertTrue(
+            CategoryFieldOptionDependency.objects.filter(
+                option=civic,
+                parent_option=honda,
+            ).exists()
+        )
+        self.assertTrue(
+            CategoryFieldOptionDependency.objects.filter(
+                option=model_year,
+                parent_option=civic,
+            ).exists()
+        )
+
+    def test_animal_catalogs_upgrade_breed_fields_and_cascade_livestock(self):
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+        call_command(
+            "import_product_catalog_pack",
+            category=["dogs", "cats", "birds", "livestock"],
+            verbosity=0,
+        )
+
+        for slug in ("dogs", "cats", "birds"):
+            breed = Category.objects.get(slug=slug).fields.get(key="breed_or_type")
+            self.assertEqual(breed.field_type, CategoryField.FieldType.SELECT)
+            self.assertTrue(breed.lazy_options)
+            self.assertTrue(breed.allow_custom_value)
+            self.assertGreater(breed.options.filter(active=True).count(), 10)
+
+        livestock = Category.objects.get(slug="livestock")
+        animal_type = livestock.fields.get(key="animal_type")
+        breed = livestock.fields.get(key="breed_or_type")
+        cattle = animal_type.options.get(value="cattle")
+        nelore = breed.options.get(value="nelore")
+        self.assertEqual(breed.depends_on_id, animal_type.id)
+        self.assertLess(animal_type.sort_order, breed.sort_order)
+        self.assertTrue(
+            CategoryFieldOptionDependency.objects.filter(
+                option=nelore,
+                parent_option=cattle,
+            ).exists()
+        )
+
     def test_force_seed_preserves_catalog_managed_field_shape_and_options(self):
         call_command("seed_marketplace_domain", verbosity=0)
 

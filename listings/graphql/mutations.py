@@ -21,6 +21,8 @@ from marketlift.graphql.auth import (
     require_user,
 )
 from marketlift.graphql.errors import not_found_error, validation_error
+from uploads.models import UploadAsset
+from uploads.services import delete_unattached_uploads
 from .inputs import ListingInput
 from .mappers import listing_queryset, listing_to_type
 from .types import ListingType
@@ -36,6 +38,14 @@ def _owned(info, listing_id):
         return listing_queryset().get(pk=str(listing_id), seller=seller)
     except (Listing.DoesNotExist, ValueError) as exc:
         raise not_found_error("Listing", code="LISTING_NOT_FOUND") from exc
+
+
+def _discard_unattached_listing_images(*, user, input):
+    delete_unattached_uploads(
+        upload_ids=input.image_upload_ids,
+        user=user,
+        purpose=UploadAsset.Purpose.LISTING_IMAGE,
+    )
 
 
 @strawberry.type
@@ -68,8 +78,10 @@ class ListingMutation:
                 image_upload_ids=input.image_upload_ids,
             )
         except Category.DoesNotExist as exc:
+            _discard_unattached_listing_images(user=seller.user, input=input)
             raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
+            _discard_unattached_listing_images(user=seller.user, input=input)
             raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 
@@ -105,10 +117,12 @@ class ListingMutation:
                 )
                 listing = publish_listing(listing)
         except Category.DoesNotExist as exc:
+            _discard_unattached_listing_images(user=seller.user, input=input)
             raise not_found_error(
                 "Category", code="CATEGORY_NOT_FOUND"
             ) from exc
         except ValidationError as exc:
+            _discard_unattached_listing_images(user=seller.user, input=input)
             raise validation_error(
                 exc, code="LISTING_VALIDATION_ERROR"
             ) from exc
@@ -145,8 +159,16 @@ class ListingMutation:
                 image_upload_ids=input.image_upload_ids,
             )
         except Category.DoesNotExist as exc:
+            _discard_unattached_listing_images(
+                user=listing.seller.user,
+                input=input,
+            )
             raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
+            _discard_unattached_listing_images(
+                user=listing.seller.user,
+                input=input,
+            )
             raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 

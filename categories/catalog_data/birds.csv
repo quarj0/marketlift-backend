@@ -1,0 +1,21 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+breed_or_type,Species,,,budgerigar,Budgerigar,false,true,true,true,,0,true
+breed_or_type,Species,,,cockatiel,Cockatiel,false,true,true,true,,1,true
+breed_or_type,Species,,,canary,Canary,false,true,true,true,,2,true
+breed_or_type,Species,,,lovebird,Lovebird,false,true,true,true,,3,true
+breed_or_type,Species,,,finch,Finch,false,true,true,true,,4,true
+breed_or_type,Species,,,parrot,Parrot,false,true,true,true,,5,true
+breed_or_type,Species,,,macaw,Macaw,false,true,true,true,,6,true
+breed_or_type,Species,,,african-grey,African Grey Parrot,false,true,true,true,,7,true
+breed_or_type,Species,,,amazon-parrot,Amazon Parrot,false,true,true,true,,8,true
+breed_or_type,Species,,,cockatoo,Cockatoo,false,true,true,true,,9,true
+breed_or_type,Species,,,conure,Conure,false,true,true,true,,10,true
+breed_or_type,Species,,,lorikeet,Lorikeet,false,true,true,true,,11,true
+breed_or_type,Species,,,pigeon,Pigeon,false,true,true,true,,12,true
+breed_or_type,Species,,,dove,Dove,false,true,true,true,,13,true
+breed_or_type,Species,,,quail,Quail,false,true,true,true,,14,true
+breed_or_type,Species,,,chicken,Chicken,false,true,true,true,,15,true
+breed_or_type,Species,,,duck,Duck,false,true,true,true,,16,true
+breed_or_type,Species,,,goose,Goose,false,true,true,true,,17,true
+breed_or_type,Species,,,turkey,Turkey,false,true,true,true,,18,true
+breed_or_type,Species,,,peafowl,Peafowl,false,true,true,true,,19,true

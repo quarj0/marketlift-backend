@@ -21,6 +21,10 @@ PACKS = {
     "tvs-video": {"file": "tvs-video.csv", "target": "tvs-video", "fallback": "tvs-video"},
     "smart-watches": {"file": "smart-watches.csv", "target": "smart-watches", "fallback": "smart-watches"},
     "tablets": {"file": "tablets.csv", "target": "tablets", "fallback": "tablets"},
+    "dogs": {"file": "dogs.csv", "target": "dogs", "fallback": "dogs"},
+    "cats": {"file": "cats.csv", "target": "cats", "fallback": "cats"},
+    "birds": {"file": "birds.csv", "target": "birds", "fallback": "birds"},
+    "livestock": {"file": "livestock.csv", "target": "livestock", "fallback": "livestock"},
 }
 
 
@@ -149,31 +153,28 @@ class Command(BaseCommand):
                     f"(e.g. {sample})"
                 )
 
-        for child_key, child_value, parent_key, parent_value in expected_links:
-            child_field = fields.get(child_key)
-            parent_field = fields.get(parent_key)
-            if child_field is None or parent_field is None:
-                continue
-            child_option = child_field.options.filter(
-                value=child_value,
-                active=True,
-            ).first()
-            parent_option = parent_field.options.filter(
-                value=parent_value,
-                active=True,
-            ).first()
-            if child_option is None or parent_option is None:
-                continue
-            if not CategoryFieldOptionDependency.objects.filter(
-                option=child_option,
-                parent_option=parent_option,
-            ).exists():
-                problems.append(
-                    f"missing dependency: {parent_key}={parent_value} -> "
-                    f"{child_key}={child_value}"
-                )
-                if len(problems) >= 20:
-                    break
+        actual_links = {
+            (
+                dependency.option.field.key,
+                dependency.option.value,
+                dependency.parent_option.field.key,
+                dependency.parent_option.value,
+            )
+            for dependency in CategoryFieldOptionDependency.objects.filter(
+                option__field__category=category,
+                parent_option__field__category=category,
+            ).select_related(
+                "option__field",
+                "parent_option__field",
+            )
+        }
+        for child_key, child_value, parent_key, parent_value in sorted(
+            expected_links - actual_links
+        )[:20]:
+            problems.append(
+                f"missing dependency: {parent_key}={parent_value} -> "
+                f"{child_key}={child_value}"
+            )
 
         if problems:
             raise CommandError(

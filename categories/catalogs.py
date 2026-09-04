@@ -125,6 +125,7 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
         current = definitions.setdefault(row["field_key"], {
             "label": row["field_label"],
             "depends_on": row["depends_on"],
+            "field_order": len(definitions),
             "required": row["required"],
             "filterable": row["filterable"],
             "allow_custom": row["allow_custom"],
@@ -157,7 +158,7 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
                 allow_custom_value=definition["allow_custom"],
                 lazy_options=definition["lazy"],
                 unit=definition["unit"],
-                sort_order=len(field_map),
+                sort_order=definition["field_order"],
             )
             field_map[key] = field
             fields_created += 1
@@ -192,6 +193,7 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
             "allow_custom_value": definition["allow_custom"],
             "lazy_options": definition["lazy"],
             "unit": definition["unit"],
+            "sort_order": definition["field_order"],
         }
         for attr, value in values.items():
             if getattr(field, attr) != value:
@@ -224,6 +226,9 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
     for row in rows:
         field = field_map[row["field_key"]]
         imported_values[field.key].add(row["option_value"])
+        option_key = (field.key, row["option_value"])
+        if option_key in option_cache:
+            continue
         option, created = CategoryFieldOption.objects.update_or_create(
             field=field,
             value=row["option_value"],
@@ -233,7 +238,7 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
                 "active": row["active"],
             },
         )
-        option_cache[(field.key, option.value)] = option
+        option_cache[option_key] = option
         options_created += int(created)
         options_updated += int(not created)
 

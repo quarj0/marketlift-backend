@@ -1,0 +1,31 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+breed_or_type,Breed,,,mixed-breed,Mixed Breed,false,true,true,true,,0,true
+breed_or_type,Breed,,,labrador-retriever,Labrador Retriever,false,true,true,true,,1,true
+breed_or_type,Breed,,,golden-retriever,Golden Retriever,false,true,true,true,,2,true
+breed_or_type,Breed,,,german-shepherd,German Shepherd,false,true,true,true,,3,true
+breed_or_type,Breed,,,poodle,Poodle,false,true,true,true,,4,true
+breed_or_type,Breed,,,shih-tzu,Shih Tzu,false,true,true,true,,5,true
+breed_or_type,Breed,,,yorkshire-terrier,Yorkshire Terrier,false,true,true,true,,6,true
+breed_or_type,Breed,,,french-bulldog,French Bulldog,false,true,true,true,,7,true
+breed_or_type,Breed,,,english-bulldog,English Bulldog,false,true,true,true,,8,true
+breed_or_type,Breed,,,beagle,Beagle,false,true,true,true,,9,true
+breed_or_type,Breed,,,rottweiler,Rottweiler,false,true,true,true,,10,true
+breed_or_type,Breed,,,doberman,Doberman,false,true,true,true,,11,true
+breed_or_type,Breed,,,boxer,Boxer,false,true,true,true,,12,true
+breed_or_type,Breed,,,border-collie,Border Collie,false,true,true,true,,13,true
+breed_or_type,Breed,,,australian-shepherd,Australian Shepherd,false,true,true,true,,14,true
+breed_or_type,Breed,,,siberian-husky,Siberian Husky,false,true,true,true,,15,true
+breed_or_type,Breed,,,chow-chow,Chow Chow,false,true,true,true,,16,true
+breed_or_type,Breed,,,pomeranian,Pomeranian,false,true,true,true,,17,true
+breed_or_type,Breed,,,chihuahua,Chihuahua,false,true,true,true,,18,true
+breed_or_type,Breed,,,dachshund,Dachshund,false,true,true,true,,19,true
+breed_or_type,Breed,,,pit-bull,American Pit Bull Terrier,false,true,true,true,,20,true
+breed_or_type,Breed,,,bull-terrier,Bull Terrier,false,true,true,true,,21,true
+breed_or_type,Breed,,,akita,Akita,false,true,true,true,,22,true
+breed_or_type,Breed,,,cane-corso,Cane Corso,false,true,true,true,,23,true
+breed_or_type,Breed,,,great-dane,Great Dane,false,true,true,true,,24,true
+breed_or_type,Breed,,,maltese,Maltese,false,true,true,true,,25,true
+breed_or_type,Breed,,,cocker-spaniel,Cocker Spaniel,false,true,true,true,,26,true
+breed_or_type,Breed,,,schnauzer,Schnauzer,false,true,true,true,,27,true
+breed_or_type,Breed,,,lhasa-apso,Lhasa Apso,false,true,true,true,,28,true
+breed_or_type,Breed,,,jack-russell-terrier,Jack Russell Terrier,false,true,true,true,,29,true

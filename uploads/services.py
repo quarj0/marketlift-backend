@@ -327,6 +327,27 @@ def delete_unattached_upload(*, asset, user):
     return asset
 
 
+def delete_unattached_uploads(*, upload_ids, user, purpose: str | None = None) -> int:
+    """Best-effort cleanup for a failed domain mutation's staged uploads."""
+    queryset = UploadAsset.objects.filter(
+        id__in=list(upload_ids or []),
+        owner=user,
+        status__in=(UploadAsset.Status.PREPARED, UploadAsset.Status.READY),
+    )
+    if purpose:
+        queryset = queryset.filter(purpose=purpose)
+
+    deleted = 0
+    for asset in queryset.prefetch_related("variants"):
+        try:
+            delete_unattached_upload(asset=asset, user=user)
+        except Exception:
+            # The scheduled abandoned-upload cleanup remains the final safety net.
+            continue
+        deleted += 1
+    return deleted
+
+
 def retire_upload(*, asset):
     """Remove an attachment's stored object when its domain owner replaces it."""
     if asset.status == UploadAsset.Status.DELETED:

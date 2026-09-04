@@ -1,0 +1,33 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+animal_type,Animal type,,,cattle,Cattle,true,true,true,false,,0,true
+animal_type,Animal type,,,goat,Goat,true,true,true,false,,1,true
+animal_type,Animal type,,,sheep,Sheep,true,true,true,false,,2,true
+animal_type,Animal type,,,pig,Pig,true,true,true,false,,3,true
+animal_type,Animal type,,,horse,Horse,true,true,true,false,,4,true
+animal_type,Animal type,,,donkey,Donkey,true,true,true,false,,5,true
+animal_type,Animal type,,,rabbit,Rabbit,true,true,true,false,,6,true
+breed_or_type,Breed or type,animal_type,cattle,nelore,Nelore,false,true,true,true,,0,true
+breed_or_type,Breed or type,animal_type,cattle,angus,Angus,false,true,true,true,,1,true
+breed_or_type,Breed or type,animal_type,cattle,brahman,Brahman,false,true,true,true,,2,true
+breed_or_type,Breed or type,animal_type,cattle,gir,Gir,false,true,true,true,,3,true
+breed_or_type,Breed or type,animal_type,cattle,girolando,Girolando,false,true,true,true,,4,true
+breed_or_type,Breed or type,animal_type,cattle,holstein,Holstein,false,true,true,true,,5,true
+breed_or_type,Breed or type,animal_type,cattle,jersey,Jersey,false,true,true,true,,6,true
+breed_or_type,Breed or type,animal_type,goat,boer,Boer,false,true,true,true,,0,true
+breed_or_type,Breed or type,animal_type,goat,saanen,Saanen,false,true,true,true,,1,true
+breed_or_type,Breed or type,animal_type,goat,anglo-nubian,Anglo-Nubian,false,true,true,true,,2,true
+breed_or_type,Breed or type,animal_type,goat,toggenburg,Toggenburg,false,true,true,true,,3,true
+breed_or_type,Breed or type,animal_type,sheep,santa-ines,Santa Inês,false,true,true,true,,0,true
+breed_or_type,Breed or type,animal_type,sheep,dorper,Dorper,false,true,true,true,,1,true
+breed_or_type,Breed or type,animal_type,sheep,suffolk,Suffolk,false,true,true,true,,2,true
+breed_or_type,Breed or type,animal_type,sheep,texel,Texel,false,true,true,true,,3,true
+breed_or_type,Breed or type,animal_type,pig,large-white,Large White,false,true,true,true,,0,true
+breed_or_type,Breed or type,animal_type,pig,landrace,Landrace,false,true,true,true,,1,true
+breed_or_type,Breed or type,animal_type,pig,duroc,Duroc,false,true,true,true,,2,true
+breed_or_type,Breed or type,animal_type,horse,mangalarga-marchador,Mangalarga Marchador,false,true,true,true,,0,true
+breed_or_type,Breed or type,animal_type,horse,quarter-horse,Quarter Horse,false,true,true,true,,1,true
+breed_or_type,Breed or type,animal_type,horse,campolina,Campolina,false,true,true,true,,2,true
+breed_or_type,Breed or type,animal_type,horse,arabian,Arabian,false,true,true,true,,3,true
+breed_or_type,Breed or type,animal_type,donkey,pega,Pêga,false,true,true,true,,0,true
+breed_or_type,Breed or type,animal_type,rabbit,new-zealand,New Zealand,false,true,true,true,,0,true
+breed_or_type,Breed or type,animal_type,rabbit,californian,Californian,false,true,true,true,,1,true

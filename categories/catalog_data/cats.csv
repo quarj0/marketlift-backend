@@ -1,0 +1,21 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+breed_or_type,Breed,,,mixed-breed,Mixed Breed,false,true,true,true,,0,true
+breed_or_type,Breed,,,brazilian-shorthair,Brazilian Shorthair,false,true,true,true,,1,true
+breed_or_type,Breed,,,siamese,Siamese,false,true,true,true,,2,true
+breed_or_type,Breed,,,persian,Persian,false,true,true,true,,3,true
+breed_or_type,Breed,,,maine-coon,Maine Coon,false,true,true,true,,4,true
+breed_or_type,Breed,,,ragdoll,Ragdoll,false,true,true,true,,5,true
+breed_or_type,Breed,,,bengal,Bengal,false,true,true,true,,6,true
+breed_or_type,Breed,,,british-shorthair,British Shorthair,false,true,true,true,,7,true
+breed_or_type,Breed,,,scottish-fold,Scottish Fold,false,true,true,true,,8,true
+breed_or_type,Breed,,,sphynx,Sphynx,false,true,true,true,,9,true
+breed_or_type,Breed,,,abyssinian,Abyssinian,false,true,true,true,,10,true
+breed_or_type,Breed,,,angora,Turkish Angora,false,true,true,true,,11,true
+breed_or_type,Breed,,,burmese,Burmese,false,true,true,true,,12,true
+breed_or_type,Breed,,,russian-blue,Russian Blue,false,true,true,true,,13,true
+breed_or_type,Breed,,,norwegian-forest,Norwegian Forest Cat,false,true,true,true,,14,true
+breed_or_type,Breed,,,oriental-shorthair,Oriental Shorthair,false,true,true,true,,15,true
+breed_or_type,Breed,,,himalayan,Himalayan,false,true,true,true,,16,true
+breed_or_type,Breed,,,exotic-shorthair,Exotic Shorthair,false,true,true,true,,17,true
+breed_or_type,Breed,,,devon-rex,Devon Rex,false,true,true,true,,18,true
+breed_or_type,Breed,,,american-shorthair,American Shorthair,false,true,true,true,,19,true

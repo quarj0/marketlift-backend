@@ -244,6 +244,8 @@ def validate_listing_payload(
             active=True, value=parent_value
         ).first()
         if parent_option is None:
+            if parent_field.allow_custom_value:
+                continue
             errors[field.key] = (
                 f"Choose a valid {field.label} for the selected {parent_field.label}."
             )

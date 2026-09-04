@@ -8,6 +8,7 @@ from uploads.models import UploadAsset
 from uploads.services import (
     claim_upload,
     complete_upload,
+    delete_unattached_uploads,
     prepare_upload,
     store_proxy_upload,
 )
@@ -89,6 +90,35 @@ class UploadServiceTests(TestCase):
             claim_upload(
                 asset=asset, user=self.user, purpose=UploadAsset.Purpose.LISTING_IMAGE
             )
+
+    def test_failed_domain_cleanup_deletes_only_matching_unattached_uploads(self):
+        payload = jpeg_bytes()
+        listing_asset, _ = prepare_upload(
+            user=self.user,
+            purpose=UploadAsset.Purpose.LISTING_IMAGE,
+            original_name="listing.jpg",
+            mime_type="image/jpeg",
+            size=len(payload),
+        )
+        message_asset, _ = prepare_upload(
+            user=self.user,
+            purpose=UploadAsset.Purpose.MESSAGE_IMAGE,
+            original_name="message.jpg",
+            mime_type="image/jpeg",
+            size=len(payload),
+        )
+
+        deleted = delete_unattached_uploads(
+            upload_ids=[listing_asset.id, message_asset.id],
+            user=self.user,
+            purpose=UploadAsset.Purpose.LISTING_IMAGE,
+        )
+
+        listing_asset.refresh_from_db()
+        message_asset.refresh_from_db()
+        self.assertEqual(deleted, 1)
+        self.assertEqual(listing_asset.status, UploadAsset.Status.DELETED)
+        self.assertEqual(message_asset.status, UploadAsset.Status.PREPARED)
 
 
 @override_settings(
