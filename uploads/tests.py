@@ -26,9 +26,9 @@ LOCAL_UPLOAD_SETTINGS = {
 }
 
 
-def jpeg_bytes():
+def jpeg_bytes(*, width=4, height=4):
     buf = io.BytesIO()
-    Image.new("RGB", (4, 4), "white").save(buf, format="JPEG")
+    Image.new("RGB", (width, height), "white").save(buf, format="JPEG")
     return buf.getvalue()
 
 
@@ -115,7 +115,7 @@ class ListingUploadIntegrationTests(TestCase):
             condition_enabled=False,
             condition_required=False,
         )
-        payload = jpeg_bytes()
+        payload = jpeg_bytes(width=400, height=400)
         asset, _ = prepare_upload(
             user=user,
             purpose=UploadAsset.Purpose.LISTING_IMAGE,

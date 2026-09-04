@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -38,7 +40,8 @@ class LocationSuggestionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["suggestions"], ["Pinheiros", "Vila Madalena"])
 
-    def test_can_filter_neighborhood_suggestions(self):
+    @patch("marketlift.api.locations.views.geocode_locations", return_value=[])
+    def test_can_filter_neighborhood_suggestions(self, _geocode_locations):
         response = self.client.get(
             "/api/v1/locations/neighborhoods/",
             {"state": "SP", "city": "São Paulo", "q": "Vila"},

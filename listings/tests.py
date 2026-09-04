@@ -45,7 +45,9 @@ class MarketplaceDomainTests(TestCase):
                 "model": "iPhone 15 Pro",
                 "storage_gb": "256",
             },
-            "image_urls": ["https://example.com/phone.jpg"],
+            "image_urls": [
+                f"https://example.com/phone-{index}.jpg" for index in range(5)
+            ],
         }
 
     def test_seed_matches_frontend_domain_counts(self):
