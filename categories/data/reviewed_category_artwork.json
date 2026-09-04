@@ -44,10 +44,6 @@
     "fashion",
     "womens-fashion",
     "mens-fashion",
-    "shoes",
-    "bags-accessories",
-    "watches-jewelry",
-    "childrens-clothing",
     "other-fashion"
   ],
   "beauty-personal-care": [
@@ -62,11 +58,6 @@
   ],
   "babies-kids": [
     "babies-kids",
-    "baby-clothing",
-    "baby-gear",
-    "maternity",
-    "feeding",
-    "nursery",
     "toys-games",
     "other-babies-kids"
   ],
@@ -74,9 +65,6 @@
     "animals-pets",
     "dogs",
     "cats",
-    "birds",
-    "livestock",
-    "pet-supplies",
     "other-pets"
   ],
   "food-agriculture-farming": [
@@ -84,9 +72,6 @@
     "food-beverages",
     "crops-produce",
     "seeds-fertilizer",
-    "farm-machinery",
-    "livestock-poultry",
-    "animal-feed",
     "other-food-agriculture-farming"
   ],
   "jobs": [
@@ -120,8 +105,6 @@
     "construction-tools",
     "electrical-plumbing",
     "construction-services",
-    "doors-windows",
-    "roofing",
     "other-repair-construction"
   ],
   "business-industry": [
@@ -130,15 +113,6 @@
     "commercial-equipments-tools",
     "industrial-machinery",
     "manufacturing-materials-supplies",
-    "restaurant-equipment",
-    "office-equipment",
-    "medical-equipment",
-    "printing-equipment",
-    "power-tools",
-    "hand-tools",
-    "generators",
-    "safety-equipment",
-    "measuring-tools",
     "other-commercial-equipment",
     "other-business-industry"
   ],
@@ -148,8 +122,33 @@
     "musical-instruments",
     "books-media",
     "outdoor-camping",
-    "hobbies-collectibles",
-    "tickets-events",
     "other-leisure-activities"
-  ]
+  ],
+  "shoes": ["shoes"],
+  "bags-accessories": ["bags-accessories"],
+  "watches-jewelry": ["watches-jewelry"],
+  "childrens-clothing": ["childrens-clothing"],
+  "baby-clothing": ["baby-clothing"],
+  "baby-gear": ["baby-gear"],
+  "maternity": ["maternity"],
+  "feeding": ["feeding"],
+  "nursery": ["nursery"],
+  "birds": ["birds"],
+  "livestock": ["livestock", "livestock-poultry"],
+  "pet-supplies": ["pet-supplies"],
+  "farm-machinery": ["farm-machinery"],
+  "animal-feed": ["animal-feed"],
+  "doors-windows": ["doors-windows"],
+  "roofing": ["roofing"],
+  "restaurant-equipment": ["restaurant-equipment"],
+  "office-equipment": ["office-equipment"],
+  "medical-equipment": ["medical-equipment"],
+  "printing-equipment": ["printing-equipment"],
+  "power-tools": ["power-tools"],
+  "hand-tools": ["hand-tools"],
+  "generators": ["generators"],
+  "safety-equipment": ["safety-equipment"],
+  "measuring-tools": ["measuring-tools"],
+  "hobbies-collectibles": ["hobbies-collectibles"],
+  "tickets-events": ["tickets-events"]
 }
