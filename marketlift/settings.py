@@ -257,8 +257,10 @@ def redis_database_url(database: int) -> str:
     return parsed._replace(path=f"/{database}").geturl()
 
 
-# One Redis endpoint is enough; logical DBs separate cache, Celery and Channels.
-CHANNEL_REDIS_URL = redis_database_url(3)
+# Channels already namespaces its keys, so it can safely share the configured
+# Redis database with Django's cache. This also supports managed Redis services
+# that expose only database 0. Operators may still provide a dedicated endpoint.
+CHANNEL_REDIS_URL = env_text("CHANNEL_REDIS_URL", REDIS_URL)
 MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS = float(
     os.getenv("MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS", "5")
 )
@@ -270,6 +272,7 @@ CHANNEL_LAYERS = {
         ),
         "CONFIG": {
             "hosts": [CHANNEL_REDIS_URL],
+            "prefix": os.getenv("MARKETLIFT_CHANNEL_PREFIX", "marketlift:channels"),
             "capacity": int(os.getenv("MARKETLIFT_CHANNEL_CAPACITY", "1000")),
             "expiry": int(os.getenv("MARKETLIFT_CHANNEL_EXPIRY_SECONDS", "60")),
         },
