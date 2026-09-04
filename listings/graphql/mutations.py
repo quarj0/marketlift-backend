@@ -1,6 +1,7 @@
 from decimal import Decimal
 import strawberry
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from categories.models import Category
 from listings.models import Listing, SavedListing
@@ -70,6 +71,48 @@ class ListingMutation:
             raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
             raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
+        return listing_to_type(listing_queryset().get(pk=listing.pk))
+
+    @strawberry.mutation
+    def create_and_publish_listing(
+        self, info: strawberry.Info, input: ListingInput
+    ) -> ListingType:
+        seller = require_seller(info)
+        try:
+            with transaction.atomic():
+                category = Category.objects.prefetch_related(
+                    "fields__options"
+                ).get(slug=input.category_id)
+                listing = create_listing(
+                    seller=seller,
+                    category=category,
+                    title=input.title,
+                    description=input.description,
+                    price=_decimal(input.price),
+                    condition=input.condition,
+                    negotiable=input.negotiable,
+                    state=input.state,
+                    state_code=input.state_code,
+                    city=input.city,
+                    district=input.district,
+                    country_code=input.country_code,
+                    latitude=input.latitude,
+                    longitude=input.longitude,
+                    location_token=input.location_token,
+                    attributes=dict(input.attributes or {}),
+                    image_urls=input.image_urls,
+                    image_upload_ids=input.image_upload_ids,
+                )
+                listing = publish_listing(listing)
+        except Category.DoesNotExist as exc:
+            raise not_found_error(
+                "Category", code="CATEGORY_NOT_FOUND"
+            ) from exc
+        except ValidationError as exc:
+            raise validation_error(
+                exc, code="LISTING_VALIDATION_ERROR"
+            ) from exc
+
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 
     @strawberry.mutation

@@ -4,52 +4,336 @@ product_type,Product type,,,Laser Printer,Laser Printer,true,true,true,true,,11,
 product_type,Product type,,,Multifunction Printer,Multifunction Printer,true,true,true,true,,12,true
 product_type,Product type,,,Photo Printer,Photo Printer,true,true,true,true,,13,true
 product_type,Product type,,,Thermal Printer,Thermal Printer,true,true,true,true,,14,true
-product_type,Product type,,,Scanner,Scanner,true,true,true,true,,15,true
-product_type,Product type,,,Other,Other,true,true,true,true,,16,true
+product_type,Product type,,,Dot Matrix Printer,Dot Matrix Printer,true,true,true,true,,15,true
+product_type,Product type,,,Large Format Printer,Large Format Printer,true,true,true,true,,16,true
+product_type,Product type,,,Label Printer,Label Printer,true,true,true,true,,17,true
+product_type,Product type,,,Scanner,Scanner,true,true,true,true,,18,true
+product_type,Product type,,,Other,Other,true,true,true,true,,19,true
 brand,Brand,,,epson,Epson,true,true,true,true,,10,true
 brand,Brand,,,hp,HP,true,true,true,true,,11,true
 brand,Brand,,,canon,Canon,true,true,true,true,,12,true
 brand,Brand,,,brother,Brother,true,true,true,true,,13,true
 brand,Brand,,,xerox,Xerox,true,true,true,true,,14,true
-model,Model,brand,epson,EcoTank L3250,EcoTank L3250,true,true,true,true,,10,true
-model,Model,brand,epson,EcoTank L4260,EcoTank L4260,true,true,true,true,,11,true
-model,Model,brand,epson,EcoTank L5290,EcoTank L5290,true,true,true,true,,12,true
-model,Model,brand,epson,EcoTank L6270,EcoTank L6270,true,true,true,true,,13,true
-model,Model,brand,epson,EcoTank L8180,EcoTank L8180,true,true,true,true,,14,true
-model,Model,brand,epson,WorkForce Pro WF-C5890,WorkForce Pro WF-C5890,true,true,true,true,,15,true
-model,Model,brand,epson,SureColor F170,SureColor F170,true,true,true,true,,16,true
-model,Model,brand,hp,Smart Tank 581,Smart Tank 581,true,true,true,true,,10,true
-model,Model,brand,hp,Smart Tank 584,Smart Tank 584,true,true,true,true,,11,true
-model,Model,brand,hp,Smart Tank 724,Smart Tank 724,true,true,true,true,,12,true
-model,Model,brand,hp,Smart Tank 790,Smart Tank 790,true,true,true,true,,13,true
-model,Model,brand,hp,LaserJet M111w,LaserJet M111w,true,true,true,true,,14,true
-model,Model,brand,hp,LaserJet M140w,LaserJet M140w,true,true,true,true,,15,true
-model,Model,brand,hp,LaserJet M236sdw,LaserJet M236sdw,true,true,true,true,,16,true
-model,Model,brand,hp,OfficeJet Pro 9120e,OfficeJet Pro 9120e,true,true,true,true,,17,true
-model,Model,brand,canon,MegaTank G3110,MegaTank G3110,true,true,true,true,,10,true
-model,Model,brand,canon,MegaTank G3160,MegaTank G3160,true,true,true,true,,11,true
-model,Model,brand,canon,MegaTank G6010,MegaTank G6010,true,true,true,true,,12,true
-model,Model,brand,canon,MegaTank G7010,MegaTank G7010,true,true,true,true,,13,true
-model,Model,brand,canon,PIXMA TS3720,PIXMA TS3720,true,true,true,true,,14,true
-model,Model,brand,canon,imageCLASS MF272dw,imageCLASS MF272dw,true,true,true,true,,15,true
-model,Model,brand,brother,DCP-T420W,DCP-T420W,true,true,true,true,,10,true
-model,Model,brand,brother,DCP-T520W,DCP-T520W,true,true,true,true,,11,true
-model,Model,brand,brother,DCP-T720DW,DCP-T720DW,true,true,true,true,,12,true
-model,Model,brand,brother,MFC-T920DW,MFC-T920DW,true,true,true,true,,13,true
-model,Model,brand,brother,HL-L1232W,HL-L1232W,true,true,true,true,,14,true
-model,Model,brand,brother,DCP-L2540DW,DCP-L2540DW,true,true,true,true,,15,true
-model,Model,brand,brother,MFC-L2802DW,MFC-L2802DW,true,true,true,true,,16,true
-model,Model,brand,xerox,B230,B230,true,true,true,true,,10,true
-model,Model,brand,xerox,B235,B235,true,true,true,true,,11,true
-model,Model,brand,xerox,C230,C230,true,true,true,true,,12,true
-model,Model,brand,xerox,C235,C235,true,true,true,true,,13,true
-model,Model,brand,xerox,VersaLink C415,VersaLink C415,true,true,true,true,,14,true
-model,Model,brand,xerox,VersaLink B415,VersaLink B415,true,true,true,true,,15,true
-model,Model,brand,epson,EcoTank L3150,EcoTank L3150,true,true,true,true,,200,true
-model,Model,brand,epson,EcoTank L4150,EcoTank L4150,true,true,true,true,,201,true
-model,Model,brand,epson,EcoTank L4160,EcoTank L4160,true,true,true,true,,202,true
-model,Model,brand,epson,EcoTank L5190,EcoTank L5190,true,true,true,true,,203,true
-model,Model,brand,hp,DeskJet Ink Advantage 2774,DeskJet Ink Advantage 2774,true,true,true,true,,200,true
-model,Model,brand,hp,Ink Tank Wireless 416,Ink Tank Wireless 416,true,true,true,true,,201,true
-model,Model,brand,hp,LaserJet Pro M15w,LaserJet Pro M15w,true,true,true,true,,202,true
-model,Model,brand,hp,LaserJet Pro MFP M28w,LaserJet Pro MFP M28w,true,true,true,true,,203,true
+brand,Brand,,,samsung,Samsung,true,true,true,true,,15,true
+brand,Brand,,,ricoh,Ricoh / Fujitsu,true,true,true,true,,16,true
+brand,Brand,,,kyocera,Kyocera,true,true,true,true,,17,true
+brand,Brand,,,lexmark,Lexmark,true,true,true,true,,18,true
+brand,Brand,,,pantum,Pantum,true,true,true,true,,19,true
+brand,Brand,,,zebra,Zebra,true,true,true,true,,20,true
+brand,Brand,,,dymo,DYMO,true,true,true,true,,21,true
+brand,Brand,,,kodak,Kodak Alaris,true,true,true,true,,22,true
+brand,Brand,,,plustek,Plustek,true,true,true,true,,23,true
+model,Model,brand,epson,EcoTank L110,EcoTank L110,true,true,true,true,,10,true
+model,Model,brand,epson,EcoTank L120,EcoTank L120,true,true,true,true,,11,true
+model,Model,brand,epson,EcoTank L130,EcoTank L130,true,true,true,true,,12,true
+model,Model,brand,epson,EcoTank L210,EcoTank L210,true,true,true,true,,13,true
+model,Model,brand,epson,EcoTank L220,EcoTank L220,true,true,true,true,,14,true
+model,Model,brand,epson,EcoTank L300,EcoTank L300,true,true,true,true,,15,true
+model,Model,brand,epson,EcoTank L3050,EcoTank L3050,true,true,true,true,,16,true
+model,Model,brand,epson,EcoTank L3060,EcoTank L3060,true,true,true,true,,17,true
+model,Model,brand,epson,EcoTank L310,EcoTank L310,true,true,true,true,,18,true
+model,Model,brand,epson,EcoTank L3110,EcoTank L3110,true,true,true,true,,19,true
+model,Model,brand,epson,EcoTank L3150,EcoTank L3150,true,true,true,true,,20,true
+model,Model,brand,epson,EcoTank L3160,EcoTank L3160,true,true,true,true,,21,true
+model,Model,brand,epson,EcoTank L3210,EcoTank L3210,true,true,true,true,,22,true
+model,Model,brand,epson,EcoTank L3250,EcoTank L3250,true,true,true,true,,23,true
+model,Model,brand,epson,EcoTank L3260,EcoTank L3260,true,true,true,true,,24,true
+model,Model,brand,epson,EcoTank L355,EcoTank L355,true,true,true,true,,25,true
+model,Model,brand,epson,EcoTank L365,EcoTank L365,true,true,true,true,,26,true
+model,Model,brand,epson,EcoTank L375,EcoTank L375,true,true,true,true,,27,true
+model,Model,brand,epson,EcoTank L380,EcoTank L380,true,true,true,true,,28,true
+model,Model,brand,epson,EcoTank L382,EcoTank L382,true,true,true,true,,29,true
+model,Model,brand,epson,EcoTank L385,EcoTank L385,true,true,true,true,,30,true
+model,Model,brand,epson,EcoTank L386,EcoTank L386,true,true,true,true,,31,true
+model,Model,brand,epson,EcoTank L395,EcoTank L395,true,true,true,true,,32,true
+model,Model,brand,epson,EcoTank L396,EcoTank L396,true,true,true,true,,33,true
+model,Model,brand,epson,EcoTank L4150,EcoTank L4150,true,true,true,true,,34,true
+model,Model,brand,epson,EcoTank L4160,EcoTank L4160,true,true,true,true,,35,true
+model,Model,brand,epson,EcoTank L4260,EcoTank L4260,true,true,true,true,,36,true
+model,Model,brand,epson,EcoTank L455,EcoTank L455,true,true,true,true,,37,true
+model,Model,brand,epson,EcoTank L475,EcoTank L475,true,true,true,true,,38,true
+model,Model,brand,epson,EcoTank L485,EcoTank L485,true,true,true,true,,39,true
+model,Model,brand,epson,EcoTank L486,EcoTank L486,true,true,true,true,,40,true
+model,Model,brand,epson,EcoTank L495,EcoTank L495,true,true,true,true,,41,true
+model,Model,brand,epson,EcoTank L5190,EcoTank L5190,true,true,true,true,,42,true
+model,Model,brand,epson,EcoTank L5290,EcoTank L5290,true,true,true,true,,43,true
+model,Model,brand,epson,EcoTank L555,EcoTank L555,true,true,true,true,,44,true
+model,Model,brand,epson,EcoTank L565,EcoTank L565,true,true,true,true,,45,true
+model,Model,brand,epson,EcoTank L575,EcoTank L575,true,true,true,true,,46,true
+model,Model,brand,epson,EcoTank L6160,EcoTank L6160,true,true,true,true,,47,true
+model,Model,brand,epson,EcoTank L6170,EcoTank L6170,true,true,true,true,,48,true
+model,Model,brand,epson,EcoTank L6190,EcoTank L6190,true,true,true,true,,49,true
+model,Model,brand,epson,EcoTank L6270,EcoTank L6270,true,true,true,true,,50,true
+model,Model,brand,epson,EcoTank L805,EcoTank L805,true,true,true,true,,51,true
+model,Model,brand,epson,EcoTank L810,EcoTank L810,true,true,true,true,,52,true
+model,Model,brand,epson,EcoTank L850,EcoTank L850,true,true,true,true,,53,true
+model,Model,brand,epson,EcoTank L1800,EcoTank L1800,true,true,true,true,,54,true
+model,Model,brand,epson,EcoTank L8180,EcoTank L8180,true,true,true,true,,55,true
+model,Model,brand,epson,WorkForce WF-2630,WorkForce WF-2630,true,true,true,true,,56,true
+model,Model,brand,epson,WorkForce WF-2750,WorkForce WF-2750,true,true,true,true,,57,true
+model,Model,brand,epson,WorkForce WF-2860,WorkForce WF-2860,true,true,true,true,,58,true
+model,Model,brand,epson,WorkForce WF-3820,WorkForce WF-3820,true,true,true,true,,59,true
+model,Model,brand,epson,WorkForce WF-4830,WorkForce WF-4830,true,true,true,true,,60,true
+model,Model,brand,epson,WorkForce Pro WF-C5890,WorkForce Pro WF-C5890,true,true,true,true,,61,true
+model,Model,brand,epson,SureColor F170,SureColor F170,true,true,true,true,,62,true
+model,Model,brand,epson,Perfection V39,Perfection V39,true,true,true,true,,63,true
+model,Model,brand,epson,Perfection V550,Perfection V550,true,true,true,true,,64,true
+model,Model,brand,epson,Perfection V600,Perfection V600,true,true,true,true,,65,true
+model,Model,brand,epson,WorkForce ES-50,WorkForce ES-50,true,true,true,true,,66,true
+model,Model,brand,epson,WorkForce DS-530,WorkForce DS-530,true,true,true,true,,67,true
+model,Model,brand,hp,DeskJet 1015,DeskJet 1015,true,true,true,true,,10,true
+model,Model,brand,hp,DeskJet 1515,DeskJet 1515,true,true,true,true,,11,true
+model,Model,brand,hp,DeskJet 2130,DeskJet 2130,true,true,true,true,,12,true
+model,Model,brand,hp,DeskJet 2135,DeskJet 2135,true,true,true,true,,13,true
+model,Model,brand,hp,DeskJet 2515,DeskJet 2515,true,true,true,true,,14,true
+model,Model,brand,hp,DeskJet 2545,DeskJet 2545,true,true,true,true,,15,true
+model,Model,brand,hp,DeskJet 2620,DeskJet 2620,true,true,true,true,,16,true
+model,Model,brand,hp,DeskJet 2630,DeskJet 2630,true,true,true,true,,17,true
+model,Model,brand,hp,DeskJet Ink Advantage 2675,DeskJet Ink Advantage 2675,true,true,true,true,,18,true
+model,Model,brand,hp,DeskJet 2710,DeskJet 2710,true,true,true,true,,19,true
+model,Model,brand,hp,DeskJet 2720,DeskJet 2720,true,true,true,true,,20,true
+model,Model,brand,hp,DeskJet Ink Advantage 2774,DeskJet Ink Advantage 2774,true,true,true,true,,21,true
+model,Model,brand,hp,DeskJet 3635,DeskJet 3635,true,true,true,true,,22,true
+model,Model,brand,hp,DeskJet 3775,DeskJet 3775,true,true,true,true,,23,true
+model,Model,brand,hp,DeskJet 3785,DeskJet 3785,true,true,true,true,,24,true
+model,Model,brand,hp,DeskJet Ink Advantage 4535,DeskJet Ink Advantage 4535,true,true,true,true,,25,true
+model,Model,brand,hp,DeskJet 4729,DeskJet 4729,true,true,true,true,,26,true
+model,Model,brand,hp,DeskJet Ink Advantage 5075,DeskJet Ink Advantage 5075,true,true,true,true,,27,true
+model,Model,brand,hp,DeskJet Ink Advantage 5275,DeskJet Ink Advantage 5275,true,true,true,true,,28,true
+model,Model,brand,hp,DeskJet GT 5820,DeskJet GT 5820,true,true,true,true,,29,true
+model,Model,brand,hp,Ink Tank 115,Ink Tank 115,true,true,true,true,,30,true
+model,Model,brand,hp,Ink Tank 315,Ink Tank 315,true,true,true,true,,31,true
+model,Model,brand,hp,Ink Tank 316,Ink Tank 316,true,true,true,true,,32,true
+model,Model,brand,hp,Ink Tank 319,Ink Tank 319,true,true,true,true,,33,true
+model,Model,brand,hp,Ink Tank Wireless 410,Ink Tank Wireless 410,true,true,true,true,,34,true
+model,Model,brand,hp,Ink Tank Wireless 415,Ink Tank Wireless 415,true,true,true,true,,35,true
+model,Model,brand,hp,Ink Tank Wireless 416,Ink Tank Wireless 416,true,true,true,true,,36,true
+model,Model,brand,hp,Smart Tank 500,Smart Tank 500,true,true,true,true,,37,true
+model,Model,brand,hp,Smart Tank 515,Smart Tank 515,true,true,true,true,,38,true
+model,Model,brand,hp,Smart Tank 519,Smart Tank 519,true,true,true,true,,39,true
+model,Model,brand,hp,Smart Tank 530,Smart Tank 530,true,true,true,true,,40,true
+model,Model,brand,hp,Smart Tank 580,Smart Tank 580,true,true,true,true,,41,true
+model,Model,brand,hp,Smart Tank 581,Smart Tank 581,true,true,true,true,,42,true
+model,Model,brand,hp,Smart Tank 584,Smart Tank 584,true,true,true,true,,43,true
+model,Model,brand,hp,Smart Tank 670,Smart Tank 670,true,true,true,true,,44,true
+model,Model,brand,hp,Smart Tank 675,Smart Tank 675,true,true,true,true,,45,true
+model,Model,brand,hp,Smart Tank 720,Smart Tank 720,true,true,true,true,,46,true
+model,Model,brand,hp,Smart Tank 724,Smart Tank 724,true,true,true,true,,47,true
+model,Model,brand,hp,Smart Tank 750,Smart Tank 750,true,true,true,true,,48,true
+model,Model,brand,hp,Smart Tank 790,Smart Tank 790,true,true,true,true,,49,true
+model,Model,brand,hp,LaserJet 1018,LaserJet 1018,true,true,true,true,,50,true
+model,Model,brand,hp,LaserJet 1020,LaserJet 1020,true,true,true,true,,51,true
+model,Model,brand,hp,LaserJet P1005,LaserJet P1005,true,true,true,true,,52,true
+model,Model,brand,hp,LaserJet P1006,LaserJet P1006,true,true,true,true,,53,true
+model,Model,brand,hp,LaserJet P1102,LaserJet P1102,true,true,true,true,,54,true
+model,Model,brand,hp,LaserJet P1102w,LaserJet P1102w,true,true,true,true,,55,true
+model,Model,brand,hp,LaserJet Pro M12w,LaserJet Pro M12w,true,true,true,true,,56,true
+model,Model,brand,hp,LaserJet Pro M15w,LaserJet Pro M15w,true,true,true,true,,57,true
+model,Model,brand,hp,LaserJet M111w,LaserJet M111w,true,true,true,true,,58,true
+model,Model,brand,hp,LaserJet M140w,LaserJet M140w,true,true,true,true,,59,true
+model,Model,brand,hp,LaserJet Pro MFP M28w,LaserJet Pro MFP M28w,true,true,true,true,,60,true
+model,Model,brand,hp,LaserJet Pro MFP M130nw,LaserJet Pro MFP M130nw,true,true,true,true,,61,true
+model,Model,brand,hp,LaserJet Pro MFP M227fdw,LaserJet Pro MFP M227fdw,true,true,true,true,,62,true
+model,Model,brand,hp,LaserJet M236sdw,LaserJet M236sdw,true,true,true,true,,63,true
+model,Model,brand,hp,LaserJet Pro M404dn,LaserJet Pro M404dn,true,true,true,true,,64,true
+model,Model,brand,hp,LaserJet Pro MFP M428fdw,LaserJet Pro MFP M428fdw,true,true,true,true,,65,true
+model,Model,brand,hp,OfficeJet 3830,OfficeJet 3830,true,true,true,true,,66,true
+model,Model,brand,hp,OfficeJet 4650,OfficeJet 4650,true,true,true,true,,67,true
+model,Model,brand,hp,OfficeJet 5255,OfficeJet 5255,true,true,true,true,,68,true
+model,Model,brand,hp,OfficeJet 6950,OfficeJet 6950,true,true,true,true,,69,true
+model,Model,brand,hp,OfficeJet Pro 6970,OfficeJet Pro 6970,true,true,true,true,,70,true
+model,Model,brand,hp,OfficeJet Pro 7740,OfficeJet Pro 7740,true,true,true,true,,71,true
+model,Model,brand,hp,OfficeJet Pro 8020e,OfficeJet Pro 8020e,true,true,true,true,,72,true
+model,Model,brand,hp,OfficeJet Pro 9010e,OfficeJet Pro 9010e,true,true,true,true,,73,true
+model,Model,brand,hp,OfficeJet Pro 9020e,OfficeJet Pro 9020e,true,true,true,true,,74,true
+model,Model,brand,hp,OfficeJet Pro 9120e,OfficeJet Pro 9120e,true,true,true,true,,75,true
+model,Model,brand,hp,ScanJet Pro 2500 f1,ScanJet Pro 2500 f1,true,true,true,true,,76,true
+model,Model,brand,hp,ScanJet Pro 3000 s4,ScanJet Pro 3000 s4,true,true,true,true,,77,true
+model,Model,brand,canon,PIXMA iP2700,PIXMA iP2700,true,true,true,true,,10,true
+model,Model,brand,canon,PIXMA MG2540S,PIXMA MG2540S,true,true,true,true,,11,true
+model,Model,brand,canon,PIXMA MG2570S,PIXMA MG2570S,true,true,true,true,,12,true
+model,Model,brand,canon,PIXMA MG2970,PIXMA MG2970,true,true,true,true,,13,true
+model,Model,brand,canon,PIXMA MG3040,PIXMA MG3040,true,true,true,true,,14,true
+model,Model,brand,canon,PIXMA MG3640,PIXMA MG3640,true,true,true,true,,15,true
+model,Model,brand,canon,PIXMA MG3670,PIXMA MG3670,true,true,true,true,,16,true
+model,Model,brand,canon,PIXMA TS207,PIXMA TS207,true,true,true,true,,17,true
+model,Model,brand,canon,PIXMA TS307,PIXMA TS307,true,true,true,true,,18,true
+model,Model,brand,canon,PIXMA TS3170,PIXMA TS3170,true,true,true,true,,19,true
+model,Model,brand,canon,PIXMA TS3340,PIXMA TS3340,true,true,true,true,,20,true
+model,Model,brand,canon,PIXMA TS3440,PIXMA TS3440,true,true,true,true,,21,true
+model,Model,brand,canon,PIXMA TS3450,PIXMA TS3450,true,true,true,true,,22,true
+model,Model,brand,canon,PIXMA TS3720,PIXMA TS3720,true,true,true,true,,23,true
+model,Model,brand,canon,PIXMA G1000,PIXMA G1000,true,true,true,true,,24,true
+model,Model,brand,canon,PIXMA G1010,PIXMA G1010,true,true,true,true,,25,true
+model,Model,brand,canon,PIXMA G2000,PIXMA G2000,true,true,true,true,,26,true
+model,Model,brand,canon,PIXMA G2010,PIXMA G2010,true,true,true,true,,27,true
+model,Model,brand,canon,PIXMA G2410,PIXMA G2410,true,true,true,true,,28,true
+model,Model,brand,canon,PIXMA G3000,PIXMA G3000,true,true,true,true,,29,true
+model,Model,brand,canon,PIXMA G3010,PIXMA G3010,true,true,true,true,,30,true
+model,Model,brand,canon,MegaTank G3110,MegaTank G3110,true,true,true,true,,31,true
+model,Model,brand,canon,MegaTank G3160,MegaTank G3160,true,true,true,true,,32,true
+model,Model,brand,canon,PIXMA G3410,PIXMA G3410,true,true,true,true,,33,true
+model,Model,brand,canon,PIXMA G3411,PIXMA G3411,true,true,true,true,,34,true
+model,Model,brand,canon,PIXMA G4010,PIXMA G4010,true,true,true,true,,35,true
+model,Model,brand,canon,PIXMA G4411,PIXMA G4411,true,true,true,true,,36,true
+model,Model,brand,canon,MegaTank G6010,MegaTank G6010,true,true,true,true,,37,true
+model,Model,brand,canon,MegaTank G6020,MegaTank G6020,true,true,true,true,,38,true
+model,Model,brand,canon,MegaTank G7010,MegaTank G7010,true,true,true,true,,39,true
+model,Model,brand,canon,MegaTank G7020,MegaTank G7020,true,true,true,true,,40,true
+model,Model,brand,canon,MAXIFY GX4010,MAXIFY GX4010,true,true,true,true,,41,true
+model,Model,brand,canon,MAXIFY GX6010,MAXIFY GX6010,true,true,true,true,,42,true
+model,Model,brand,canon,imageCLASS LBP6030w,imageCLASS LBP6030w,true,true,true,true,,43,true
+model,Model,brand,canon,imageCLASS LBP6230dw,imageCLASS LBP6230dw,true,true,true,true,,44,true
+model,Model,brand,canon,imageCLASS MF3010,imageCLASS MF3010,true,true,true,true,,45,true
+model,Model,brand,canon,imageCLASS MF244dw,imageCLASS MF244dw,true,true,true,true,,46,true
+model,Model,brand,canon,imageCLASS MF264dw,imageCLASS MF264dw,true,true,true,true,,47,true
+model,Model,brand,canon,imageCLASS MF272dw,imageCLASS MF272dw,true,true,true,true,,48,true
+model,Model,brand,canon,CanoScan LiDE 120,CanoScan LiDE 120,true,true,true,true,,49,true
+model,Model,brand,canon,CanoScan LiDE 220,CanoScan LiDE 220,true,true,true,true,,50,true
+model,Model,brand,canon,CanoScan LiDE 300,CanoScan LiDE 300,true,true,true,true,,51,true
+model,Model,brand,canon,CanoScan LiDE 400,CanoScan LiDE 400,true,true,true,true,,52,true
+model,Model,brand,brother,DCP-T300,DCP-T300,true,true,true,true,,10,true
+model,Model,brand,brother,DCP-T310,DCP-T310,true,true,true,true,,11,true
+model,Model,brand,brother,DCP-T420W,DCP-T420W,true,true,true,true,,12,true
+model,Model,brand,brother,DCP-T500W,DCP-T500W,true,true,true,true,,13,true
+model,Model,brand,brother,DCP-T510W,DCP-T510W,true,true,true,true,,14,true
+model,Model,brand,brother,DCP-T520W,DCP-T520W,true,true,true,true,,15,true
+model,Model,brand,brother,DCP-T700W,DCP-T700W,true,true,true,true,,16,true
+model,Model,brand,brother,DCP-T710W,DCP-T710W,true,true,true,true,,17,true
+model,Model,brand,brother,DCP-T720DW,DCP-T720DW,true,true,true,true,,18,true
+model,Model,brand,brother,MFC-T800W,MFC-T800W,true,true,true,true,,19,true
+model,Model,brand,brother,MFC-T810W,MFC-T810W,true,true,true,true,,20,true
+model,Model,brand,brother,MFC-T910DW,MFC-T910DW,true,true,true,true,,21,true
+model,Model,brand,brother,MFC-T920DW,MFC-T920DW,true,true,true,true,,22,true
+model,Model,brand,brother,HL-1110,HL-1110,true,true,true,true,,23,true
+model,Model,brand,brother,HL-1210W,HL-1210W,true,true,true,true,,24,true
+model,Model,brand,brother,HL-L1232W,HL-L1232W,true,true,true,true,,25,true
+model,Model,brand,brother,HL-L2320D,HL-L2320D,true,true,true,true,,26,true
+model,Model,brand,brother,HL-L2350DW,HL-L2350DW,true,true,true,true,,27,true
+model,Model,brand,brother,HL-L2370DW,HL-L2370DW,true,true,true,true,,28,true
+model,Model,brand,brother,DCP-L2540DW,DCP-L2540DW,true,true,true,true,,29,true
+model,Model,brand,brother,DCP-L2550DW,DCP-L2550DW,true,true,true,true,,30,true
+model,Model,brand,brother,MFC-L2700DW,MFC-L2700DW,true,true,true,true,,31,true
+model,Model,brand,brother,MFC-L2710DW,MFC-L2710DW,true,true,true,true,,32,true
+model,Model,brand,brother,MFC-L2802DW,MFC-L2802DW,true,true,true,true,,33,true
+model,Model,brand,brother,ADS-1700W,ADS-1700W,true,true,true,true,,34,true
+model,Model,brand,brother,ADS-2700W,ADS-2700W,true,true,true,true,,35,true
+model,Model,brand,xerox,B210,B210,true,true,true,true,,10,true
+model,Model,brand,xerox,B230,B230,true,true,true,true,,11,true
+model,Model,brand,xerox,B235,B235,true,true,true,true,,12,true
+model,Model,brand,xerox,C230,C230,true,true,true,true,,13,true
+model,Model,brand,xerox,C235,C235,true,true,true,true,,14,true
+model,Model,brand,xerox,Phaser 3020,Phaser 3020,true,true,true,true,,15,true
+model,Model,brand,xerox,WorkCentre 3025,WorkCentre 3025,true,true,true,true,,16,true
+model,Model,brand,xerox,WorkCentre 3345,WorkCentre 3345,true,true,true,true,,17,true
+model,Model,brand,xerox,WorkCentre 6515,WorkCentre 6515,true,true,true,true,,18,true
+model,Model,brand,xerox,VersaLink B400,VersaLink B400,true,true,true,true,,19,true
+model,Model,brand,xerox,VersaLink B405,VersaLink B405,true,true,true,true,,20,true
+model,Model,brand,xerox,VersaLink B415,VersaLink B415,true,true,true,true,,21,true
+model,Model,brand,xerox,VersaLink C400,VersaLink C400,true,true,true,true,,22,true
+model,Model,brand,xerox,VersaLink C405,VersaLink C405,true,true,true,true,,23,true
+model,Model,brand,xerox,VersaLink C415,VersaLink C415,true,true,true,true,,24,true
+model,Model,brand,samsung,ML-2165,ML-2165,true,true,true,true,,10,true
+model,Model,brand,samsung,ML-2165W,ML-2165W,true,true,true,true,,11,true
+model,Model,brand,samsung,Xpress M2020,Xpress M2020,true,true,true,true,,12,true
+model,Model,brand,samsung,Xpress M2020W,Xpress M2020W,true,true,true,true,,13,true
+model,Model,brand,samsung,Xpress M2070,Xpress M2070,true,true,true,true,,14,true
+model,Model,brand,samsung,Xpress M2070W,Xpress M2070W,true,true,true,true,,15,true
+model,Model,brand,samsung,SCX-3405,SCX-3405,true,true,true,true,,16,true
+model,Model,brand,samsung,SCX-3405W,SCX-3405W,true,true,true,true,,17,true
+model,Model,brand,samsung,CLP-365,CLP-365,true,true,true,true,,18,true
+model,Model,brand,samsung,Xpress C430W,Xpress C430W,true,true,true,true,,19,true
+model,Model,brand,samsung,Xpress C480W,Xpress C480W,true,true,true,true,,20,true
+model,Model,brand,ricoh,SP 150,SP 150,true,true,true,true,,10,true
+model,Model,brand,ricoh,SP 210,SP 210,true,true,true,true,,11,true
+model,Model,brand,ricoh,SP 220Nw,SP 220Nw,true,true,true,true,,12,true
+model,Model,brand,ricoh,SP 230DNw,SP 230DNw,true,true,true,true,,13,true
+model,Model,brand,ricoh,P 311,P 311,true,true,true,true,,14,true
+model,Model,brand,ricoh,M 320F,M 320F,true,true,true,true,,15,true
+model,Model,brand,ricoh,M C2000,M C2000,true,true,true,true,,16,true
+model,Model,brand,ricoh,M C251FW,M C251FW,true,true,true,true,,17,true
+model,Model,brand,ricoh,ScanSnap iX500,ScanSnap iX500,true,true,true,true,,18,true
+model,Model,brand,ricoh,ScanSnap iX1500,ScanSnap iX1500,true,true,true,true,,19,true
+model,Model,brand,ricoh,ScanSnap iX1600,ScanSnap iX1600,true,true,true,true,,20,true
+model,Model,brand,ricoh,fi-7160,fi-7160,true,true,true,true,,21,true
+model,Model,brand,ricoh,fi-8170,fi-8170,true,true,true,true,,22,true
+model,Model,brand,kyocera,ECOSYS P2235dn,ECOSYS P2235dn,true,true,true,true,,10,true
+model,Model,brand,kyocera,ECOSYS P2040dn,ECOSYS P2040dn,true,true,true,true,,11,true
+model,Model,brand,kyocera,ECOSYS M2040dn,ECOSYS M2040dn,true,true,true,true,,12,true
+model,Model,brand,kyocera,ECOSYS M2540dn,ECOSYS M2540dn,true,true,true,true,,13,true
+model,Model,brand,kyocera,ECOSYS M5526cdw,ECOSYS M5526cdw,true,true,true,true,,14,true
+model,Model,brand,kyocera,ECOSYS MA2000w,ECOSYS MA2000w,true,true,true,true,,15,true
+model,Model,brand,kyocera,ECOSYS PA2000w,ECOSYS PA2000w,true,true,true,true,,16,true
+model,Model,brand,lexmark,B2236dw,B2236dw,true,true,true,true,,10,true
+model,Model,brand,lexmark,B2338dw,B2338dw,true,true,true,true,,11,true
+model,Model,brand,lexmark,MB2236adw,MB2236adw,true,true,true,true,,12,true
+model,Model,brand,lexmark,MB2338adw,MB2338adw,true,true,true,true,,13,true
+model,Model,brand,lexmark,C3326dw,C3326dw,true,true,true,true,,14,true
+model,Model,brand,lexmark,MC3224dwe,MC3224dwe,true,true,true,true,,15,true
+model,Model,brand,pantum,P2500W,P2500W,true,true,true,true,,10,true
+model,Model,brand,pantum,P2516,P2516,true,true,true,true,,11,true
+model,Model,brand,pantum,P3010DW,P3010DW,true,true,true,true,,12,true
+model,Model,brand,pantum,M6500NW,M6500NW,true,true,true,true,,13,true
+model,Model,brand,pantum,M6550NW,M6550NW,true,true,true,true,,14,true
+model,Model,brand,pantum,M6600NW,M6600NW,true,true,true,true,,15,true
+model,Model,brand,pantum,BM2300AW,BM2300AW,true,true,true,true,,16,true
+model,Model,brand,pantum,M7100DW,M7100DW,true,true,true,true,,17,true
+model,Model,brand,zebra,GK420d,GK420d,true,true,true,true,,10,true
+model,Model,brand,zebra,GK420t,GK420t,true,true,true,true,,11,true
+model,Model,brand,zebra,ZD220,ZD220,true,true,true,true,,12,true
+model,Model,brand,zebra,ZD230,ZD230,true,true,true,true,,13,true
+model,Model,brand,zebra,ZD421,ZD421,true,true,true,true,,14,true
+model,Model,brand,zebra,ZT230,ZT230,true,true,true,true,,15,true
+model,Model,brand,zebra,ZT411,ZT411,true,true,true,true,,16,true
+model,Model,brand,dymo,LabelWriter 450,LabelWriter 450,true,true,true,true,,10,true
+model,Model,brand,dymo,LabelWriter 550,LabelWriter 550,true,true,true,true,,11,true
+model,Model,brand,dymo,LabelWriter 5XL,LabelWriter 5XL,true,true,true,true,,12,true
+model,Model,brand,kodak,ScanMate i940,ScanMate i940,true,true,true,true,,10,true
+model,Model,brand,kodak,Alaris S2050,Alaris S2050,true,true,true,true,,11,true
+model,Model,brand,kodak,Alaris S2070,Alaris S2070,true,true,true,true,,12,true
+model,Model,brand,plustek,OpticSlim 2610,OpticSlim 2610,true,true,true,true,,10,true
+model,Model,brand,plustek,OpticBook 3800,OpticBook 3800,true,true,true,true,,11,true
+model,Model,brand,plustek,SmartOffice PS286 Plus,SmartOffice PS286 Plus,true,true,true,true,,12,true
+model,Model,brand,epson,EcoTank L200,EcoTank L200,true,true,true,true,,300,true
+model,Model,brand,epson,EcoTank L350,EcoTank L350,true,true,true,true,,301,true
+model,Model,brand,epson,EcoTank L360,EcoTank L360,true,true,true,true,,302,true
+model,Model,brand,epson,EcoTank L361,EcoTank L361,true,true,true,true,,303,true
+model,Model,brand,epson,EcoTank L550,EcoTank L550,true,true,true,true,,304,true
+model,Model,brand,epson,EcoTank L1300,EcoTank L1300,true,true,true,true,,305,true
+model,Model,brand,epson,EcoTank L14150,EcoTank L14150,true,true,true,true,,306,true
+brand,Brand,,,fujitsu,Fujitsu,true,true,true,true,,24,true
+model,Model,brand,fujitsu,ScanSnap S1300i,ScanSnap S1300i,true,true,true,true,,10,true
+model,Model,brand,fujitsu,ScanSnap iX500,ScanSnap iX500,true,true,true,true,,11,true
+model,Model,brand,fujitsu,ScanSnap iX1400,ScanSnap iX1400,true,true,true,true,,12,true
+model,Model,brand,fujitsu,ScanSnap iX1500,ScanSnap iX1500,true,true,true,true,,13,true
+model,Model,brand,fujitsu,ScanSnap iX1600,ScanSnap iX1600,true,true,true,true,,14,true
+model,Model,brand,fujitsu,fi-6130,fi-6130,true,true,true,true,,15,true
+model,Model,brand,fujitsu,fi-7160,fi-7160,true,true,true,true,,16,true
+model,Model,brand,fujitsu,fi-7460,fi-7460,true,true,true,true,,17,true
+model,Model,brand,fujitsu,fi-8170,fi-8170,true,true,true,true,,18,true
+brand,Brand,,,oki,OKI,true,true,true,true,,342,true
+model,Model,brand,oki,B412dn,B412dn,true,true,true,true,,10,true
+model,Model,brand,oki,B432dn,B432dn,true,true,true,true,,11,true
+model,Model,brand,oki,B512dn,B512dn,true,true,true,true,,12,true
+model,Model,brand,oki,C332dn,C332dn,true,true,true,true,,13,true
+model,Model,brand,oki,C532dn,C532dn,true,true,true,true,,14,true
+model,Model,brand,oki,MC363dn,MC363dn,true,true,true,true,,15,true
+model,Model,brand,oki,MC573dn,MC573dn,true,true,true,true,,16,true
+brand,Brand,,,konica-minolta,Konica Minolta,true,true,true,true,,350,true
+model,Model,brand,konica-minolta,bizhub C224e,bizhub C224e,true,true,true,true,,10,true
+model,Model,brand,konica-minolta,bizhub C258,bizhub C258,true,true,true,true,,11,true
+model,Model,brand,konica-minolta,bizhub C308,bizhub C308,true,true,true,true,,12,true
+model,Model,brand,konica-minolta,bizhub C360i,bizhub C360i,true,true,true,true,,13,true
+model,Model,brand,konica-minolta,bizhub 367,bizhub 367,true,true,true,true,,14,true
+model,Model,brand,konica-minolta,bizhub 4050i,bizhub 4050i,true,true,true,true,,15,true
+brand,Brand,,,sharp,Sharp,true,true,true,true,,357,true
+model,Model,brand,sharp,MX-2614N,MX-2614N,true,true,true,true,,10,true
+model,Model,brand,sharp,MX-3114N,MX-3114N,true,true,true,true,,11,true
+model,Model,brand,sharp,MX-4071,MX-4071,true,true,true,true,,12,true
+model,Model,brand,sharp,BP-30M28,BP-30M28,true,true,true,true,,13,true
+model,Model,brand,sharp,BP-50C26,BP-50C26,true,true,true,true,,14,true
+brand,Brand,,,toshiba,Toshiba,true,true,true,true,,363,true
+model,Model,brand,toshiba,e-STUDIO 2525AC,e-STUDIO 2525AC,true,true,true,true,,10,true
+model,Model,brand,toshiba,e-STUDIO 3015AC,e-STUDIO 3015AC,true,true,true,true,,11,true
+model,Model,brand,toshiba,e-STUDIO 3518A,e-STUDIO 3518A,true,true,true,true,,12,true
+model,Model,brand,toshiba,e-STUDIO 4528A,e-STUDIO 4528A,true,true,true,true,,13,true
