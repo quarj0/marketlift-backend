@@ -41,6 +41,7 @@ class Category(UUIDTimeStampedModel):
     pricing_placeholder = models.CharField(max_length=120, blank=True)
     condition_enabled = models.BooleanField(default=True)
     condition_required = models.BooleanField(default=True)
+    condition_options = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ("sort_order", "name")
@@ -90,6 +91,7 @@ class CategoryField(UUIDTimeStampedModel):
     lazy_options = models.BooleanField(default=False)
     placeholder = models.CharField(max_length=200, blank=True)
     help_text = models.TextField(blank=True)
+    ui_group = models.CharField(max_length=80, blank=True)
     unit = models.CharField(max_length=32, blank=True)
     min_value = models.DecimalField(
         max_digits=16, decimal_places=4, null=True, blank=True

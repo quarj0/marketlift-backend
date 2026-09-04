@@ -126,6 +126,7 @@ def create_category_field(
     lazy_options: bool = False,
     placeholder: str = "",
     help_text: str = "",
+    ui_group: str = "",
     unit: str = "",
     min_value=None,
     max_value=None,
@@ -173,6 +174,7 @@ def create_category_field(
         ),
         placeholder=placeholder.strip(),
         help_text=help_text.strip(),
+        ui_group=ui_group.strip(),
         unit=unit.strip(),
         min_value=_clean_decimal(min_value, label="min_value"),
         max_value=_clean_decimal(max_value, label="max_value"),
@@ -200,6 +202,7 @@ def update_category_field(
     lazy_options: bool = False,
     placeholder: str = "",
     help_text: str = "",
+    ui_group: str = "",
     unit: str = "",
     min_value=None,
     max_value=None,
@@ -270,6 +273,7 @@ def update_category_field(
     )
     field.placeholder = placeholder.strip()
     field.help_text = help_text.strip()
+    field.ui_group = ui_group.strip()
     field.unit = unit.strip()
     field.min_value = _clean_decimal(min_value, label="min_value")
     field.max_value = _clean_decimal(max_value, label="max_value")

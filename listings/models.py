@@ -33,10 +33,19 @@ class Listing(UUIDTimeStampedModel):
         REMOVED = "removed", "Removed"
 
     class Condition(models.TextChoices):
-        # Constant names stay stable internally; public values match the marketplace.
+        # Category.condition_options controls which values are valid per category.
         NEW = "Brand New", "Brand New"
         LIKE_NEW = "Refurbished", "Refurbished"
         USED = "Used", "Used"
+        FOREIGN_USED = "Foreign Used", "Foreign Used"
+        LOCAL_USED = "Local Used", "Local Used"
+        FAIRLY_USED = "Fairly Used", "Fairly Used"
+        NEWLY_BUILT = "Newly-Built", "Newly-Built"
+        OFF_PLAN = "Off-Plan", "Off-Plan"
+        OLD = "Old", "Old"
+        RENOVATED = "Renovated", "Renovated"
+        UNCOMPLETED = "Uncompleted Building", "Uncompleted Building"
+        UNDER_CONSTRUCTION = "Under construction", "Under construction"
 
     seller = models.ForeignKey(
         "sellers.SellerProfile",
@@ -58,7 +67,7 @@ class Listing(UUIDTimeStampedModel):
     title = models.CharField(max_length=180)
     description = models.TextField()
     price = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
-    condition = models.CharField(max_length=16, choices=Condition.choices, blank=True)
+    condition = models.CharField(max_length=32, choices=Condition.choices, blank=True)
     negotiable = models.BooleanField(default=False)
 
     # Human-readable location snapshots remain on the listing for display, SEO,

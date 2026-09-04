@@ -159,10 +159,17 @@ def validate_listing_payload(
         errors["price"] = "Price is required for this category."
 
     if category.condition_enabled:
+        allowed_conditions = list(
+            category.condition_options or Listing.Condition.values
+        )
         if category.condition_required and not condition:
             errors["condition"] = "Condition is required for this category."
-        elif condition and condition not in Listing.Condition.values:
-            errors["condition"] = "Invalid listing condition."
+        elif condition and condition not in allowed_conditions:
+            errors["condition"] = (
+                "Invalid condition for this category. Choose one of: "
+                + ", ".join(allowed_conditions)
+                + "."
+            )
     elif condition:
         errors["condition"] = "Condition is disabled for this category."
 
@@ -282,6 +289,14 @@ def _write_attributes(
         )
 
 
+def _perceptual_hash_distance(left: str, right: str) -> int:
+    try:
+        return (int(left, 16) ^ int(right, 16)).bit_count()
+    except (TypeError, ValueError):
+        return 999
+
+
+
 def _write_media(
     listing: Listing,
     *,
@@ -319,6 +334,30 @@ def _write_media(
             raise ValidationError(
                 {"images": "One or more image uploads were not found."}
             )
+        seen_checksums = set()
+        seen_hashes = []
+        for asset_id in ordered_ids:
+            asset = assets[asset_id]
+            checksum = (asset.checksum_sha256 or "").strip()
+            perceptual_hash = str(
+                (asset.metadata or {}).get("perceptual_hash") or ""
+            ).strip()
+            if checksum and checksum in seen_checksums:
+                raise ValidationError(
+                    {"images": "This image is already uploaded."}
+                )
+            if perceptual_hash and any(
+                _perceptual_hash_distance(perceptual_hash, previous) <= 3
+                for previous in seen_hashes
+            ):
+                raise ValidationError(
+                    {"images": "This image is already uploaded."}
+                )
+            if checksum:
+                seen_checksums.add(checksum)
+            if perceptual_hash:
+                seen_hashes.append(perceptual_hash)
+
         current_ids = {str(item.id) for item in current_uploads}
         resolved = []
         for asset_id in ordered_ids:
@@ -568,6 +607,17 @@ def publish_listing(listing: Listing):
     from platform_settings.models import PlatformConfiguration
 
     config = PlatformConfiguration.load()
+    image_count = listing.media.count()
+    if image_count < config.min_listing_images:
+        raise ValidationError(
+            {
+                "images": (
+                    f"Add at least {config.min_listing_images} photos before publishing. "
+                    f"You currently have {image_count}."
+                )
+            }
+        )
+
     if (
         settings.MARKETLIFT_IDENTITY_VERIFICATION_ENABLED
         and config.seller_verification_required

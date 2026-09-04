@@ -50,7 +50,9 @@ def category_to_type(category) -> CategoryType:
             placeholder=category.pricing_placeholder or None,
         ),
         condition=CategoryConditionType(
-            enabled=category.condition_enabled, required=category.condition_required
+            enabled=category.condition_enabled,
+            required=category.condition_required,
+            options=list(category.condition_options or (["Brand New", "Refurbished", "Used"] if category.condition_enabled else [])),
         ),
         fields=[
             CategoryFieldDefinitionType(
@@ -65,6 +67,7 @@ def category_to_type(category) -> CategoryType:
                 option_count=sum(1 for option in field.options.all() if option.active),
                 placeholder=field.placeholder or None,
                 help_text=field.help_text or None,
+                ui_group=field.ui_group or None,
                 unit=field.unit or None,
                 min=float(field.min_value) if field.min_value is not None else None,
                 max=float(field.max_value) if field.max_value is not None else None,

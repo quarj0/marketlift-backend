@@ -65,12 +65,32 @@ def _category_schema_values(input: CategoryAdminInput):
         raise ValidationError(
             {"condition_required": "A disabled condition cannot be required."}
         )
+    supplied_condition_options = input.condition_options
+    if supplied_condition_options is None and existing is not None:
+        supplied_condition_options = list(existing.condition_options or [])
+    condition_options = []
+    seen = set()
+    for raw in supplied_condition_options or []:
+        value = str(raw or "").strip()
+        if not value or value.casefold() in seen:
+            continue
+        if len(value) > 32:
+            raise ValidationError(
+                {"condition_options": "Condition values must be at most 32 characters."}
+            )
+        seen.add(value.casefold())
+        condition_options.append(value)
+    if input.condition_enabled and not condition_options:
+        condition_options = ["Brand New", "Refurbished", "Used"]
+    if not input.condition_enabled:
+        condition_options = []
     return {
         "pricing_mode": pricing_mode,
         "pricing_label": input.pricing_label.strip() or default_pricing_label(),
         "pricing_placeholder": (input.pricing_placeholder or "").strip(),
         "condition_enabled": input.condition_enabled,
         "condition_required": input.condition_required,
+        "condition_options": condition_options,
     }
 
 
@@ -225,6 +245,7 @@ class CategoryMutation:
                 lazy_options=input.lazy_options,
                 placeholder=input.placeholder or "",
                 help_text=input.help_text or "",
+                ui_group=input.ui_group or "",
                 unit=input.unit or "",
                 min_value=input.min,
                 max_value=input.max,
@@ -275,6 +296,7 @@ class CategoryMutation:
                 lazy_options=input.lazy_options,
                 placeholder=input.placeholder or "",
                 help_text=input.help_text or "",
+                ui_group=input.ui_group or "",
                 unit=input.unit or "",
                 min_value=input.min,
                 max_value=input.max,

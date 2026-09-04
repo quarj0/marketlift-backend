@@ -22,6 +22,7 @@ class CategoryFieldDefinitionType:
     option_count: int
     placeholder: str | None
     help_text: str | None
+    ui_group: str | None
     unit: str | None
     min: float | None
     max: float | None
@@ -40,6 +41,7 @@ class CategoryPricingType:
 class CategoryConditionType:
     enabled: bool
     required: bool
+    options: list[str]
 
 
 @strawberry.type
@@ -97,6 +99,7 @@ class CategoryAdminInput:
     pricing_placeholder: str | None = None
     condition_enabled: bool = True
     condition_required: bool = True
+    condition_options: list[str] | None = None
 
 
 @strawberry.input
@@ -118,6 +121,7 @@ class CategoryFieldAdminInput:
     lazy_options: bool = False
     placeholder: str | None = None
     help_text: str | None = None
+    ui_group: str | None = None
     unit: str | None = None
     min: float | None = None
     max: float | None = None
