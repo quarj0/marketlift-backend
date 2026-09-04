@@ -1,8 +1,15 @@
 from django.core.management import call_command
-from django.test import TestCase
+from django.core.management.base import CommandError
+from django.test import SimpleTestCase, TestCase
 
 from .graphql.mappers import category_to_type
 from .models import Category, CategoryField, CategoryFieldOption
+
+
+class CategoryImageSeedSafetyTests(SimpleTestCase):
+    def test_unreviewed_image_search_requires_explicit_opt_in(self):
+        with self.assertRaisesMessage(CommandError, "not visually reviewed"):
+            call_command("seed_distinct_subcategory_images", verbosity=0)
 
 
 class CategorySeedTests(TestCase):

@@ -47,9 +47,9 @@ def _clean_html(value: str) -> str:
 
 class Command(BaseCommand):
     help = (
-        "Give meaningful Marketlift subcategories distinct real images. "
-        "Existing unique category images are preserved; inherited/shared "
-        "images are replaced with category-specific Wikimedia Commons photos."
+        "Audit or seed category-specific Wikimedia Commons photos. Automated "
+        "search results are unreviewed and require an explicit opt-in before "
+        "they can replace category artwork."
     )
 
     def add_arguments(self, parser):
@@ -68,6 +68,14 @@ class Command(BaseCommand):
             "--audit-only",
             action="store_true",
             help="Show what would be replaced without downloading or saving.",
+        )
+        parser.add_argument(
+            "--allow-unreviewed-search",
+            action="store_true",
+            help=(
+                "Allow the first search result passing the technical filters to be "
+                "stored. Prefer the reviewed frontend visual manifest instead."
+            ),
         )
 
     def _owner(self, email: str | None):
@@ -261,6 +269,7 @@ class Command(BaseCommand):
                 "license_url": candidate["license_url"],
                 "seeded_for": f"category:{category.slug}",
                 "category_specific": True,
+                "review_status": "unreviewed",
             }
             asset.save(
                 update_fields=(
@@ -293,6 +302,12 @@ class Command(BaseCommand):
         only = set(options["category"] or [])
         force = options["force"]
         audit_only = options["audit_only"]
+        allow_unreviewed_search = options["allow_unreviewed_search"]
+        if not audit_only and not allow_unreviewed_search:
+            raise CommandError(
+                "Automated Wikimedia selection is not visually reviewed. Run with "
+                "--audit-only, or explicitly pass --allow-unreviewed-search."
+            )
         owner = None if audit_only else self._owner(options["owner_email"])
 
         qs = (
