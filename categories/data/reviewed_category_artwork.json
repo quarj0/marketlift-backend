@@ -32,30 +32,30 @@
   "home-furniture-appliances": [
     "home",
     "home-furniture-appliances",
-    "furniture",
-    "home-decor",
-    "lighting",
     "other-home-furniture-appliances"
   ],
+  "furniture": ["furniture"],
+  "home-decor": ["home-decor"],
+  "lighting": ["lighting"],
   "kitchen-appliances": ["kitchen-appliances"],
   "home-appliances": ["home-appliances"],
   "garden-outdoor": ["garden-outdoor"],
   "fashion": [
     "fashion",
-    "womens-fashion",
-    "mens-fashion",
     "other-fashion"
   ],
+  "womens-fashion": ["womens-fashion"],
+  "mens-fashion": ["mens-fashion"],
   "beauty-personal-care": [
     "beauty-personal-care",
-    "skincare",
-    "haircare",
-    "makeup",
-    "fragrances",
-    "personal-care",
     "beauty-tools",
     "other-beauty-personal-care"
   ],
+  "skincare": ["skincare"],
+  "haircare": ["haircare"],
+  "makeup": ["makeup"],
+  "fragrances": ["fragrances"],
+  "personal-care": ["personal-care"],
   "babies-kids": [
     "babies-kids",
     "toys-games",

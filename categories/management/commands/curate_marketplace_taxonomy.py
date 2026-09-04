@@ -11,6 +11,16 @@ from listings.models import Listing
 from marketlift.search.document import rebuild_listing_search_document
 
 
+LEGACY_CATEGORY_MERGES = {
+    "home": "other-home-furniture-appliances",
+    "business": "other-business-industry",
+    "manufacturing-materials-supplies": "other-business-industry",
+    "retail-store-equipment": "other-commercial-equipment",
+    "salon-beauty-equipment": "other-commercial-equipment",
+    "stage-event-equipment": "other-commercial-equipment",
+}
+
+
 SOURCE_SCHEMA_MOVES = {
     "phones-tablets": "other-phones-tablets",
     "vehicles": "cars",
@@ -28,6 +38,7 @@ SOURCE_SCHEMA_MOVES = {
     "leisure-activities": "other-leisure-activities",
     "business-industry": "other-business-industry",
     "commercial-equipments-tools": "other-commercial-equipment",
+    **LEGACY_CATEGORY_MERGES,
 }
 
 
@@ -156,6 +167,10 @@ class Command(BaseCommand):
                         category_schema_version=target.schema_version,
                     )
                     affected_listing_ids.extend(ids)
+
+            # These old roots/leaves overlap the curated taxonomy. Preserve the
+            # rows for historical references, but remove them from discovery.
+            Category.objects.filter(slug__in=LEGACY_CATEGORY_MERGES).update(active=False)
 
             # Seed missing fields on new leaves. Existing fields are preserved.
             for item in data["categories"]:

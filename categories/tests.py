@@ -10,6 +10,37 @@ from .graphql.mappers import category_to_type
 from .models import Category, CategoryField, CategoryFieldOption
 
 
+class CategoryTaxonomyCurationTests(TestCase):
+    def test_legacy_duplicates_are_deactivated_idempotently(self):
+        for slug in (
+            "home",
+            "business",
+            "manufacturing-materials-supplies",
+            "retail-store-equipment",
+            "salon-beauty-equipment",
+            "stage-event-equipment",
+        ):
+            Category.objects.create(name=slug.replace("-", " ").title(), slug=slug)
+
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+
+        self.assertFalse(
+            Category.objects.filter(
+                slug__in=(
+                    "home",
+                    "business",
+                    "manufacturing-materials-supplies",
+                    "retail-store-equipment",
+                    "salon-beauty-equipment",
+                    "stage-event-equipment",
+                ),
+                active=True,
+            ).exists()
+        )
+        self.assertEqual(Category.objects.filter(parent=None, active=True).count(), 14)
+
+
 class CategoryImageSeedSafetyTests(SimpleTestCase):
     def test_unreviewed_image_search_requires_explicit_opt_in(self):
         with self.assertRaisesMessage(CommandError, "not visually reviewed"):
