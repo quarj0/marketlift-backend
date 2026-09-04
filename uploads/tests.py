@@ -1,4 +1,5 @@
 import io
+import json
 from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -177,6 +178,63 @@ class ListingUploadIntegrationTests(TestCase):
         self.assertEqual(media.upload_id, asset.id)
         self.assertEqual(media.content_url, asset.preferred_image_url("detail"))
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
+
+    def test_failed_listing_mutation_removes_completed_image_upload(self):
+        from sellers.models import SellerProfile
+
+        user = User.objects.create_user(
+            email="failed-listing-upload@example.com",
+            full_name="Failed Listing Upload",
+            password="secret123",
+        )
+        SellerProfile.objects.create(user=user)
+        payload = jpeg_bytes(width=400, height=400)
+        asset, _ = prepare_upload(
+            user=user,
+            purpose=UploadAsset.Purpose.LISTING_IMAGE,
+            original_name="failed-listing.jpg",
+            mime_type="image/jpeg",
+            size=len(payload),
+        )
+        store_proxy_upload(
+            asset=asset,
+            user=user,
+            stream=io.BytesIO(payload),
+            content_type="image/jpeg",
+            content_length=len(payload),
+        )
+        complete_upload(asset=asset, user=user)
+        self.client.force_login(user)
+
+        response = self.client.post(
+            "/graphql/",
+            data=json.dumps(
+                {
+                    "query": """
+                        mutation FailedListing($input: ListingInput!) {
+                          createAndPublishListing(input: $input) { id }
+                        }
+                    """,
+                    "variables": {
+                        "input": {
+                            "categoryId": "missing-category",
+                            "title": "Listing that must fail",
+                            "description": "This listing intentionally uses an invalid category.",
+                            "imageUploadIds": [str(asset.id)],
+                        }
+                    },
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["errors"][0]["extensions"]["code"],
+            "CATEGORY_NOT_FOUND",
+        )
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, UploadAsset.Status.DELETED)
 
 
 @override_settings(

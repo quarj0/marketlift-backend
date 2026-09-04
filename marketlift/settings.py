@@ -179,6 +179,10 @@ def database_config(database_url: str, *, is_production: bool) -> dict:
     )
     if using_local_fallback:
         config.update(USER="marketlift", PASSWORD="marketlift")
+    config.setdefault("OPTIONS", {}).setdefault(
+        "connect_timeout",
+        int(os.getenv("MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS", "5")),
+    )
     if is_production:
         config.setdefault("OPTIONS", {}).setdefault("sslmode", "require")
     return config
@@ -255,6 +259,9 @@ def redis_database_url(database: int) -> str:
 
 # One Redis endpoint is enough; logical DBs separate cache, Celery and Channels.
 CHANNEL_REDIS_URL = redis_database_url(3)
+MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS = float(
+    os.getenv("MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS", "5")
+)
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": os.getenv(
@@ -290,6 +297,10 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "socket_connect_timeout": MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS,
+            "socket_timeout": MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS,
+        },
     }
 }
 

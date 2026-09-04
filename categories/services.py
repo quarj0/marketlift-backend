@@ -9,6 +9,29 @@ from django.utils.text import slugify
 from .models import Category, CategoryField, CategoryFieldOption
 
 
+def category_scope_ids(slug: str) -> list:
+    """Return an active category and every active descendant in its subtree."""
+    root_id = (
+        Category.objects.filter(slug=slug, active=True)
+        .values_list("id", flat=True)
+        .first()
+    )
+    if root_id is None:
+        return []
+
+    ids = [root_id]
+    frontier = [root_id]
+    while frontier:
+        children = list(
+            Category.objects.filter(parent_id__in=frontier, active=True)
+            .exclude(id__in=ids)
+            .values_list("id", flat=True)
+        )
+        ids.extend(children)
+        frontier = children
+    return ids
+
+
 def _clean_decimal(value, *, label: str):
     if value in (None, ""):
         return None
@@ -170,7 +193,9 @@ def create_category_field(
         ),
         depends_on=depends_on,
         lazy_options=(
-            bool(lazy_options) if field_type == CategoryField.FieldType.SELECT else False
+            bool(lazy_options)
+            if field_type == CategoryField.FieldType.SELECT
+            else False
         ),
         placeholder=placeholder.strip(),
         help_text=help_text.strip(),

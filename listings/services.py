@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
+from datetime import date
 
 from django.conf import settings
 from marketlift.markets.service import default_country_code
@@ -40,7 +41,6 @@ def _normalize_listing_condition(value: str) -> str:
     }
     candidate = (value or "").strip()
     return str(aliases.get(candidate, candidate))
-
 
 
 def _resolve_listing_location(
@@ -94,6 +94,60 @@ def _resolve_listing_location(
     }
 
 
+def _location_input_matches_listing(
+    listing: Listing,
+    *,
+    state: str,
+    state_code: str,
+    city: str,
+    district: str,
+    country_code: str | None,
+    latitude,
+    longitude,
+) -> bool:
+    submitted_strings = (
+        (state or "").strip(),
+        (state_code or "").strip().upper(),
+        (city or "").strip(),
+        (district or "").strip(),
+        (country_code or listing.country_code or "").strip().upper(),
+    )
+    stored_strings = (
+        listing.state,
+        listing.state_code.upper(),
+        listing.city,
+        listing.district,
+        listing.country_code.upper(),
+    )
+    if submitted_strings != stored_strings:
+        return False
+
+    if latitude is None and longitude is None:
+        return True
+    if latitude is None or longitude is None or listing.location_point is None:
+        return False
+    try:
+        return (
+            abs(float(latitude) - listing.location_point.y) < 0.000001
+            and abs(float(longitude) - listing.location_point.x) < 0.000001
+        )
+    except (TypeError, ValueError):
+        return False
+
+
+def _stored_listing_location(listing: Listing) -> dict:
+    return {
+        "state": listing.state,
+        "state_code": listing.state_code,
+        "city": listing.city,
+        "district": listing.district,
+        "country_code": listing.country_code,
+        "location_point": listing.location_point,
+        "location_provider": listing.location_provider,
+        "location_provider_id": listing.location_provider_id,
+    }
+
+
 def _validate_scalar(field: CategoryField, value):
     if field.field_type in {
         CategoryField.FieldType.TEXT,
@@ -111,6 +165,14 @@ def _validate_scalar(field: CategoryField, value):
         candidate = str(value).strip()
         if not candidate:
             raise ValidationError({field.key: f"{field.label} cannot be empty."})
+        if field.key == "year":
+            try:
+                if int(candidate) > date.today().year:
+                    raise ValidationError(
+                        {field.key: f"{field.label} cannot be in the future."}
+                    )
+            except ValueError:
+                pass
 
         # Normalize a typed option label/value back to the canonical option value.
         # Example: typing "Apple" stores "apple" when that option exists.
@@ -175,9 +237,9 @@ def validate_listing_payload(
 
     attributes = attributes or {}
     fields = list(
-        category.fields.select_related("depends_on").prefetch_related(
-            "options", "depends_on__options"
-        ).all()
+        category.fields.select_related("depends_on")
+        .prefetch_related("options", "depends_on__options")
+        .all()
     )
     known_keys = {field.key for field in fields}
     unknown = set(attributes) - known_keys
@@ -298,7 +360,6 @@ def _perceptual_hash_distance(left: str, right: str) -> int:
         return 999
 
 
-
 def _write_media(
     listing: Listing,
     *,
@@ -345,16 +406,12 @@ def _write_media(
                 (asset.metadata or {}).get("perceptual_hash") or ""
             ).strip()
             if checksum and checksum in seen_checksums:
-                raise ValidationError(
-                    {"images": "This image is already uploaded."}
-                )
+                raise ValidationError({"images": "This image is already uploaded."})
             if perceptual_hash and any(
                 _perceptual_hash_distance(perceptual_hash, previous) <= 3
                 for previous in seen_hashes
             ):
-                raise ValidationError(
-                    {"images": "This image is already uploaded."}
-                )
+                raise ValidationError({"images": "This image is already uploaded."})
             if checksum:
                 seen_checksums.add(checksum)
             if perceptual_hash:
@@ -529,16 +586,28 @@ def update_listing(
         condition=condition,
         attributes=attributes,
     )
-    location = _resolve_listing_location(
+    if not location_token and _location_input_matches_listing(
+        listing,
         state=state,
         state_code=state_code,
         city=city,
         district=district,
-        country_code=country_code or listing.seller.country_code,
+        country_code=country_code,
         latitude=latitude,
         longitude=longitude,
-        location_token=location_token,
-    )
+    ):
+        location = _stored_listing_location(listing)
+    else:
+        location = _resolve_listing_location(
+            state=state,
+            state_code=state_code,
+            city=city,
+            district=district,
+            country_code=country_code or listing.seller.country_code,
+            latitude=latitude,
+            longitude=longitude,
+            location_token=location_token,
+        )
     if location["country_code"] != listing.seller.country_code:
         raise ValidationError(
             {"countryCode": "Listing country must match the seller market."}

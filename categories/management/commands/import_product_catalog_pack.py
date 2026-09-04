@@ -25,6 +25,7 @@ PACKS = {
     "cats": {"file": "cats.csv", "target": "cats", "fallback": "cats"},
     "birds": {"file": "birds.csv", "target": "birds", "fallback": "birds"},
     "livestock": {"file": "livestock.csv", "target": "livestock", "fallback": "livestock"},
+    "other-pets": {"file": "other-pets.csv", "target": "other-pets", "fallback": "other-pets"},
 }
 
 

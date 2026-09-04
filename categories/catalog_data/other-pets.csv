@@ -1,0 +1,36 @@
+field_key,field_label,depends_on,parent_value,option_value,option_label,required,filterable,allow_custom,lazy,unit,sort_order,active
+species,Species,,,fish,Fish,true,true,true,false,,0,true
+species,Species,,,reptile,Reptile,true,true,true,false,,1,true
+species,Species,,,rodent,Rodent,true,true,true,false,,2,true
+species,Species,,,small-mammal,Small mammal,true,true,true,false,,3,true
+species,Species,,,amphibian,Amphibian,true,true,true,false,,4,true
+species,Species,,,arachnid,Arachnid,true,true,true,false,,5,true
+species,Species,,,insect,Insect,true,true,true,false,,6,true
+species,Species,,,other,Other,true,true,true,false,,7,true
+breed_or_type,Breed or type,species,fish,betta,Betta,false,true,true,true,,0,true
+breed_or_type,Breed or type,species,fish,goldfish,Goldfish,false,true,true,true,,1,true
+breed_or_type,Breed or type,species,fish,guppy,Guppy,false,true,true,true,,2,true
+breed_or_type,Breed or type,species,fish,discus,Discus,false,true,true,true,,3,true
+breed_or_type,Breed or type,species,fish,koi,Koi,false,true,true,true,,4,true
+breed_or_type,Breed or type,species,reptile,tortoise,Tortoise,false,true,true,true,,0,true
+breed_or_type,Breed or type,species,reptile,turtle,Turtle,false,true,true,true,,1,true
+breed_or_type,Breed or type,species,reptile,gecko,Gecko,false,true,true,true,,2,true
+breed_or_type,Breed or type,species,reptile,iguana,Iguana,false,true,true,true,,3,true
+breed_or_type,Breed or type,species,reptile,snake,Snake,false,true,true,true,,4,true
+breed_or_type,Breed or type,species,rodent,hamster,Hamster,false,true,true,true,,0,true
+breed_or_type,Breed or type,species,rodent,gerbil,Gerbil,false,true,true,true,,1,true
+breed_or_type,Breed or type,species,rodent,mouse,Mouse,false,true,true,true,,2,true
+breed_or_type,Breed or type,species,rodent,rat,Rat,false,true,true,true,,3,true
+breed_or_type,Breed or type,species,small-mammal,guinea-pig,Guinea pig,false,true,true,true,,0,true
+breed_or_type,Breed or type,species,small-mammal,ferret,Ferret,false,true,true,true,,1,true
+breed_or_type,Breed or type,species,small-mammal,chinchilla,Chinchilla,false,true,true,true,,2,true
+breed_or_type,Breed or type,species,small-mammal,hedgehog,Hedgehog,false,true,true,true,,3,true
+breed_or_type,Breed or type,species,amphibian,frog,Frog,false,true,true,true,,0,true
+breed_or_type,Breed or type,species,amphibian,toad,Toad,false,true,true,true,,1,true
+breed_or_type,Breed or type,species,amphibian,salamander,Salamander,false,true,true,true,,2,true
+breed_or_type,Breed or type,species,arachnid,tarantula,Tarantula,false,true,true,true,,0,true
+breed_or_type,Breed or type,species,arachnid,scorpion,Scorpion,false,true,true,true,,1,true
+breed_or_type,Breed or type,species,insect,ant-colony,Ant colony,false,true,true,true,,0,true
+breed_or_type,Breed or type,species,insect,beetle,Beetle,false,true,true,true,,1,true
+breed_or_type,Breed or type,species,insect,praying-mantis,Praying mantis,false,true,true,true,,2,true
+breed_or_type,Breed or type,species,other,other,Other / Not listed,false,true,true,true,,0,true

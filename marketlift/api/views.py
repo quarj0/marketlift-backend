@@ -1,3 +1,5 @@
+import asyncio
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.core.cache import cache
@@ -18,6 +20,12 @@ from platform_settings.readiness import (
     identity_provider_readiness,
     payment_provider_readiness,
 )
+
+
+async def _realtime_round_trip(layer):
+    channel_name = await layer.new_channel("marketlift.readiness.")
+    await layer.send(channel_name, {"type": "readiness.ping"})
+    return await layer.receive(channel_name)
 
 
 @api_view(["GET"])
@@ -126,9 +134,10 @@ def readiness(request):
         layer = get_channel_layer()
         if layer is None:
             raise RuntimeError("No channel layer configured")
-        channel_name = async_to_sync(layer.new_channel)("marketlift.readiness.")
-        async_to_sync(layer.send)(channel_name, {"type": "readiness.ping"})
-        event = async_to_sync(layer.receive)(channel_name)
+        event = async_to_sync(asyncio.wait_for)(
+            _realtime_round_trip(layer),
+            timeout=settings.MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS,
+        )
         checks["realtime"] = (
             "ok" if event.get("type") == "readiness.ping" else "unavailable"
         )

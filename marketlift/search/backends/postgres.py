@@ -24,6 +24,7 @@ from django.utils import timezone
 from listings.querysets import with_listing_card_data
 from listings.models import Listing, ListingAttribute
 from listings.search import apply_listing_sort
+from categories.services import category_scope_ids
 from marketlift.search.backends.base import ListingSearchBackend
 from marketlift.search.regions import BRAZIL_REGION_STATES
 from marketlift.search.contracts import (
@@ -189,7 +190,7 @@ def _apply_structured_filters(
     district = (request.district or "").strip()
 
     if category:
-        qs = qs.filter(category__slug=category)
+        qs = qs.filter(category_id__in=category_scope_ids(category))
     if country_code:
         qs = qs.filter(country_code__iexact=country_code)
     if region:

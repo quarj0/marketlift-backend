@@ -15,8 +15,8 @@ from categories.models import (
     CategoryFieldOptionDependency,
 )
 
-MAX_CATALOG_BYTES = 2 * 1024 * 1024
-MAX_CATALOG_ROWS = 25000
+MAX_CATALOG_BYTES = 16 * 1024 * 1024
+MAX_CATALOG_ROWS = 250000
 
 
 def _bool(value, default=False) -> bool:
@@ -51,7 +51,7 @@ class CatalogImportResult:
 
 def _read_rows(csv_text: str) -> list[dict]:
     if len(csv_text.encode("utf-8")) > MAX_CATALOG_BYTES:
-        raise ValidationError({"catalog": "Catalog CSV must be 2 MB or smaller."})
+        raise ValidationError({"catalog": "Catalog CSV must be 16 MB or smaller."})
 
     reader = csv.DictReader(io.StringIO(csv_text))
     required = {"field_key", "field_label", "option_label"}
@@ -63,7 +63,9 @@ def _read_rows(csv_text: str) -> list[dict]:
     rows: list[dict] = []
     for index, raw in enumerate(reader, start=2):
         if len(rows) >= MAX_CATALOG_ROWS:
-            raise ValidationError({"catalog": f"Catalogs can contain at most {MAX_CATALOG_ROWS} rows."})
+            raise ValidationError(
+                {"catalog": f"Catalogs can contain at most {MAX_CATALOG_ROWS} rows."}
+            )
         if not any(str(value or "").strip() for value in raw.values()):
             continue
 
@@ -71,38 +73,46 @@ def _read_rows(csv_text: str) -> list[dict]:
         field_label = str(raw.get("field_label") or "").strip()[:120]
         option_label = str(raw.get("option_label") or "").strip()[:120]
         if not field_key or not field_label or not option_label:
-            raise ValidationError({
-                "catalog": f"Row {index}: field_key, field_label and option_label are required."
-            })
+            raise ValidationError(
+                {
+                    "catalog": f"Row {index}: field_key, field_label and option_label are required."
+                }
+            )
 
         depends_on = slugify(str(raw.get("depends_on") or "").strip())[:80]
         parent_value = str(raw.get("parent_value") or "").strip()[:120]
         if depends_on and not parent_value:
-            raise ValidationError({
-                "catalog": f"Row {index}: parent_value is required when depends_on is set."
-            })
+            raise ValidationError(
+                {
+                    "catalog": f"Row {index}: parent_value is required when depends_on is set."
+                }
+            )
 
         try:
             sort_order = max(0, int(str(raw.get("sort_order") or "0").strip() or 0))
         except ValueError as exc:
-            raise ValidationError({"catalog": f"Row {index}: sort_order must be a number."}) from exc
+            raise ValidationError(
+                {"catalog": f"Row {index}: sort_order must be a number."}
+            ) from exc
 
-        rows.append({
-            "row": index,
-            "field_key": field_key,
-            "field_label": field_label,
-            "depends_on": depends_on,
-            "parent_value": parent_value,
-            "option_value": _value(raw.get("option_value"), option_label),
-            "option_label": option_label,
-            "required": _bool(raw.get("required"), False),
-            "filterable": _bool(raw.get("filterable"), True),
-            "allow_custom": _bool(raw.get("allow_custom"), True),
-            "lazy": _bool(raw.get("lazy"), True),
-            "active": _bool(raw.get("active"), True),
-            "unit": str(raw.get("unit") or "").strip()[:32],
-            "sort_order": sort_order,
-        })
+        rows.append(
+            {
+                "row": index,
+                "field_key": field_key,
+                "field_label": field_label,
+                "depends_on": depends_on,
+                "parent_value": parent_value,
+                "option_value": _value(raw.get("option_value"), option_label),
+                "option_label": option_label,
+                "required": _bool(raw.get("required"), False),
+                "filterable": _bool(raw.get("filterable"), True),
+                "allow_custom": _bool(raw.get("allow_custom"), True),
+                "lazy": _bool(raw.get("lazy"), True),
+                "active": _bool(raw.get("active"), True),
+                "unit": str(raw.get("unit") or "").strip()[:32],
+                "sort_order": sort_order,
+            }
+        )
 
     if not rows:
         raise ValidationError({"catalog": "The catalog contains no data rows."})
@@ -110,7 +120,9 @@ def _read_rows(csv_text: str) -> list[dict]:
 
 
 @transaction.atomic
-def import_category_catalog(*, category: Category, csv_text: str, replace_current: bool = True) -> CatalogImportResult:
+def import_category_catalog(
+    *, category: Category, csv_text: str, replace_current: bool = True
+) -> CatalogImportResult:
     """
     Import a generic cascading-option catalog.
 
@@ -122,24 +134,39 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
 
     definitions: dict[str, dict] = {}
     for row in rows:
-        current = definitions.setdefault(row["field_key"], {
-            "label": row["field_label"],
-            "depends_on": row["depends_on"],
-            "field_order": len(definitions),
-            "required": row["required"],
-            "filterable": row["filterable"],
-            "allow_custom": row["allow_custom"],
-            "lazy": row["lazy"],
-            "unit": row["unit"],
-        })
+        current = definitions.setdefault(
+            row["field_key"],
+            {
+                "label": row["field_label"],
+                "depends_on": row["depends_on"],
+                "field_order": len(definitions),
+                "required": row["required"],
+                "filterable": row["filterable"],
+                "allow_custom": row["allow_custom"],
+                "lazy": row["lazy"],
+                "unit": row["unit"],
+            },
+        )
         if current["depends_on"] != row["depends_on"]:
-            raise ValidationError({"catalog": f"Field {row['field_key']} uses more than one parent field."})
+            raise ValidationError(
+                {
+                    "catalog": f"Field {row['field_key']} uses more than one parent field."
+                }
+            )
 
-    existing_fields = {field.key: field for field in category.fields.select_for_update().all()}
+    existing_fields = {
+        field.key: field for field in category.fields.select_for_update().all()
+    }
     for key, definition in definitions.items():
         parent_key = definition["depends_on"]
-        if parent_key and parent_key not in definitions and parent_key not in existing_fields:
-            raise ValidationError({"catalog": f"Field {key} depends on unknown field {parent_key}."})
+        if (
+            parent_key
+            and parent_key not in definitions
+            and parent_key not in existing_fields
+        ):
+            raise ValidationError(
+                {"catalog": f"Field {key} depends on unknown field {parent_key}."}
+            )
 
     fields_created = 0
     fields_updated = 0
@@ -169,12 +196,13 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
             if field.field_type not in {
                 CategoryField.FieldType.TEXT,
                 CategoryField.FieldType.TEXTAREA,
+                CategoryField.FieldType.NUMBER,
             }:
                 raise ValidationError(
                     {
                         "catalog": (
                             f"Field {key} already exists as {field.field_type}. "
-                            "Only text fields can be upgraded to catalog choices automatically."
+                            "Only text or number fields can be upgraded to catalog choices automatically."
                         )
                     }
                 )
@@ -209,7 +237,9 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
         parent_key = definition["depends_on"]
         parent = field_map.get(parent_key) if parent_key else None
         if parent is not None and parent.field_type != CategoryField.FieldType.SELECT:
-            raise ValidationError({"catalog": f"Parent field {parent_key} must be a choice field."})
+            raise ValidationError(
+                {"catalog": f"Parent field {parent_key} must be a choice field."}
+            )
         if parent is not None and parent.pk == field.pk:
             raise ValidationError({"catalog": f"Field {key} cannot depend on itself."})
         target_id = parent.pk if parent else None
@@ -252,7 +282,9 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
             )
 
     imported_option_ids = [option.pk for option in option_cache.values()]
-    CategoryFieldOptionDependency.objects.filter(option_id__in=imported_option_ids).delete()
+    CategoryFieldOptionDependency.objects.filter(
+        option_id__in=imported_option_ids
+    ).delete()
 
     dependency_rows = []
     seen_links: set[tuple[str, str]] = set()
@@ -268,19 +300,27 @@ def import_category_catalog(*, category: Category, csv_text: str, replace_curren
         if parent is None:
             parent = parent_field.options.filter(label__iexact=parent_value).first()
         if parent is None:
-            raise ValidationError({
-                "catalog": f"Row {row['row']}: parent option '{parent_value}' does not exist in {parent_field.label}."
-            })
+            raise ValidationError(
+                {
+                    "catalog": f"Row {row['row']}: parent option '{parent_value}' does not exist in {parent_field.label}."
+                }
+            )
         pair = (str(child.pk), str(parent.pk))
         if pair in seen_links:
             continue
         seen_links.add(pair)
-        dependency_rows.append(CategoryFieldOptionDependency(option=child, parent_option=parent))
+        dependency_rows.append(
+            CategoryFieldOptionDependency(option=child, parent_option=parent)
+        )
 
     if dependency_rows:
-        CategoryFieldOptionDependency.objects.bulk_create(dependency_rows, ignore_conflicts=True)
+        CategoryFieldOptionDependency.objects.bulk_create(
+            dependency_rows, ignore_conflicts=True
+        )
 
-    Category.objects.filter(pk=category.pk).update(schema_version=category.schema_version + 1)
+    Category.objects.filter(pk=category.pk).update(
+        schema_version=category.schema_version + 1
+    )
 
     return CatalogImportResult(
         rows=len(rows),

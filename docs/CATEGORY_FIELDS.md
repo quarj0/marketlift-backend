@@ -2,6 +2,17 @@
 
 Marketlift category schemas are platform-managed data. Listing code must not hardcode a provider, brand catalogue, vehicle make list, storage-size list, or similar taxonomy.
 
+Vehicle make/model/year data can be refreshed from a licensed CSV without
+changing application code. The required columns are `vehicle_type`, `make`,
+`model`, and `year`; supported vehicle types are `cars`, `motorcycles`,
+`trucks`, and `buses`. Use
+`categories/catalog_templates/vehicle_dataset_example.csv` as the format
+reference, validate with `import_vehicle_catalog_dataset <file> --dry-run`,
+then run the same command without `--dry-run`. Model-to-year dependencies are
+created only from combinations present in the supplied dataset. Marketlift does
+not redistribute third-party FIPE data; production operators must use a source
+licensed for their commercial use.
+
 ## Field input behavior
 
 - `text`, `textarea`, and `number` fields are free-form by nature. Their `options` may be used by clients as suggestions if present.

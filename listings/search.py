@@ -9,6 +9,7 @@ from django.db.models import Exists, OuterRef, Q, Value
 from django.utils import timezone
 from marketlift.location.validators import validate_coordinates, validate_radius_km
 from marketlift.locations import BRAZIL_REGION_STATES
+from categories.services import category_scope_ids
 from .models import Listing
 
 
@@ -61,7 +62,7 @@ def apply_listing_filters(qs, filters):
     seller_type = _get(filters, "seller_type")
     seller_id = _get(filters, "seller_id")
     if category:
-        qs = qs.filter(category__slug=category)
+        qs = qs.filter(category_id__in=category_scope_ids(category))
     if country_code:
         qs = qs.filter(country_code__iexact=country_code)
     if region:

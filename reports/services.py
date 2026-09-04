@@ -79,11 +79,12 @@ def create_report(
             )
         if message.sender_id == reporter.pk:
             raise ValidationError("You cannot report your own message.")
+    statement = statement.strip() or Report.Reason(reason).label
     report = Report(
         reporter=reporter,
         target_type=target_type,
         reason=reason,
-        statement=_required(statement, "A report statement is required."),
+        statement=statement,
         priority=priority,
         **data,
     )

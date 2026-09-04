@@ -13,6 +13,13 @@ class Report(UUIDTimeStampedModel):
         MESSAGE = "message", "Message"
 
     class Reason(models.TextChoices):
+        FRAUD = "fraud", "Fraud or scam"
+        FAKE_LISTING = "fake_listing", "Fake listing"
+        INCORRECT_INFO = "incorrect_info", "Incorrect information"
+        PROHIBITED = "prohibited", "Prohibited content"
+        OFFENSIVE = "offensive", "Abusive or offensive behaviour"
+        DUPLICATE = "duplicate", "Duplicate or spam"
+        UNAVAILABLE = "unavailable", "Item no longer available"
         ACCOUNT = "account", "Account"
         PAYMENT = "payment", "Payment"
         MODERATION = "moderation", "Moderation"

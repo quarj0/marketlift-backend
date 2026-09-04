@@ -1,3 +1,6 @@
+from datetime import date
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase
@@ -9,6 +12,7 @@ from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan
 
 from .models import Listing
+from .search import apply_listing_filters
 from .services import create_listing, publish_listing, update_listing
 
 
@@ -119,3 +123,67 @@ class MarketplaceDomainTests(TestCase):
         payload.update(state="Georgia", state_code="GA", city="Accra")
         with self.assertRaises(ValidationError):
             create_listing(**payload)
+
+    def test_listing_rejects_future_year(self):
+        year_field = self.category.fields.get(key="storage_gb")
+        year_field.key = "year"
+        year_field.save(update_fields=("key", "updated_at"))
+        payload = self.listing_payload()
+        payload["attributes"] = {
+            "brand": "apple",
+            "model": "iPhone 15 Pro",
+            "year": str(date.today().year + 1),
+        }
+
+        with self.assertRaises(ValidationError):
+            create_listing(**payload)
+
+    def test_parent_category_filter_includes_descendant_listings(self):
+        parent = Category.objects.get(slug="electronics")
+        self.category.parent = parent
+        self.category.save(update_fields=("parent", "updated_at"))
+        listing = create_listing(**self.listing_payload())
+        publish_listing(listing)
+
+        self.assertQuerySetEqual(
+            apply_listing_filters(
+                Listing.objects.public(), {"category": "electronics"}
+            ),
+            [listing],
+        )
+        self.assertQuerySetEqual(
+            apply_listing_filters(Listing.objects.public(), {"category": "phones"}),
+            [listing],
+        )
+
+    def test_price_only_edit_keeps_existing_resolved_location(self):
+        listing = create_listing(**self.listing_payload())
+        listing.location_provider = "google"
+        listing.location_provider_id = "place-1"
+        listing.save(
+            update_fields=("location_provider", "location_provider_id", "updated_at")
+        )
+
+        with self.settings(MARKETLIFT_REQUIRE_RESOLVED_LISTING_LOCATION=True):
+            update_listing(
+                listing=listing,
+                category=self.category,
+                title=listing.title,
+                description=listing.description,
+                price="6000.00",
+                condition=listing.condition,
+                state=listing.state,
+                state_code=listing.state_code,
+                city=listing.city,
+                district=listing.district,
+                country_code=listing.country_code,
+                attributes={
+                    "brand": "apple",
+                    "model": "iPhone 15 Pro",
+                    "storage_gb": "256",
+                },
+            )
+
+        listing.refresh_from_db()
+        self.assertEqual(listing.price, Decimal("6000.00"))
+        self.assertEqual(listing.location_provider, "google")

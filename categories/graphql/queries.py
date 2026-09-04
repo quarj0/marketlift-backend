@@ -1,5 +1,6 @@
 import strawberry
 from categories.models import Category, CategoryField
+from categories.options import option_is_current
 from marketlift.graphql.auth import require_staff
 from .mappers import category_to_type
 from .types import CategoryFieldOptionType, CategoryType
@@ -22,7 +23,10 @@ class CategoryQuery:
     def categories(self, active_only: bool = True) -> list[CategoryType]:
         # Public category discovery never exposes disabled categories. `active_only`
         # remains for backwards compatibility but cannot turn this into an admin query.
-        return [category_to_type(item) for item in _qs().filter(active=True, parent__isnull=True)]
+        return [
+            category_to_type(item)
+            for item in _qs().filter(active=True, parent__isnull=True)
+        ]
 
     @strawberry.field
     def category(self, id: str) -> CategoryType | None:
@@ -42,9 +46,9 @@ class CategoryQuery:
         limit: int = 100,
     ) -> list[CategoryFieldOptionType]:
         try:
-            field = CategoryField.objects.select_related(
-                "category", "depends_on"
-            ).get(category__slug=category_id, category__active=True, key=field_id)
+            field = CategoryField.objects.select_related("category", "depends_on").get(
+                category__slug=category_id, category__active=True, key=field_id
+            )
         except CategoryField.DoesNotExist:
             return []
 
@@ -69,6 +73,7 @@ class CategoryQuery:
         term = (search or "").strip()
         if term:
             from django.db.models import Q
+
             queryset = queryset.filter(
                 Q(label__icontains=term) | Q(value__icontains=term)
             )
@@ -76,21 +81,17 @@ class CategoryQuery:
         limit = max(1, min(int(limit), 250))
         return [
             CategoryFieldOptionType(value=item.value, label=item.label)
-            for item in queryset.order_by("sort_order", "label").distinct()[:limit]
-        ]
+            for item in queryset.order_by("sort_order", "label").distinct()
+            if option_is_current(field, item)
+        ][:limit]
 
     @strawberry.field
     def admin_categories(self, info: strawberry.Info) -> list[CategoryType]:
         require_staff(info, roles={"admin"})
-        return [
-            category_to_type(item)
-            for item in _qs().filter(parent__isnull=True)
-        ]
+        return [category_to_type(item) for item in _qs().filter(parent__isnull=True)]
 
     @strawberry.field
-    def admin_category(
-        self, info: strawberry.Info, id: str
-    ) -> CategoryType | None:
+    def admin_category(self, info: strawberry.Info, id: str) -> CategoryType | None:
         require_staff(info, roles={"admin"})
         try:
             item = _qs().get(slug=id)

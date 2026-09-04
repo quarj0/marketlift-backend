@@ -1,6 +1,8 @@
 import json
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -13,6 +15,17 @@ from .models import (
     CategoryFieldOption,
     CategoryFieldOptionDependency,
 )
+from .options import option_is_current
+
+
+class CurrentYearOptionTests(SimpleTestCase):
+    def test_future_year_appears_automatically_when_calendar_catches_up(self):
+        field = SimpleNamespace(key="year")
+        current = SimpleNamespace(value=str(date.today().year))
+        future = SimpleNamespace(value=str(date.today().year + 1))
+
+        self.assertTrue(option_is_current(field, current))
+        self.assertFalse(option_is_current(field, future))
 
 
 class CategoryTaxonomyCurationTests(TestCase):
@@ -124,7 +137,6 @@ class CategorySeedTests(TestCase):
         self.assertEqual(brand.label, "Brand")
 
 
-
 class CategoryGraphQLTreeTests(TestCase):
     def test_category_mapper_supports_recursive_subcategories(self):
         root = Category.objects.create(
@@ -162,8 +174,54 @@ class CategoryGraphQLTreeTests(TestCase):
         )
 
 
-
 class CatalogSeedSafetyTests(TestCase):
+    def test_vehicle_dataset_import_preserves_exact_model_year_dependencies(self):
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+        with TemporaryDirectory() as directory:
+            dataset = Path(directory) / "vehicles.csv"
+            dataset.write_text(
+                "tipoVeiculo,Marca,Modelo,AnoModelo\n"
+                "1,Honda,Civic,2020\n"
+                "1,Honda,Civic,2021\n"
+                "1,Honda,Fit,2019\n"
+                "2,Honda,CG 160,2024\n",
+                encoding="utf-8",
+            )
+            call_command(
+                "import_vehicle_catalog_dataset",
+                dataset,
+                verbosity=0,
+            )
+
+        cars = Category.objects.get(slug="cars")
+        make = cars.fields.get(key="make")
+        model = cars.fields.get(key="model")
+        year = cars.fields.get(key="year")
+        honda = make.options.get(value="honda")
+        civic = model.options.get(value="Civic")
+        year_2020 = year.options.get(value="2020")
+        year_2019 = year.options.get(value="2019")
+        self.assertEqual(model.depends_on_id, make.id)
+        self.assertEqual(year.depends_on_id, model.id)
+        self.assertTrue(
+            CategoryFieldOptionDependency.objects.filter(
+                option=civic,
+                parent_option=honda,
+            ).exists()
+        )
+        self.assertTrue(
+            CategoryFieldOptionDependency.objects.filter(
+                option=year_2020,
+                parent_option=civic,
+            ).exists()
+        )
+        self.assertFalse(
+            CategoryFieldOptionDependency.objects.filter(
+                option=year_2019,
+                parent_option=civic,
+            ).exists()
+        )
+
     def test_vehicle_catalog_cascades_make_model_and_year(self):
         call_command("curate_marketplace_taxonomy", verbosity=0)
         call_command(
@@ -200,6 +258,33 @@ class CatalogSeedSafetyTests(TestCase):
             ).exists()
         )
 
+    def test_vehicle_compatibility_catalogs_follow_car_make_and_model(self):
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+        call_command(
+            "import_product_catalog_pack",
+            category=["vehicles"],
+            verbosity=0,
+        )
+        call_command("seed_vehicle_compatibility_catalogs", verbosity=0)
+
+        for slug, type_key in (
+            ("vehicle-parts", "part_type"),
+            ("vehicle-accessories", "accessory_type"),
+        ):
+            category = Category.objects.get(slug=slug)
+            make = category.fields.get(key="compatible_make")
+            model = category.fields.get(key="compatible_model")
+            honda = make.options.get(value="honda")
+            civic = model.options.get(value="Civic")
+            self.assertEqual(model.depends_on_id, make.id)
+            self.assertGreater(category.fields.get(key=type_key).options.count(), 5)
+            self.assertTrue(
+                CategoryFieldOptionDependency.objects.filter(
+                    option=civic,
+                    parent_option=honda,
+                ).exists()
+            )
+
     def test_animal_catalogs_upgrade_breed_fields_and_cascade_livestock(self):
         call_command("curate_marketplace_taxonomy", verbosity=0)
         call_command(
@@ -226,6 +311,28 @@ class CatalogSeedSafetyTests(TestCase):
             CategoryFieldOptionDependency.objects.filter(
                 option=nelore,
                 parent_option=cattle,
+            ).exists()
+        )
+
+    def test_other_pet_catalog_cascades_species_and_type(self):
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+        call_command(
+            "import_product_catalog_pack",
+            category=["other-pets"],
+            verbosity=0,
+        )
+
+        category = Category.objects.get(slug="other-pets")
+        species = category.fields.get(key="species")
+        breed = category.fields.get(key="breed_or_type")
+        reptile = species.options.get(value="reptile")
+        gecko = breed.options.get(value="gecko")
+        self.assertEqual(breed.depends_on_id, species.id)
+        self.assertTrue(species.required)
+        self.assertTrue(
+            CategoryFieldOptionDependency.objects.filter(
+                option=gecko,
+                parent_option=reptile,
             ).exists()
         )
 
@@ -267,6 +374,4 @@ class CatalogSeedSafetyTests(TestCase):
         self.assertEqual(model.field_type, CategoryField.FieldType.SELECT)
         self.assertTrue(model.lazy_options)
         self.assertEqual(model.depends_on_id, brand.id)
-        self.assertTrue(
-            model.options.filter(value="Galaxy Test", active=True).exists()
-        )
+        self.assertTrue(model.options.filter(value="Galaxy Test", active=True).exists())

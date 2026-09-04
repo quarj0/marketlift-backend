@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from categories.models import CategoryField
+from categories.services import category_scope_ids
 from listings.models import Listing
 from sellers.models import SellerProfile
 from marketlift.markets.service import profile_for_country_code, default_country_code
@@ -64,7 +65,7 @@ def _validate_attribute_filters(filters: dict, *, category: str | None) -> dict:
 
     allowed = CategoryField.objects.filter(filterable=True, category__active=True)
     if category:
-        allowed = allowed.filter(category__slug=category)
+        allowed = allowed.filter(category_id__in=category_scope_ids(category))
     field_types_by_key: dict[str, set[str]] = {}
     for key, field_type in allowed.filter(key__in=keys).values_list(
         "key", "field_type"

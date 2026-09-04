@@ -33,3 +33,25 @@ class ReportDecisionTests(TestCase):
         resolve_report(report=report, actor=self.admin, reason="handled")
         with self.assertRaises(ValidationError):
             dismiss_report(report=report, actor=self.admin, reason="no")
+
+    def test_marketplace_report_reasons_are_preserved(self):
+        for reason in ("fake_listing", "incorrect_info", "unavailable"):
+            report = create_report(
+                reporter=self.reporter,
+                target_type="user",
+                target_id=self.target.id,
+                reason=reason,
+                statement="Marketplace report details",
+            )
+            self.assertEqual(report.reason, reason)
+
+    def test_optional_report_details_fall_back_to_reason_label(self):
+        report = create_report(
+            reporter=self.reporter,
+            target_type="user",
+            target_id=self.target.id,
+            reason="fake_listing",
+            statement="",
+        )
+
+        self.assertEqual(report.statement, "Fake listing")

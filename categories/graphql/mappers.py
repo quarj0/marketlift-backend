@@ -1,4 +1,5 @@
 from uploads.storage import get_storage_backend
+from categories.options import option_is_current
 
 from .types import (
     CategoryConditionType,
@@ -52,7 +53,14 @@ def category_to_type(category) -> CategoryType:
         condition=CategoryConditionType(
             enabled=category.condition_enabled,
             required=category.condition_required,
-            options=list(category.condition_options or (["Brand New", "Refurbished", "Used"] if category.condition_enabled else [])),
+            options=list(
+                category.condition_options
+                or (
+                    ["Brand New", "Refurbished", "Used"]
+                    if category.condition_enabled
+                    else []
+                )
+            ),
         ),
         fields=[
             CategoryFieldDefinitionType(
@@ -64,7 +72,11 @@ def category_to_type(category) -> CategoryType:
                 allow_custom_value=field.custom_values_allowed,
                 depends_on=field.depends_on.key if field.depends_on_id else None,
                 lazy_options=field.lazy_options,
-                option_count=sum(1 for option in field.options.all() if option.active),
+                option_count=sum(
+                    1
+                    for option in field.options.all()
+                    if option.active and option_is_current(field, option)
+                ),
                 placeholder=field.placeholder or None,
                 help_text=field.help_text or None,
                 ui_group=field.ui_group or None,
@@ -78,15 +90,13 @@ def category_to_type(category) -> CategoryType:
                     else [
                         CategoryFieldOptionType(value=o.value, label=o.label)
                         for o in field.options.all()
-                        if o.active
+                        if o.active and option_is_current(field, o)
                     ]
                 ),
             )
             for field in category.fields.all()
         ],
         subcategories=[
-            category_to_summary(c)
-            for c in category.subcategories.all()
-            if c.active
+            category_to_summary(c) for c in category.subcategories.all() if c.active
         ],
     )
