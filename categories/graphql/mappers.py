@@ -39,6 +39,7 @@ def category_to_summary(category) -> CategorySummaryType:
 def category_to_type(category) -> CategoryType:
     return CategoryType(
         id=category.slug,
+        parent_id=category.parent.slug if category.parent_id else None,
         name=category.name,
         icon=category.icon,
         image_url=_category_image_url(category),

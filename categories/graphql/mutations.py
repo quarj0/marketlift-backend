@@ -29,7 +29,7 @@ from .types import (
 
 
 def _category_qs():
-    return Category.objects.select_related("image_upload").prefetch_related("fields__options", "fields__depends_on", "image_upload__variants", "subcategories__image_upload__variants")
+    return Category.objects.select_related("image_upload", "parent").prefetch_related("fields__options", "fields__depends_on", "image_upload__variants", "subcategories__image_upload__variants")
 
 
 def _field_to_type(field: CategoryField) -> CategoryFieldDefinitionType:
@@ -55,7 +55,9 @@ def _option_payload(options):
     ]
 
 
-def _category_schema_values(input: CategoryAdminInput):
+def _category_schema_values(
+    input: CategoryAdminInput, *, existing: Category | None = None
+):
     pricing_mode = input.pricing_mode.strip().lower()
     if pricing_mode not in Category.PricingMode.values:
         raise ValidationError(
@@ -92,6 +94,16 @@ def _category_schema_values(input: CategoryAdminInput):
         "condition_required": input.condition_required,
         "condition_options": condition_options,
     }
+
+
+def _category_parent_id(
+    input: CategoryAdminInput, *, existing: Category | None = None
+):
+    if input.parent_id is strawberry.UNSET:
+        return existing.parent_id if existing is not None else None
+    if input.parent_id is None:
+        return None
+    return Category.objects.only("pk").get(slug=input.parent_id).pk
 
 
 def _apply_category_image(*, category: Category, input: CategoryAdminInput, actor):
@@ -131,16 +143,14 @@ class CategoryMutation:
                 status=422,
             )
         try:
-            parent = (
-                Category.objects.get(slug=input.parent_id) if input.parent_id else None
-            )
+            parent_id = _category_parent_id(input)
             schema_values = _category_schema_values(input)
             category = Category(
                 name=name,
                 slug=slug,
                 icon=(input.icon or "").strip(),
                 description=(input.description or "").strip(),
-                parent=parent,
+                parent_id=parent_id,
                 active=input.active,
                 sort_order=max(0, input.sort_order),
                 **schema_values,
@@ -174,10 +184,8 @@ class CategoryMutation:
         actor = require_staff(info, roles={"admin"})
         try:
             category = Category.objects.get(slug=category_id)
-            parent = (
-                Category.objects.get(slug=input.parent_id) if input.parent_id else None
-            )
-            schema_values = _category_schema_values(input)
+            parent_id = _category_parent_id(input, existing=category)
+            schema_values = _category_schema_values(input, existing=category)
             schema_changed = any(
                 getattr(category, key) != value for key, value in schema_values.items()
             )
@@ -185,7 +193,7 @@ class CategoryMutation:
             category.slug = slugify((input.slug or category.slug).strip())[:80]
             category.icon = (input.icon or "").strip()
             category.description = (input.description or "").strip()
-            category.parent = parent
+            category.parent_id = parent_id
             category.active = input.active
             category.sort_order = max(0, input.sort_order)
             for key, value in schema_values.items():

@@ -57,6 +57,7 @@ class CategorySummaryType:
 @strawberry.type
 class CategoryType:
     id: str
+    parent_id: str | None
     name: str
     icon: str
     image_url: str | None
@@ -91,7 +92,9 @@ class CategoryAdminInput:
     image_upload_id: strawberry.ID | None = None
     remove_image: bool = False
     description: str | None = None
-    parent_id: str | None = None
+    # UNSET means an update leaves the hierarchy unchanged; explicit null moves
+    # a category to the root level.
+    parent_id: str | None = strawberry.UNSET
     active: bool = True
     sort_order: int = 0
     pricing_mode: str = "required"

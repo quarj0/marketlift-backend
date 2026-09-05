@@ -7,7 +7,7 @@ from .types import CategoryFieldOptionType, CategoryType
 
 
 def _qs():
-    return Category.objects.select_related("image_upload").prefetch_related(
+    return Category.objects.select_related("image_upload", "parent").prefetch_related(
         "fields__options",
         "fields__depends_on",
         "image_upload__variants",

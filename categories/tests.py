@@ -8,6 +8,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase, override_settings
 
+from accounts.models import User
 from .graphql.mappers import category_to_type
 from .models import (
     Category,
@@ -57,6 +58,23 @@ class CategoryTaxonomyCurationTests(TestCase):
             ).exists()
         )
         self.assertEqual(Category.objects.filter(parent=None, active=True).count(), 14)
+
+    def test_hierarchy_repair_restores_parent_without_overwriting_admin_metadata(self):
+        call_command("curate_marketplace_taxonomy", verbosity=0)
+        cats = Category.objects.get(slug="cats")
+        cats.parent = None
+        cats.name = "Custom Cats"
+        cats.icon = "CustomIcon"
+        cats.active = False
+        cats.save(update_fields=("parent", "name", "icon", "active", "updated_at"))
+
+        call_command("repair_category_hierarchy", verbosity=0)
+
+        cats.refresh_from_db()
+        self.assertEqual(cats.parent.slug, "animals-pets")
+        self.assertEqual(cats.name, "Custom Cats")
+        self.assertEqual(cats.icon, "CustomIcon")
+        self.assertFalse(cats.active)
 
 
 class CategoryImageSeedSafetyTests(SimpleTestCase):
@@ -172,6 +190,58 @@ class CategoryGraphQLTreeTests(TestCase):
             mapped.subcategories[0].subcategories[0].id,
             "smartphones-test",
         )
+
+
+class CategoryAdminMutationHierarchyTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            email="category-admin@example.com",
+            password="test-password",
+            full_name="Category Admin",
+        )
+        self.client.force_login(self.admin)
+        self.parent = Category.objects.create(
+            slug="animals-test",
+            name="Animals Test",
+        )
+        self.child = Category.objects.create(
+            slug="cats-test",
+            name="Cats Test",
+            parent=self.parent,
+        )
+
+    def _update(self, category_input: str):
+        return self.client.post(
+            "/graphql/",
+            data=json.dumps(
+                {
+                    "query": (
+                        "mutation { updateCategory("
+                        'categoryId: "cats-test", '
+                        f"input: {category_input}"
+                        ") { id } }"
+                    )
+                }
+            ),
+            content_type="application/json",
+        )
+
+    def test_edit_without_parent_preserves_subcategory_hierarchy(self):
+        response = self._update('{name: "Renamed Cats"}')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("errors", response.json())
+        self.child.refresh_from_db()
+        self.assertEqual(self.child.name, "Renamed Cats")
+        self.assertEqual(self.child.parent_id, self.parent.id)
+
+    def test_explicit_null_parent_can_promote_category_to_root(self):
+        response = self._update('{name: "Cats Test", parentId: null}')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("errors", response.json())
+        self.child.refresh_from_db()
+        self.assertIsNone(self.child.parent_id)
 
 
 class CatalogSeedSafetyTests(TestCase):
