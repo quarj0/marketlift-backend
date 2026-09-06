@@ -1,6 +1,8 @@
 import csv
 import io
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+import httpx
 
 from django.test import SimpleTestCase
 
@@ -100,6 +102,30 @@ class FipeVehicleCatalogTests(SimpleTestCase):
             "/cars/brands/25/years/2020-5/models",
             client.get.call_args_list[-1].args[0],
         )
+
+    @patch("categories.management.commands.sync_fipe_vehicle_catalog.time.sleep")
+    def test_fipe_rows_retry_transient_read_timeouts(self, sleep):
+        client = MagicMock()
+        client.get.side_effect = [
+            response([{"code": "25", "name": "Honda"}]),
+            response([{"code": "2020-5", "name": "2020 Flex"}]),
+            httpx.ReadTimeout("temporary timeout"),
+            response([{"code": "7693", "name": "Civic Sedan EXL"}]),
+        ]
+
+        rows, brands, requests = fetch_fipe_rows(
+            client,
+            vehicle_type="cars",
+            requested_brands=["Honda"],
+            max_requests=5,
+            current_year=2026,
+            retry_backoff=0.25,
+        )
+
+        self.assertEqual(rows, {("Honda", "Civic Sedan EXL", 2020)})
+        self.assertEqual(brands, {"Honda"})
+        self.assertEqual(requests, 4)
+        sleep.assert_called_once_with(0.25)
 
 
 class WikidataCatalogTests(SimpleTestCase):

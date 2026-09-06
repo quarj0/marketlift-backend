@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from datetime import date
 
 import httpx
@@ -21,6 +22,7 @@ FIPE_TYPES = {
     "motorcycles": "motorcycles",
     "trucks": "trucks",
 }
+RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
 
 def _items(response: httpx.Response, *, description: str) -> list[dict]:
@@ -29,6 +31,36 @@ def _items(response: httpx.Response, *, description: str) -> list[dict]:
     if not isinstance(payload, list):
         raise CommandError(f"FIPE returned an unexpected {description} response.")
     return payload
+
+
+def _fetch_items(
+    client: httpx.Client,
+    url: str,
+    *,
+    description: str,
+    failure_context: str,
+    request_retries: int,
+    retry_backoff: float,
+) -> tuple[list[dict], int]:
+    attempts = 0
+    while True:
+        attempts += 1
+        try:
+            return _items(client.get(url), description=description), attempts
+        except httpx.HTTPStatusError as exc:
+            retryable = exc.response.status_code in RETRYABLE_STATUS_CODES
+            if not retryable or attempts > request_retries:
+                raise CommandError(f"{failure_context}: {exc}") from exc
+            retry_after = exc.response.headers.get("Retry-After", "")
+            try:
+                delay = max(float(retry_after), 0.0)
+            except ValueError:
+                delay = retry_backoff * (2 ** (attempts - 1))
+        except (httpx.TimeoutException, httpx.TransportError) as exc:
+            if attempts > request_retries:
+                raise CommandError(f"{failure_context}: {exc}") from exc
+            delay = retry_backoff * (2 ** (attempts - 1))
+        time.sleep(min(delay, 30.0))
 
 
 def _year_from_code(value: object, *, current_year: int) -> int | None:
@@ -47,16 +79,20 @@ def fetch_fipe_rows(
     requested_brands: list[str] | None,
     max_requests: int,
     current_year: int,
+    request_retries: int = 4,
+    retry_backoff: float = 1.0,
 ) -> tuple[set[tuple[str, str, int]], set[str], int]:
     endpoint = FIPE_TYPES[vehicle_type]
-    requests = 1
-    try:
-        brands = _items(
-            client.get(f"{FIPE_BASE_URL}/{endpoint}/brands"),
-            description="brand",
-        )
-    except httpx.HTTPError as exc:
-        raise CommandError(f"FIPE brand lookup failed: {exc}") from exc
+    requests = 0
+    brands, attempts = _fetch_items(
+        client,
+        f"{FIPE_BASE_URL}/{endpoint}/brands",
+        description="brand",
+        failure_context="FIPE brand lookup failed",
+        request_retries=min(request_retries, max_requests - 1),
+        retry_backoff=retry_backoff,
+    )
+    requests += attempts
 
     requested = {
         item.strip().casefold() for item in requested_brands or [] if item.strip()
@@ -78,45 +114,41 @@ def fetch_fipe_rows(
 
     rows: set[tuple[str, str, int]] = set()
     for brand_code, brand_name in selected:
-        requests += 1
-        if requests > max_requests:
+        if requests >= max_requests:
             raise CommandError(
                 f"The FIPE sync exceeds --max-requests={max_requests}. "
                 "Select fewer --brand values or use an API subscription token."
             )
-        try:
-            years = _items(
-                client.get(f"{FIPE_BASE_URL}/{endpoint}/brands/{brand_code}/years"),
-                description="year",
-            )
-        except httpx.HTTPError as exc:
-            raise CommandError(
-                f"FIPE year lookup failed for {brand_name}: {exc}"
-            ) from exc
+        years, attempts = _fetch_items(
+            client,
+            f"{FIPE_BASE_URL}/{endpoint}/brands/{brand_code}/years",
+            description="year",
+            failure_context=f"FIPE year lookup failed for {brand_name}",
+            request_retries=min(request_retries, max_requests - requests - 1),
+            retry_backoff=retry_backoff,
+        )
+        requests += attempts
 
         for year_item in years:
             year_code = str(year_item.get("code") or "").strip()
             year = _year_from_code(year_code, current_year=current_year)
             if not year_code or year is None:
                 continue
-            requests += 1
-            if requests > max_requests:
+            if requests >= max_requests:
                 raise CommandError(
                     f"The FIPE sync exceeds --max-requests={max_requests}. "
                     "Select fewer --brand values or use an API subscription token."
                 )
-            try:
-                models = _items(
-                    client.get(
-                        f"{FIPE_BASE_URL}/{endpoint}/brands/{brand_code}"
-                        f"/years/{year_code}/models"
-                    ),
-                    description="model",
-                )
-            except httpx.HTTPError as exc:
-                raise CommandError(
-                    f"FIPE model lookup failed for {brand_name} {year}: {exc}"
-                ) from exc
+            models, attempts = _fetch_items(
+                client,
+                f"{FIPE_BASE_URL}/{endpoint}/brands/{brand_code}"
+                f"/years/{year_code}/models",
+                description="model",
+                failure_context=f"FIPE model lookup failed for {brand_name} {year}",
+                request_retries=min(request_retries, max_requests - requests - 1),
+                retry_backoff=retry_backoff,
+            )
+            requests += attempts
             for model_item in models:
                 model = " ".join(str(model_item.get("name") or "").split())
                 if model:
@@ -152,6 +184,18 @@ class Command(BaseCommand):
             default=500,
             help="Safety cap for FIPE HTTP requests (default: 500).",
         )
+        parser.add_argument(
+            "--request-retries",
+            type=int,
+            default=4,
+            help="Retries per FIPE request after transient failures (default: 4).",
+        )
+        parser.add_argument(
+            "--retry-backoff",
+            type=float,
+            default=1.0,
+            help="Initial retry delay in seconds, doubled per attempt (default: 1).",
+        )
         parser.add_argument("--dry-run", action="store_true")
 
     def handle(self, *args, **options):
@@ -159,6 +203,12 @@ class Command(BaseCommand):
         max_requests = options["max_requests"]
         if max_requests < 1:
             raise CommandError("--max-requests must be greater than zero.")
+        request_retries = options["request_retries"]
+        if request_retries < 0:
+            raise CommandError("--request-retries cannot be negative.")
+        retry_backoff = options["retry_backoff"]
+        if retry_backoff < 0:
+            raise CommandError("--retry-backoff cannot be negative.")
 
         headers = {"User-Agent": "Marketlift catalog sync/1.0 (marketlift.com.br)"}
         token = os.environ.get("FIPE_API_TOKEN", "").strip()
@@ -174,6 +224,8 @@ class Command(BaseCommand):
                     requested_brands=options["brand"],
                     max_requests=max_requests,
                     current_year=date.today().year,
+                    request_retries=request_retries,
+                    retry_backoff=retry_backoff,
                 )
                 if not rows:
                     raise CommandError(
