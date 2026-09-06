@@ -110,7 +110,14 @@ def records(area, info):
     if area == "support":
         return (
             ticket_queryset(internal=True),
-            ["reference", "subject", "user__full_name", "user__email", "category", "priority"],
+            [
+                "reference",
+                "subject",
+                "user__full_name",
+                "user__email",
+                "category",
+                "priority",
+            ],
             "updated_at",
             "support_tickets",
             lambda row: ticket_to_type(row, include_internal=True),

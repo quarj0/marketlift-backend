@@ -137,11 +137,15 @@ class SitemapAndExportTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    def test_pending_seller_filter_matches_unverified_ui_status_and_includes_owner(self):
+    def test_pending_seller_filter_matches_unverified_ui_status_and_includes_owner(
+        self,
+    ):
         self.owner.is_staff = True
         self.owner.admin_role = "admin"
         info = SimpleNamespace(context=SimpleNamespace(user=self.owner))
-        page = AdminPaginationQuery().admin_record_page(info, area="sellers", status="pending")
+        page = AdminPaginationQuery().admin_record_page(
+            info, area="sellers", status="pending"
+        )
         self.assertEqual(page.total_count, 1)
         self.assertEqual(page.admin_sellers[0].owner_name, self.owner.email)
         self.assertTrue(page.admin_sellers[0].plan_name)
