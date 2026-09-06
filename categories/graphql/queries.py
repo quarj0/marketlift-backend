@@ -1,4 +1,5 @@
 import strawberry
+from categories.dynamic_catalogs import enrich_category_field_options
 from categories.models import Category, CategoryField
 from categories.options import option_is_current
 from marketlift.graphql.auth import require_staff
@@ -52,7 +53,8 @@ class CategoryQuery:
         except CategoryField.DoesNotExist:
             return []
 
-        queryset = field.options.filter(active=True)
+        term = (search or "").strip()
+        parent_option = None
         if field.depends_on_id:
             parent_value = (parent_value or "").strip()
             if not parent_value:
@@ -66,11 +68,22 @@ class CategoryQuery:
                 ).first()
             if parent_option is None:
                 return []
+
+        # Cache-first enrichment: only the branch being viewed is requested.
+        # Provider errors/429s are swallowed by the catalog service so the
+        # database cache and custom-value fallback remain available.
+        enrich_category_field_options(
+            field,
+            parent_option=parent_option,
+            search=term or None,
+        )
+
+        queryset = field.options.filter(active=True)
+        if parent_option is not None:
             queryset = queryset.filter(
                 allowed_parent_links__parent_option=parent_option
             )
 
-        term = (search or "").strip()
         if term:
             from django.db.models import Q
 

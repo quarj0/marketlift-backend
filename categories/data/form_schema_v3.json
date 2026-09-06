@@ -75,12 +75,36 @@
   "category_fields": {
     "cars": [
       {
-        "key": "year",
-        "label": "Year of Manufacture",
+        "key": "make",
+        "label": "Make",
         "type": "select",
         "required": true,
         "filterable": true,
-        "allow_custom": true
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 0
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "make",
+        "sort_order": 1
+      },
+      {
+        "key": "year",
+        "label": "Model year",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "model",
+        "sort_order": 2
       },
       {
         "key": "color",
@@ -1794,12 +1818,36 @@
     ],
     "motorcycles": [
       {
-        "key": "year",
-        "label": "Year of Manufacture",
+        "key": "make",
+        "label": "Make",
         "type": "select",
         "required": true,
         "filterable": true,
-        "allow_custom": true
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 0
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "make",
+        "sort_order": 1
+      },
+      {
+        "key": "year",
+        "label": "Model year",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "model",
+        "sort_order": 2
       },
       {
         "key": "color",
@@ -2480,12 +2528,36 @@
     ],
     "trucks-commercial-vehicles": [
       {
-        "key": "year",
-        "label": "Year of Manufacture",
+        "key": "make",
+        "label": "Make",
         "type": "select",
         "required": true,
         "filterable": true,
-        "allow_custom": true
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 0
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "make",
+        "sort_order": 1
+      },
+      {
+        "key": "year",
+        "label": "Model year",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "model",
+        "sort_order": 2
       },
       {
         "key": "color",
@@ -3166,12 +3238,36 @@
     ],
     "buses-vans": [
       {
-        "key": "year",
-        "label": "Year of Manufacture",
+        "key": "make",
+        "label": "Make",
         "type": "select",
         "required": true,
         "filterable": true,
-        "allow_custom": true
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 0
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "make",
+        "sort_order": 1
+      },
+      {
+        "key": "year",
+        "label": "Model year",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "model",
+        "sort_order": 2
       },
       {
         "key": "color",
@@ -3851,6 +3947,27 @@
       }
     ],
     "phones": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      },
       {
         "key": "color",
         "label": "Color",
@@ -4555,6 +4672,27 @@
       }
     ],
     "computers": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      },
       {
         "key": "ram_gb",
         "label": "RAM",
@@ -15829,6 +15967,236 @@
           }
         ],
         "allow_custom": true
+      }
+    ],
+    "tablets": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "cameras": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "gaming": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "tvs-video": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "printers-scanners": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "smart-watches": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "audio": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "networking": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "other-electronics": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
+      }
+    ],
+    "electronics": [
+      {
+        "key": "brand",
+        "label": "Brand",
+        "type": "select",
+        "required": true,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "sort_order": 10
+      },
+      {
+        "key": "model",
+        "label": "Model",
+        "type": "select",
+        "required": false,
+        "filterable": true,
+        "allow_custom": true,
+        "lazy": true,
+        "depends_on": "brand",
+        "sort_order": 20
       }
     ]
   },

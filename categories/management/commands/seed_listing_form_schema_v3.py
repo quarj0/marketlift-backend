@@ -87,8 +87,8 @@ class Command(BaseCommand):
             field = CategoryField.objects.create(
                 category=category,
                 key=key,
-                lazy_options=False,
-                sort_order=category.fields.count() + 10,
+                lazy_options=bool(spec.get("lazy", False)),
+                sort_order=int(spec.get("sort_order", category.fields.count() + 10)),
                 **values,
             )
             changed = True
@@ -100,14 +100,37 @@ class Command(BaseCommand):
                     setattr(field, attr, value)
                     changed = True
 
-            # The v3 schema does not disturb a Brand -> Model catalog unless the
-            # field itself is being intentionally converted by a supplied spec.
+            # Dynamic catalog metadata is only changed when a spec explicitly
+            # supplies it; unrelated admin-managed catalogs remain untouched.
+            if "lazy" in spec and field.lazy_options != bool(spec["lazy"]):
+                field.lazy_options = bool(spec["lazy"])
+                changed = True
+            if "sort_order" in spec and field.sort_order != int(spec["sort_order"]):
+                field.sort_order = int(spec["sort_order"])
+                changed = True
             if field.field_type != CategoryField.FieldType.SELECT:
                 field.depends_on = None
                 field.lazy_options = False
 
             if changed:
                 field.save()
+
+        if "depends_on" in spec and field.field_type == CategoryField.FieldType.SELECT:
+            parent_key = str(spec.get("depends_on") or "").strip()
+            parent = (
+                CategoryField.objects.filter(category=category, key=parent_key).first()
+                if parent_key
+                else None
+            )
+            if parent_key and parent is None:
+                raise ValueError(
+                    f"{category.slug}.{key} depends on missing field {parent_key}."
+                )
+            target_id = parent.pk if parent else None
+            if field.depends_on_id != target_id:
+                field.depends_on = parent
+                field.save(update_fields=("depends_on", "updated_at"))
+                changed = True
 
         requested_options = spec.get("options")
         options_changed = False

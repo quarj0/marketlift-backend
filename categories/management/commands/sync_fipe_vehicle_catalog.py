@@ -207,10 +207,24 @@ class Command(BaseCommand):
             default=1.0,
             help="Initial retry delay in seconds, doubled per attempt (default: 1).",
         )
+        parser.add_argument(
+            "--allow-full-sync",
+            action="store_true",
+            help=(
+                "Explicitly allow a full FIPE crawl. Normal Marketlift operation "
+                "hydrates make/model/year branches on demand and does not need this."
+            ),
+        )
         parser.add_argument("--dry-run", action="store_true")
 
     def handle(self, *args, **options):
         selected = options["category"] or list(FIPE_TYPES)
+        if not options["brand"] and not options["allow_full_sync"]:
+            raise CommandError(
+                "Full FIPE sync is disabled by default because it can exhaust the "
+                "provider quota. Marketlift now hydrates vehicle selectors on demand. "
+                "Use --brand for a targeted warm-up, or --allow-full-sync explicitly."
+            )
         token = (
             os.environ.get("FIPE_API_TOKEN", "").strip()
             or os.environ.get("FIPE_API_KEY", "").strip()
