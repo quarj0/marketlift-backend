@@ -25,7 +25,9 @@ python manage.py sync_fipe_vehicle_catalog --category cars --max-requests 10000
 
 The fetch completes before the database transaction begins, and the catalog import
 is atomic. If the remote API fails or rate-limits the fetch, the existing catalog is
-left unchanged. A full refresh makes thousands of API requests; configure
+left unchanged. Transient timeouts, connection failures, rate limits and server
+errors are retried four times with exponential backoff. A full refresh makes
+thousands of API requests; configure
 `FIPE_API_TOKEN` in Railway when the provider requires a subscription. Do not run a
 dry run immediately before the real sync because that downloads the full catalog
 twice.
