@@ -11,6 +11,7 @@ from django.db import transaction, models
 from django.utils import timezone
 
 from categories.models import Category, CategoryField, CategoryFieldOptionDependency
+from categories.options import VEHICLE_CATEGORY_SLUGS
 from subscriptions.services import get_effective_plan
 from uploads.models import UploadAsset
 from uploads.services import claim_upload, retire_upload
@@ -167,7 +168,10 @@ def _validate_scalar(field: CategoryField, value):
             raise ValidationError({field.key: f"{field.label} cannot be empty."})
         if field.key == "year":
             try:
-                if int(candidate) > date.today().year:
+                max_year = date.today().year
+                if field.category.slug in VEHICLE_CATEGORY_SLUGS:
+                    max_year += 1
+                if int(candidate) > max_year:
                     raise ValidationError(
                         {field.key: f"{field.label} cannot be in the future."}
                     )

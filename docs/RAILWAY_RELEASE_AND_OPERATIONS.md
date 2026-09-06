@@ -13,24 +13,26 @@ The previous checkout Neon URL is obsolete. Run the following inside the Railway
 
 The backend must include the production GraphQL GET-query fix in `marketlift/urls.py`: cached frontend server reads use GET. Mutation requests still require POST. GraphQL HTTP responses are marked private/no-store; public frontend function caches remain explicitly scoped. Run `python manage.py collectstatic --noinput` during the build or release if the deployment does not already collect backend static assets.
 
-## Complete Brazilian vehicle catalog
+## Brazilian vehicle catalog
 
-The bundled vehicle CSV is only a starter catalog. After migrations, refresh all
-car makes and their exact model/year relationships from the current FIPE-compatible
-catalog inside the Railway backend service:
+After migrations, vehicle selectors hydrate the requested FIPE branch on demand:
+make first, then models for the selected make, then years for the selected model.
+Successful responses are persisted in the database and cached for later requests.
+This avoids a bulk crawl and continues serving stored choices during provider
+timeouts or rate limits. Configure `FIPE_API_TOKEN` in Railway when using an
+authenticated provider account.
+
+The bundled vehicle CSV remains a starter and recovery catalog. A targeted warm-up
+is available when needed:
 
 ```bash
-python manage.py sync_fipe_vehicle_catalog --category cars --max-requests 10000
+python manage.py sync_fipe_vehicle_catalog --category cars --brand Honda
 ```
 
-The fetch completes before the database transaction begins, and the catalog import
-is atomic. If the remote API fails or rate-limits the fetch, the existing catalog is
-left unchanged. Transient timeouts, connection failures, rate limits and server
-errors are retried four times with exponential backoff. A full refresh makes
-thousands of API requests; configure
-`FIPE_API_TOKEN` in Railway when the provider requires a subscription. Do not run a
-dry run immediately before the real sync because that downloads the full catalog
-twice.
+Full synchronization requires `--allow-full-sync` and must only be used when the
+provider plan and terms explicitly permit bulk collection. Transient timeouts,
+connection failures, rate limits and server errors are retried four times with
+exponential backoff.
 
 The command prints refreshed make count, distinct make/model count and exact
 model/year link count. The number of active `year` options is only the number of
