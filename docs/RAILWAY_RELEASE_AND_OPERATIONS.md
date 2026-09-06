@@ -13,6 +13,37 @@ The previous checkout Neon URL is obsolete. Run the following inside the Railway
 
 The backend must include the production GraphQL GET-query fix in `marketlift/urls.py`: cached frontend server reads use GET. Mutation requests still require POST. GraphQL HTTP responses are marked private/no-store; public frontend function caches remain explicitly scoped. Run `python manage.py collectstatic --noinput` during the build or release if the deployment does not already collect backend static assets.
 
+## Complete Brazilian vehicle catalog
+
+The bundled vehicle CSV is only a starter catalog. After migrations, refresh all
+car makes and their exact model/year relationships from the current FIPE-compatible
+catalog inside the Railway backend service:
+
+```bash
+python manage.py sync_fipe_vehicle_catalog --category cars --max-requests 10000
+```
+
+The fetch completes before the database transaction begins, and the catalog import
+is atomic. If the remote API fails or rate-limits the fetch, the existing catalog is
+left unchanged. A full refresh makes thousands of API requests; configure
+`FIPE_API_TOKEN` in Railway when the provider requires a subscription. Do not run a
+dry run immediately before the real sync because that downloads the full catalog
+twice.
+
+The command prints refreshed make count, distinct make/model count and exact
+model/year link count. The number of active `year` options is only the number of
+distinct year labels and must not be used as the number of vehicle combinations.
+To verify the stored relationships independently, run:
+
+```bash
+python manage.py shell -c "from categories.models import Category,CategoryFieldOptionDependency as D; c=Category.objects.get(slug='cars'); print({'makes':D.objects.filter(option__field__category=c,option__field__key='model',parent_option__field__key='make',option__active=True,parent_option__active=True).values('parent_option_id').distinct().count(),'models':D.objects.filter(option__field__category=c,option__field__key='model',parent_option__field__key='make',option__active=True,parent_option__active=True).count(),'model_year_links':D.objects.filter(option__field__category=c,option__field__key='year',parent_option__field__key='model',option__active=True,parent_option__active=True).count()})"
+```
+
+Run the sync periodically because new makes, models and model years enter FIPE.
+For a commercially licensed snapshot instead of API synchronization, use
+`import_vehicle_catalog_dataset <file> --category cars` after validating its CSV
+with the same command and `--dry-run`.
+
 ## Service topology and jobs
 
 Use separate Railway services from the same backend revision and database/Redis environment:
