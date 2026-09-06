@@ -54,7 +54,11 @@ def conversation_queryset(user=None):
 class MessagingQuery:
     @strawberry.field
     def my_conversations(
-        self, info: strawberry.Info, include_archived: bool = False
+        self,
+        info: strawberry.Info,
+        include_archived: bool = False,
+        limit: int = 50,
+        offset: int = 0,
     ) -> list[ConversationType]:
         user = require_user(info)
         query = conversation_queryset(user).filter(Q(buyer=user) | Q(seller__user=user))
@@ -63,7 +67,12 @@ class MessagingQuery:
                 Q(buyer=user, buyer_archived_at__isnull=True)
                 | Q(seller__user=user, seller_archived_at__isnull=True)
             )
-        return [conversation_to_type(item, user) for item in query[:200]]
+        start = max(0, offset)
+        query = query.order_by("-last_message_at", "-created_at", "-id")
+        return [
+            conversation_to_type(item, user)
+            for item in query[start : start + max(1, min(limit, 100))]
+        ]
 
     @strawberry.field
     def conversation(
@@ -86,6 +95,7 @@ class MessagingQuery:
         info: strawberry.Info,
         conversation_id: strawberry.ID,
         before: datetime | None = None,
+        before_id: strawberry.ID | None = None,
         limit: int = 50,
     ) -> list[MessageType]:
         user = require_user(info)
@@ -102,10 +112,13 @@ class MessagingQuery:
                 "attachment__upload",
             )
             .prefetch_related("attachment__upload__variants")
-            .order_by("-created_at")
+            .order_by("-created_at", "-id")
         )
         if before is not None:
-            query = query.filter(created_at__lt=before)
+            boundary = Q(created_at__lt=before)
+            if before_id:
+                boundary |= Q(created_at=before, id__lt=str(before_id))
+            query = query.filter(boundary)
         items = list(query[:limit])
         items.reverse()
         return [message_to_type(item, user) for item in items]

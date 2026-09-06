@@ -102,8 +102,7 @@ class Command(BaseCommand):
                     defaults=field_defaults,
                 )
                 catalog_managed = bool(
-                    not field_created
-                    and (field.lazy_options or field.depends_on_id)
+                    not field_created and (field.lazy_options or field.depends_on_id)
                 )
                 if force and not field_created and not catalog_managed:
                     for key, value in field_defaults.items():
@@ -133,9 +132,7 @@ class Command(BaseCommand):
                     field.options.exclude(value__in=seen_options).delete()
 
             if force:
-                category.fields.exclude(
-                    key__in=seen_field_keys
-                ).filter(
+                category.fields.exclude(key__in=seen_field_keys).filter(
                     lazy_options=False,
                     depends_on__isnull=True,
                 ).delete()

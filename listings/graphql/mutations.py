@@ -92,9 +92,9 @@ class ListingMutation:
         seller = require_seller(info)
         try:
             with transaction.atomic():
-                category = Category.objects.prefetch_related(
-                    "fields__options"
-                ).get(slug=input.category_id)
+                category = Category.objects.prefetch_related("fields__options").get(
+                    slug=input.category_id
+                )
                 listing = create_listing(
                     seller=seller,
                     category=category,
@@ -118,14 +118,10 @@ class ListingMutation:
                 listing = publish_listing(listing)
         except Category.DoesNotExist as exc:
             _discard_unattached_listing_images(user=seller.user, input=input)
-            raise not_found_error(
-                "Category", code="CATEGORY_NOT_FOUND"
-            ) from exc
+            raise not_found_error("Category", code="CATEGORY_NOT_FOUND") from exc
         except ValidationError as exc:
             _discard_unattached_listing_images(user=seller.user, input=input)
-            raise validation_error(
-                exc, code="LISTING_VALIDATION_ERROR"
-            ) from exc
+            raise validation_error(exc, code="LISTING_VALIDATION_ERROR") from exc
 
         return listing_to_type(listing_queryset().get(pk=listing.pk))
 

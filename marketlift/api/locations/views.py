@@ -155,11 +155,7 @@ class LocationCitiesView(APIView):
             for row in rows:
                 if (row.country_code or "").upper() != country:
                     continue
-                if (
-                    state
-                    and row.state_code
-                    and row.state_code.upper() != state
-                ):
+                if state and row.state_code and row.state_code.upper() != state:
                     continue
                 value = (row.city or "").strip()
                 if not value or value.casefold() in seen:

@@ -29,7 +29,12 @@ from .types import (
 
 
 def _category_qs():
-    return Category.objects.select_related("image_upload", "parent").prefetch_related("fields__options", "fields__depends_on", "image_upload__variants", "subcategories__image_upload__variants")
+    return Category.objects.select_related("image_upload", "parent").prefetch_related(
+        "fields__options",
+        "fields__depends_on",
+        "image_upload__variants",
+        "subcategories__image_upload__variants",
+    )
 
 
 def _field_to_type(field: CategoryField) -> CategoryFieldDefinitionType:
@@ -96,9 +101,7 @@ def _category_schema_values(
     }
 
 
-def _category_parent_id(
-    input: CategoryAdminInput, *, existing: Category | None = None
-):
+def _category_parent_id(input: CategoryAdminInput, *, existing: Category | None = None):
     if input.parent_id is strawberry.UNSET:
         return existing.parent_id if existing is not None else None
     if input.parent_id is None:
@@ -108,7 +111,11 @@ def _category_parent_id(
 
 def _apply_category_image(*, category: Category, input: CategoryAdminInput, actor):
     if input.image_upload_id and input.remove_image:
-        raise ValidationError({"image": "Choose a replacement image or remove the current image, not both."})
+        raise ValidationError(
+            {
+                "image": "Choose a replacement image or remove the current image, not both."
+            }
+        )
     old_asset = category.image_upload
     if input.remove_image:
         category.image_upload = None
@@ -118,7 +125,9 @@ def _apply_category_image(*, category: Category, input: CategoryAdminInput, acto
     try:
         upload = UploadAsset.objects.get(pk=str(input.image_upload_id))
     except (UploadAsset.DoesNotExist, ValueError) as exc:
-        raise ValidationError({"image": "The selected category image upload was not found."}) from exc
+        raise ValidationError(
+            {"image": "The selected category image upload was not found."}
+        ) from exc
     category.image_upload = claim_upload(
         asset=upload,
         user=actor,
@@ -208,9 +217,9 @@ class CategoryMutation:
             if (
                 old_image_asset is not None
                 and old_image_asset.pk != category.image_upload_id
-                and not Category.objects.filter(
-                    image_upload=old_image_asset
-                ).exclude(pk=category.pk).exists()
+                and not Category.objects.filter(image_upload=old_image_asset)
+                .exclude(pk=category.pk)
+                .exists()
             ):
                 retire_upload(asset=old_image_asset)
             record_audit_event(

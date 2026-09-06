@@ -40,6 +40,9 @@ class AdminSellerType:
     suspended_at: datetime | None
     suspension_reason: str | None
     listing_count: int
+    owner_name: str = ""
+    location: LocationType | None = None
+    plan_name: str | None = None
 
 
 @strawberry.input

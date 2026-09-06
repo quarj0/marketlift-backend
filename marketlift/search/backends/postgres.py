@@ -136,6 +136,10 @@ def _fingerprint(request: SearchRequest, parsed: ParsedMarketplaceQuery) -> str:
             request.exclude_user_id,
             str(request.created_after),
             request.allow_relaxation,
+            str(request.created_before),
+            request.excluded_geography,
+            request.minimum_radius_km,
+            request.missing_coordinates_only,
         )
     ).encode()
     return hashlib.sha256(raw).hexdigest()[:20]
@@ -213,6 +217,12 @@ def _apply_structured_filters(
         qs = qs.exclude(seller__user_id=request.exclude_user_id)
     if request.created_after is not None:
         qs = qs.filter(created_at__gt=request.created_after)
+    if request.created_before is not None:
+        qs = qs.filter(created_at__lte=request.created_before)
+    if request.excluded_geography:
+        qs = qs.exclude(**request.excluded_geography)
+    if request.missing_coordinates_only:
+        qs = qs.filter(location_point__isnull=True)
 
     if request.latitude is not None and request.longitude is not None:
         origin = Point(request.longitude, request.latitude, srid=4326)
@@ -222,6 +232,10 @@ def _apply_structured_filters(
         if request.radius_km is not None:
             qs = qs.filter(
                 location_point__distance_lte=(origin, D(km=request.radius_km))
+            )
+        if request.minimum_radius_km is not None:
+            qs = qs.exclude(
+                location_point__distance_lte=(origin, D(km=request.minimum_radius_km))
             )
 
     min_candidates = [

@@ -1,4 +1,3 @@
-
 import json
 from decimal import Decimal
 from pathlib import Path
@@ -9,7 +8,6 @@ from django.db import transaction
 from categories.models import Category, CategoryField, CategoryFieldOption
 from listings.models import Listing
 from marketlift.search.document import rebuild_listing_search_document
-
 
 LEGACY_CATEGORY_MERGES = {
     "home": "other-home-furniture-appliances",
@@ -132,14 +130,20 @@ class Command(BaseCommand):
             for slug, parent_slug, name in (
                 ("phones-tablets", "electronics", "Phones & Tablets"),
                 ("computers", "electronics", "Computers"),
-                ("commercial-equipments-tools", "business-industry", "Commercial Equipment & Tools"),
+                (
+                    "commercial-equipments-tools",
+                    "business-industry",
+                    "Commercial Equipment & Tools",
+                ),
             ):
                 category = Category.objects.filter(slug=slug).first()
                 if category:
                     category.parent = category_map[parent_slug]
                     category.name = name
                     category.active = True
-                    category.save(update_fields=("parent", "name", "active", "updated_at"))
+                    category.save(
+                        update_fields=("parent", "name", "active", "updated_at")
+                    )
                     category_map[slug] = category
 
             # Move the existing generic/root schema to its curated fallback leaf.
@@ -170,7 +174,9 @@ class Command(BaseCommand):
 
             # These old roots/leaves overlap the curated taxonomy. Preserve the
             # rows for historical references, but remove them from discovery.
-            Category.objects.filter(slug__in=LEGACY_CATEGORY_MERGES).update(active=False)
+            Category.objects.filter(slug__in=LEGACY_CATEGORY_MERGES).update(
+                active=False
+            )
 
             # Seed missing fields on new leaves. Existing fields are preserved.
             for item in data["categories"]:
@@ -194,7 +200,9 @@ class Command(BaseCommand):
             if options["dry_run"]:
                 transaction.set_rollback(True)
                 self.stdout.write(
-                    self.style.WARNING("Dry run complete. All taxonomy changes rolled back.")
+                    self.style.WARNING(
+                        "Dry run complete. All taxonomy changes rolled back."
+                    )
                 )
                 return
 

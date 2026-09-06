@@ -5,7 +5,6 @@ from django.db import transaction
 
 from categories.models import Category
 
-
 LEGACY_ROOT_SLUGS = {
     "properties",
     "land",
@@ -81,9 +80,7 @@ class Command(BaseCommand):
                     if ancestor.image_upload_id:
                         if not audit_only:
                             category.image_upload_id = ancestor.image_upload_id
-                            category.save(
-                                update_fields=("image_upload", "updated_at")
-                            )
+                            category.save(update_fields=("image_upload", "updated_at"))
                             by_id[category.id] = category
 
                         inherited.append((category.slug, ancestor.slug))
@@ -105,8 +102,7 @@ class Command(BaseCommand):
 
             if inherited:
                 sample = ", ".join(
-                    f"{child} <- {parent}"
-                    for child, parent in inherited[:12]
+                    f"{child} <- {parent}" for child, parent in inherited[:12]
                 )
                 self.stdout.write(f"Sample inheritance: {sample}")
 

@@ -42,6 +42,8 @@ def _load_backend():
 def _validate_decimal(name: str, value: Decimal | None) -> None:
     if value is None:
         return
+    if not value.is_finite():
+        raise ValidationError({name: "Must be a finite number."})
     if value < 0:
         raise ValidationError({name: "Price cannot be negative."})
     if value > Decimal("999999999999.99"):
@@ -116,6 +118,8 @@ def _validate_attribute_filters(filters: dict, *, category: str | None) -> dict:
                     continue
                 try:
                     cleaned_range[side] = Decimal(str(raw))
+                    if not cleaned_range[side].is_finite():
+                        raise ValueError("Non-finite number")
                 except (InvalidOperation, TypeError, ValueError) as exc:
                     raise ValidationError(
                         {"attributes": f"{key}.{side} must be numeric."}
@@ -134,6 +138,8 @@ def _validate_attribute_filters(filters: dict, *, category: str | None) -> dict:
         if storage_kind == "number":
             try:
                 cleaned[key] = Decimal(str(value))
+                if not cleaned[key].is_finite():
+                    raise ValueError("Non-finite number")
             except (InvalidOperation, TypeError, ValueError) as exc:
                 raise ValidationError(
                     {"attributes": f"{key} must be numeric."}
@@ -296,7 +302,7 @@ def _validate_numeric_specifications(parsed) -> None:
             raise ValidationError({"q": "Specification range is reversed."})
 
 
-def search_listings(request: SearchRequest) -> SearchPage:
+def prepare_search(request: SearchRequest):
     request = validate_search_request(request)
     parsed = parse_marketplace_query(
         request.q,
@@ -335,4 +341,9 @@ def search_listings(request: SearchRequest) -> SearchPage:
             effective_radius = default_radius
         request = replace(request, radius_km=effective_radius)
 
+    return request, parsed
+
+
+def search_listings(request: SearchRequest) -> SearchPage:
+    request, parsed = prepare_search(request)
     return _load_backend().search(request, parsed)

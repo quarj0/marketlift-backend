@@ -179,13 +179,13 @@ def create_admin_login_challenge(*, user, request=None, send=True):
                 html_message=(
                     '<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">'
                     '<p style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#0b63f6">'
-                    'MARKETLIFT ADMIN</p>'
+                    "MARKETLIFT ADMIN</p>"
                     '<h1 style="font-size:24px;margin:8px 0 12px">Your sign-in code</h1>'
-                    '<p>Enter this code to finish signing in to the Marketlift Admin console.</p>'
+                    "<p>Enter this code to finish signing in to the Marketlift Admin console.</p>"
                     f'<p style="font-size:32px;font-weight:800;letter-spacing:.18em;margin:22px 0">{code}</p>'
                     '<p style="font-size:13px;color:#475569">This code expires in 10 minutes and can only be used once.</p>'
                     '<p style="font-size:13px;color:#475569">If you did not request this code, you can ignore this email.</p>'
-                    '</div>'
+                    "</div>"
                 ),
             )
         except Exception:

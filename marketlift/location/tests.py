@@ -4,7 +4,9 @@ from django.test import SimpleTestCase, override_settings
 from marketlift.location.contracts import LocationCandidate
 from marketlift.location.providers.nominatim import _candidate_from_payload
 from marketlift.location.providers.opencage import _candidate_from_result
-from marketlift.location.providers.geoapify import _candidate_from_result as _geoapify_candidate
+from marketlift.location.providers.geoapify import (
+    _candidate_from_result as _geoapify_candidate,
+)
 from marketlift.location.tokens import decode_location_token, encode_location_token
 from marketlift.location.validators import validate_coordinates, validate_radius_km
 

@@ -1,8 +1,12 @@
 from django.urls import include, path
 
+from .sitemaps import SitemapView
+from .telemetry import WebVitalsView
 from .views import health, market_profile, readiness
 
 urlpatterns = [
+    path("telemetry/web-vitals/", WebVitalsView.as_view(), name="web-vitals"),
+    path("sitemap/", SitemapView.as_view(), name="sitemap-data"),
     path("health/", health, name="health"),
     path("market/", market_profile, name="market-profile"),
     path("ready/", readiness, name="readiness"),

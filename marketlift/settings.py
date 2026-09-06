@@ -123,6 +123,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "marketlift.observability.RequestObservabilityMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -520,8 +521,7 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 USE_X_FORWARDED_HOST = False
 MARKETLIFT_TRUST_PROXY_HEADERS = IS_PRODUCTION
-# Read-only GraphQL queries (including the admin dashboard) are not request-count
-# rate limited. State-changing mutations are protected separately in middleware.
+# Read-only GraphQL queries use the separate read budget defined below. State-changing mutations are protected separately in middleware.
 MARKETLIFT_GRAPHQL_MUTATION_RATE_LIMIT_PER_MINUTE = 60
 MARKETLIFT_GRAPHQL_MAX_DEPTH = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_DEPTH", "12"))
 MARKETLIFT_GRAPHQL_MAX_TOKENS = int(os.getenv("MARKETLIFT_GRAPHQL_MAX_TOKENS", "5000"))
@@ -705,4 +705,21 @@ LOGGING = {
         },
         "marketlift": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
     },
+}
+
+# Operations: enable heartbeat enforcement after worker and single beat are deployed.
+MARKETLIFT_REQUIRE_WORKER_HEARTBEAT = env_bool(
+    "MARKETLIFT_REQUIRE_WORKER_HEARTBEAT", False
+)
+MARKETLIFT_RATE_LIMIT_FAIL_CLOSED = env_bool(
+    "MARKETLIFT_RATE_LIMIT_FAIL_CLOSED", IS_PRODUCTION
+)
+MARKETLIFT_GRAPHQL_READ_RATE_LIMIT_PER_MINUTE = int(
+    os.getenv("MARKETLIFT_GRAPHQL_READ_RATE_LIMIT_PER_MINUTE", "240")
+)
+EMAIL_TIMEOUT = 15
+CELERY_IMPORTS = ("marketlift.tasks",)
+CELERY_BEAT_SCHEDULE["worker-heartbeat"] = {
+    "task": "marketlift.tasks.worker_heartbeat",
+    "schedule": 60.0,
 }

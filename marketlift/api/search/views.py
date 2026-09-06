@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from marketlift.search.service import search_listings
+from marketlift.search.progressive import search_progressive
 from marketlift.security.rate_limit import enforce_rate_limit
 
 from .params import search_request_from_query_params
@@ -33,7 +34,11 @@ class ListingSearchView(APIView):
         )
         try:
             search_request = search_request_from_query_params(request.query_params)
-            page = search_listings(search_request)
+            geography = None
+            if request.query_params.get("expandRegions") == "true":
+                page, geography = search_progressive(search_request)
+            else:
+                page = search_listings(search_request)
         except DjangoValidationError as exc:
             raise _drf_validation_error(exc) from exc
 
@@ -45,6 +50,7 @@ class ListingSearchView(APIView):
                 "relaxed": [item.as_dict() for item in page.relaxed],
                 "totalCount": page.total_count,
                 "nextCursor": page.next_cursor,
+                "geography": geography,
                 "results": [serialize_search_listing(item) for item in page.items],
             }
         )

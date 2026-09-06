@@ -74,7 +74,9 @@ class Command(BaseCommand):
         )
         self.stdout.write(f"Destination: {public_base}/{prefix}/")
         if options["audit_only"]:
-            self.stdout.write(self.style.SUCCESS("Audit passed; no objects were uploaded."))
+            self.stdout.write(
+                self.style.SUCCESS("Audit passed; no objects were uploaded.")
+            )
             return
 
         backend = get_storage_backend(settings.MARKETLIFT_PUBLIC_STORAGE_ALIAS)

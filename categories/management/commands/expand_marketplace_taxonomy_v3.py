@@ -5,7 +5,6 @@ from django.db import transaction
 
 from categories.models import Category, CategoryField, CategoryFieldOption
 
-
 EXISTING_MOVES = {
     "industrial-machinery": ("Manufacturing Equipment", "Factory", 10),
     "medical-equipment": ("Medical Equipment & Supplies", "Stethoscope", 30),

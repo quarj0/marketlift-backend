@@ -145,7 +145,7 @@ class ClientScopedSessionMiddleware(SessionMiddleware):
 def _graphql_mutation_scope(request) -> str | None:
     """Return a stable scope for a GraphQL mutation, otherwise ``None``.
 
-    Dashboard/read-only queries deliberately bypass the request-count limiter.
+    Reads have a separate total request budget.
     Mutation scopes are based on real root field names (not aliases or operation
     labels), so clients cannot evade the limiter simply by renaming an operation.
     """
@@ -165,7 +165,7 @@ def _graphql_mutation_scope(request) -> str | None:
     if operation_name is not None and not isinstance(operation_name, str):
         return None
     try:
-        document = parse(query)
+        document = parse(query, max_tokens=settings.MARKETLIFT_GRAPHQL_MAX_TOKENS)
         operation = get_operation_ast(document, operation_name)
     except Exception:
         # Let the GraphQL view return its normal syntax/validation response.
@@ -184,13 +184,40 @@ def _graphql_mutation_scope(request) -> str | None:
 
 
 class SecurityRateLimitMiddleware:
-    """Protect GraphQL writes without throttling dashboard/read queries."""
+    """Bound all GraphQL requests, with a separate per-action write budget."""
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         if request.path.rstrip("/") == "/graphql":
+            from rest_framework.exceptions import APIException
+            from .rate_limit import enforce_rate_limit
+
+            try:
+                enforce_rate_limit(
+                    request,
+                    "graphql-requests",
+                    limit=settings.MARKETLIFT_GRAPHQL_READ_RATE_LIMIT_PER_MINUTE,
+                    window=60,
+                )
+            except APIException as exc:
+                response = JsonResponse(
+                    {
+                        "errors": [
+                            {
+                                "message": str(exc.detail),
+                                "extensions": {
+                                    "code": "GRAPHQL_REQUEST_LIMIT",
+                                    "status": exc.status_code,
+                                },
+                            }
+                        ]
+                    },
+                    status=exc.status_code,
+                )
+                response["Retry-After"] = "60"
+                return response
             mutation_scope = _graphql_mutation_scope(request)
             if mutation_scope:
                 ident = str(
@@ -227,10 +254,22 @@ class SecurityRateLimitMiddleware:
                             status=429,
                         )
                 except Exception:
-                    logger.warning(
-                        "GraphQL mutation rate-limit cache unavailable",
-                        exc_info=True,
-                    )
+                    logger.warning("GraphQL mutation rate-limit cache unavailable")
+                    if settings.MARKETLIFT_RATE_LIMIT_FAIL_CLOSED:
+                        return JsonResponse(
+                            {
+                                "errors": [
+                                    {
+                                        "message": "Request protection is temporarily unavailable.",
+                                        "extensions": {
+                                            "code": "RATE_LIMIT_UNAVAILABLE",
+                                            "status": 503,
+                                        },
+                                    }
+                                ]
+                            },
+                            status=503,
+                        )
         return self.get_response(request)
 
 

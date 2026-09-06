@@ -3,7 +3,14 @@ import logging
 
 from django.conf import settings
 from django.core.cache import cache
-from rest_framework.exceptions import Throttled
+from rest_framework.exceptions import APIException, Throttled
+
+
+class RateLimitUnavailable(APIException):
+    status_code = 503
+    default_detail = "Request protection is temporarily unavailable. Try again shortly."
+    default_code = "rate_limit_unavailable"
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +47,8 @@ def enforce_identity_rate_limit(scope, identity, *, limit, window):
         logger.warning(
             "Rate-limit cache unavailable for scope %s", scope, exc_info=True
         )
+        if getattr(settings, "MARKETLIFT_RATE_LIMIT_FAIL_CLOSED", False):
+            raise RateLimitUnavailable()
         return
 
     if count > limit:
@@ -47,6 +56,4 @@ def enforce_identity_rate_limit(scope, identity, *, limit, window):
 
 
 def enforce_rate_limit(request, scope, *, limit, window):
-    enforce_identity_rate_limit(
-        scope, _identity(request), limit=limit, window=window
-    )
+    enforce_identity_rate_limit(scope, _identity(request), limit=limit, window=window)

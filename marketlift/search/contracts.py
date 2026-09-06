@@ -91,6 +91,11 @@ class SearchRequest:
     exclude_user_id: str | None = None
     created_after: datetime | None = None
     allow_relaxation: bool = True
+    created_before: datetime | None = None
+    # Geographic continuation constraints are constructed by the service only.
+    excluded_geography: dict[str, Any] = field(default_factory=dict)
+    minimum_radius_km: float | None = None
+    missing_coordinates_only: bool = False
 
 
 @dataclass(frozen=True)

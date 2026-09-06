@@ -12,10 +12,17 @@ def message_to_type(x):
     )
 
 
-def ticket_to_type(x, include_internal=False):
+def ticket_to_type(x, include_internal=False, message_limit=50):
+    size = max(1, min(message_limit, 100))
+    rows = getattr(x, "_page_messages", None)
+    if rows is None:
+        query = x.messages.select_related("sender", "upload")
+        if not include_internal:
+            query = query.filter(internal=False)
+        rows = list(query.order_by("-created_at", "-id")[: size + 1])
     msgs = [
         message_to_type(m)
-        for m in x.messages.select_related("sender", "upload").all()
+        for m in reversed(rows[:size])
         if include_internal or not m.internal
     ]
     return SupportTicketType(
@@ -35,4 +42,5 @@ def ticket_to_type(x, include_internal=False):
         updated_at=x.updated_at,
         created_at=x.created_at,
         messages=msgs,
+        messages_has_more=len(rows) > size,
     )

@@ -138,8 +138,7 @@ class ListingQuery:
         if country_code:
             base = base.filter(country_code__iexact=country_code.strip().upper())
         qs = (
-            base
-            .filter(
+            base.filter(
                 promotions__product__code=PromotionProduct.Code.FEATURED,
                 promotions__cancelled_at__isnull=True,
                 promotions__starts_at__lte=now,

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -21,11 +22,14 @@ from platform_settings.readiness import (
     payment_provider_readiness,
 )
 
+logger = logging.getLogger(__name__)
+
 
 async def _realtime_round_trip(layer):
-    channel_name = await layer.new_channel("marketlift.readiness.")
-    await layer.send(channel_name, {"type": "readiness.ping"})
-    return await layer.receive(channel_name)
+    async with asyncio.timeout(settings.MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS):
+        channel_name = await layer.new_channel("marketlift.readiness.")
+        await layer.send(channel_name, {"type": "readiness.ping"})
+        return await layer.receive(channel_name)
 
 
 @api_view(["GET"])
@@ -134,15 +138,21 @@ def readiness(request):
         layer = get_channel_layer()
         if layer is None:
             raise RuntimeError("No channel layer configured")
-        event = async_to_sync(asyncio.wait_for)(
-            _realtime_round_trip(layer),
-            timeout=settings.MARKETLIFT_DEPENDENCY_TIMEOUT_SECONDS,
-        )
+        event = async_to_sync(_realtime_round_trip)(layer)
         checks["realtime"] = (
             "ok" if event.get("type") == "readiness.ping" else "unavailable"
         )
-    except Exception:
+    except Exception as exc:
+        logger.error("readiness check=realtime error_type=%s", type(exc).__name__)
         checks["realtime"] = "unavailable"
+
+    if settings.MARKETLIFT_REQUIRE_WORKER_HEARTBEAT:
+        try:
+            checks["worker"] = (
+                "ok" if cache.get("marketlift:worker-heartbeat") else "unavailable"
+            )
+        except Exception:
+            checks["worker"] = "unavailable"
 
     ready = all(value == "ok" for value in checks.values())
     return Response(

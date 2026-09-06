@@ -31,6 +31,7 @@ class ListingType:
     inquiries: int
     seller_deleted_at: datetime | None
     distance_km: float | None = None
+    report_count: int | None = None
 
 
 @strawberry.type
