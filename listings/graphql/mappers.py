@@ -69,4 +69,5 @@ def listing_to_type(listing) -> ListingType:
         inquiries=int(getattr(listing, "inquiry_count", 0)),
         seller_deleted_at=listing.seller_deleted_at,
         distance_km=getattr(listing, "search_distance_km", None),
+        report_count=getattr(listing, "_admin_report_count", None),
     )

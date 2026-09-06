@@ -129,7 +129,9 @@ class CategoryField(UUIDTimeStampedModel):
                     {"depends_on": "Dependent fields must belong to the same category."}
                 )
             if self.depends_on_id == self.id:
-                raise ValidationError({"depends_on": "A field cannot depend on itself."})
+                raise ValidationError(
+                    {"depends_on": "A field cannot depend on itself."}
+                )
             if self.field_type != self.FieldType.SELECT:
                 raise ValidationError(
                     {"depends_on": "Only choice fields can depend on another answer."}
@@ -199,7 +201,9 @@ class CategoryFieldOptionDependency(UUIDTimeStampedModel):
         if self.option_id and self.parent_option_id:
             if self.option.field_id == self.parent_option.field_id:
                 raise ValidationError(
-                    {"parent_option": "A dependent option must belong to the parent field."}
+                    {
+                        "parent_option": "A dependent option must belong to the parent field."
+                    }
                 )
             expected = self.option.field.depends_on_id
             if expected and self.parent_option.field_id != expected:

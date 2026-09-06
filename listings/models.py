@@ -15,6 +15,7 @@ class ListingQuerySet(models.QuerySet):
         return self.filter(
             status=Listing.Status.PUBLISHED,
             seller__is_suspended=False,
+            seller__user__is_active=True,
             category__isnull=False,
             category__active=True,
             seller_deleted_at__isnull=True,

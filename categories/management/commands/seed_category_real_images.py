@@ -11,7 +11,12 @@ from django.db import transaction
 
 from categories.models import Category
 from uploads.models import UploadAsset
-from uploads.services import claim_upload, complete_upload, prepare_upload, retire_upload
+from uploads.services import (
+    claim_upload,
+    complete_upload,
+    prepare_upload,
+    retire_upload,
+)
 from uploads.storage import get_storage_backend
 
 
@@ -64,10 +69,14 @@ class Command(BaseCommand):
         )
         try:
             for slug, info in sources.items():
-                category = Category.objects.filter(slug=slug, parent__isnull=True).first()
+                category = Category.objects.filter(
+                    slug=slug, parent__isnull=True
+                ).first()
                 if category is None:
                     self.stdout.write(
-                        self.style.WARNING(f"{slug}: root category does not exist; skipped.")
+                        self.style.WARNING(
+                            f"{slug}: root category does not exist; skipped."
+                        )
                     )
                     continue
                 if category.image_upload_id and not force:

@@ -5,7 +5,6 @@ from django.db import transaction
 
 from categories.models import Category, CategoryField
 
-
 GOODS_CONDITIONS = ["Brand New", "Refurbished", "Used"]
 
 PACKS = {

@@ -26,3 +26,4 @@ class SupportTicketType:
     updated_at: datetime
     created_at: datetime
     messages: list[SupportMessageType]
+    messages_has_more: bool = False

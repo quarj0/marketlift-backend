@@ -1,5 +1,6 @@
 from celery import shared_task
 from django.conf import settings
+from django.db import transaction
 from django.core.mail import send_mail
 from django.utils import timezone
 from .models import Notification
@@ -32,35 +33,48 @@ def _email_enabled(item):
 @shared_task
 def deliver_pending_notification_emails():
     sent = 0
-    for item in (
-        Notification.objects.select_related("user")
-        .filter(email_sent_at__isnull=True, delivery_attempts__lt=5)
-        .order_by("created_at")[:200]
-    ):
-        if not _email_enabled(item):
-            item.email_sent_at = timezone.now()
-            item.save(update_fields=("email_sent_at", "updated_at"))
-            continue
-        item.delivery_attempts += 1
-        try:
-            send_mail(
-                item.title,
-                item.body,
-                settings.DEFAULT_FROM_EMAIL,
-                [item.user.email],
-                fail_silently=False,
+    candidates = list(
+        Notification.objects.filter(email_sent_at__isnull=True, delivery_attempts__lt=5)
+        .order_by("created_at")
+        .values_list("id", flat=True)[:200]
+    )
+    for candidate in candidates:
+        with transaction.atomic():
+            # Concurrent workers skip a notification while its bounded send is in progress.
+            item = (
+                Notification.objects.select_for_update(skip_locked=True, of=("self",))
+                .select_related("user", "user__settings")
+                .filter(
+                    pk=candidate, email_sent_at__isnull=True, delivery_attempts__lt=5
+                )
+                .first()
             )
-            item.email_sent_at = timezone.now()
-            item.last_delivery_error = ""
-            sent += 1
-        except Exception as exc:
-            item.last_delivery_error = str(exc)[:1000]
-        item.save(
-            update_fields=(
-                "delivery_attempts",
-                "email_sent_at",
-                "last_delivery_error",
-                "updated_at",
+            if item is None:
+                continue
+            if not _email_enabled(item):
+                item.email_sent_at = timezone.now()
+                item.save(update_fields=("email_sent_at", "updated_at"))
+                continue
+            item.delivery_attempts += 1
+            try:
+                send_mail(
+                    item.title,
+                    item.body,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [item.user.email],
+                    fail_silently=False,
+                )
+                item.email_sent_at = timezone.now()
+                item.last_delivery_error = ""
+                sent += 1
+            except Exception as exc:
+                item.last_delivery_error = str(exc)[:1000]
+            item.save(
+                update_fields=(
+                    "delivery_attempts",
+                    "email_sent_at",
+                    "last_delivery_error",
+                    "updated_at",
+                )
             )
-        )
     return sent

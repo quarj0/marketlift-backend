@@ -23,11 +23,11 @@ def _first(properties: dict, *keys: str) -> str:
 
 
 def _state_code(properties: dict) -> str:
-    raw = str(
-        properties.get("state_code")
-        or properties.get("state_code_2")
-        or ""
-    ).strip().upper()
+    raw = (
+        str(properties.get("state_code") or properties.get("state_code_2") or "")
+        .strip()
+        .upper()
+    )
     if raw:
         if "-" in raw:
             raw = raw.rsplit("-", 1)[-1]
@@ -42,10 +42,18 @@ def _state_code(properties: dict) -> str:
 
 
 def _candidate_from_result(result: dict) -> LocationCandidate:
-    properties = result.get("properties") if isinstance(result.get("properties"), dict) else result
+    properties = (
+        result.get("properties")
+        if isinstance(result.get("properties"), dict)
+        else result
+    )
     lat, lng = validate_coordinates(
         properties.get("lat"),
-        properties.get("lon") if properties.get("lon") is not None else properties.get("lng"),
+        (
+            properties.get("lon")
+            if properties.get("lon") is not None
+            else properties.get("lng")
+        ),
         required=True,
     )
     return LocationCandidate(
@@ -151,9 +159,12 @@ class GeoapifyGeocoder(GeocoderBackend):
             raise ValidationError(
                 {"country_code": "Country code must be a two-letter ISO code."}
             )
-        cache_key = "marketlift:geocode:geoapify:" + hashlib.sha256(
-            f"{self.language}|{country}|{query}|{limit}".encode()
-        ).hexdigest()
+        cache_key = (
+            "marketlift:geocode:geoapify:"
+            + hashlib.sha256(
+                f"{self.language}|{country}|{query}|{limit}".encode()
+            ).hexdigest()
+        )
         cached = cache.get(cache_key)
         if cached is not None:
             return [LocationCandidate(**item) for item in cached]
@@ -175,9 +186,12 @@ class GeoapifyGeocoder(GeocoderBackend):
 
     def reverse(self, latitude: float, longitude: float) -> LocationCandidate | None:
         lat, lng = validate_coordinates(latitude, longitude, required=True)
-        cache_key = "marketlift:reverse:geoapify:" + hashlib.sha256(
-            f"{self.language}|{lat:.5f}|{lng:.5f}".encode()
-        ).hexdigest()
+        cache_key = (
+            "marketlift:reverse:geoapify:"
+            + hashlib.sha256(
+                f"{self.language}|{lat:.5f}|{lng:.5f}".encode()
+            ).hexdigest()
+        )
         cached = cache.get(cache_key)
         if cached is not None:
             return LocationCandidate(**cached) if cached else None

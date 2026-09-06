@@ -39,9 +39,11 @@ from support.graphql.queries import SupportQuery
 from verifications.graphql.mutations import VerificationMutation
 from verifications.graphql.queries import VerificationQuery
 
+from .admin_pages import AdminPaginationQuery
 from .queries import HealthQuery
 
 QUERY_TYPES = (
+    AdminPaginationQuery,
     HealthQuery,
     AccountQuery,
     SellerQuery,

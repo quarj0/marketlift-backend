@@ -19,7 +19,10 @@ def _decimal(name: str, raw: str | None) -> Decimal | None:
     if "," in value and "." not in value:
         value = value.replace(",", ".")
     try:
-        return Decimal(value)
+        number = Decimal(value)
+        if not number.is_finite():
+            raise ValueError("Non-finite number")
+        return number
     except (InvalidOperation, ValueError) as exc:
         raise ValidationError({name: "Must be a valid number."}) from exc
 

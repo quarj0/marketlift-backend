@@ -18,12 +18,31 @@ SCREENSHOT_NAME_RE = re.compile(
 )
 
 COMMON_SCREEN_SIZES = {
-    (1280, 720), (1366, 768), (1440, 900), (1536, 864), (1600, 900),
-    (1920, 1080), (2560, 1440), (3840, 2160),
-    (720, 1280), (768, 1366), (900, 1440), (864, 1536), (900, 1600),
-    (1080, 1920), (1080, 2340), (1080, 2400), (1080, 2460),
-    (1170, 2532), (1179, 2556), (1242, 2688), (1284, 2778),
-    (1290, 2796), (1440, 2960), (1440, 3040), (1440, 3088),
+    (1280, 720),
+    (1366, 768),
+    (1440, 900),
+    (1536, 864),
+    (1600, 900),
+    (1920, 1080),
+    (2560, 1440),
+    (3840, 2160),
+    (720, 1280),
+    (768, 1366),
+    (900, 1440),
+    (864, 1536),
+    (900, 1600),
+    (1080, 1920),
+    (1080, 2340),
+    (1080, 2400),
+    (1080, 2460),
+    (1170, 2532),
+    (1179, 2556),
+    (1242, 2688),
+    (1284, 2778),
+    (1290, 2796),
+    (1440, 2960),
+    (1440, 3040),
+    (1440, 3088),
     (1440, 3200),
 }
 
@@ -35,9 +54,7 @@ def _dhash(image) -> str:
     for y in range(8):
         row = y * 9
         for x in range(8):
-            bits = (bits << 1) | int(
-                pixels[row + x] > pixels[row + x + 1]
-            )
+            bits = (bits << 1) | int(pixels[row + x] > pixels[row + x + 1])
     return f"{bits:016x}"
 
 
@@ -47,11 +64,7 @@ def _looks_like_screenshot(asset, image, fmt: str | None, exif) -> bool:
     software = str(exif.get(305, "") if exif else "").casefold()
     if "screenshot" in software or "screen shot" in software:
         return True
-    return (
-        fmt == "PNG"
-        and not exif
-        and tuple(image.size) in COMMON_SCREEN_SIZES
-    )
+    return fmt == "PNG" and not exif and tuple(image.size) in COMMON_SCREEN_SIZES
 
 
 VARIANTS = {
@@ -83,9 +96,7 @@ def validate_image_asset(asset):
 
     if asset.purpose == UploadAsset.Purpose.LISTING_IMAGE:
         if width < 400:
-            raise ValueError(
-                "Listing photos must be at least 400 pixels wide."
-            )
+            raise ValueError("Listing photos must be at least 400 pixels wide.")
         if _looks_like_screenshot(asset, image, fmt, exif):
             raise ValueError(
                 "Screenshots are not allowed. Upload a real photo of the item."
@@ -99,6 +110,7 @@ def validate_image_asset(asset):
     }
     asset.save(update_fields=("metadata", "updated_at"))
     return True
+
 
 def process_image_asset(asset):
     if not asset.mime_type.startswith("image/"):

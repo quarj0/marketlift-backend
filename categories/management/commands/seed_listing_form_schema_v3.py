@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import json
@@ -131,9 +130,11 @@ class Command(BaseCommand):
                 )
                 options_changed = options_changed or created
 
-            deactivated = field.options.exclude(
-                value__in=requested_values
-            ).filter(active=True).update(active=False)
+            deactivated = (
+                field.options.exclude(value__in=requested_values)
+                .filter(active=True)
+                .update(active=False)
+            )
             options_changed = options_changed or bool(deactivated)
 
         if changed or options_changed:
@@ -185,26 +186,22 @@ class Command(BaseCommand):
                 )
                 options_changed = options_changed or created
 
-            deactivated = field.options.exclude(
-                value__in=requested_values
-            ).filter(active=True).update(active=False)
+            deactivated = (
+                field.options.exclude(value__in=requested_values)
+                .filter(active=True)
+                .update(active=False)
+            )
             options_changed = options_changed or bool(deactivated)
 
             if changed or options_changed:
                 field.category.schema_version += 1
-                field.category.save(
-                    update_fields=("schema_version", "updated_at")
-                )
+                field.category.save(update_fields=("schema_version", "updated_at"))
             processed += 1
 
         return processed
 
     def handle(self, *args, **options):
-        path = (
-            Path(__file__).resolve().parents[2]
-            / "data"
-            / "form_schema_v3.json"
-        )
+        path = Path(__file__).resolve().parents[2] / "data" / "form_schema_v3.json"
         data = json.loads(path.read_text(encoding="utf-8"))
         dry_run = options["dry_run"]
 
@@ -227,9 +224,7 @@ class Command(BaseCommand):
                         self.style.WARNING(f"{slug}: category missing; skipped.")
                     )
                     continue
-                condition_values = (
-                    condition_sets[policy_name] if policy_name else None
-                )
+                condition_values = condition_sets[policy_name] if policy_name else None
                 self._set_condition(category, condition_values)
 
             color_fields = self._apply_global_color_catalog(

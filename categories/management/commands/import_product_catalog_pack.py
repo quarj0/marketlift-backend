@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
@@ -7,25 +6,56 @@ from django.db import transaction
 from categories.catalogs import import_category_catalog
 from categories.models import Category
 
-
 PACKS = {
     "phones": {"file": "phones.csv", "target": "phones", "fallback": "phones"},
-    "computers": {"file": "computers.csv", "target": "computers", "fallback": "computers"},
+    "computers": {
+        "file": "computers.csv",
+        "target": "computers",
+        "fallback": "computers",
+    },
     "vehicles": {"file": "vehicles.csv", "target": "cars", "fallback": "vehicles"},
-    "electronics": {"file": "electronics.csv", "target": "other-electronics", "fallback": "electronics"},
-    "printers-scanners": {"file": "printers-scanners.csv", "target": "printers-scanners", "fallback": "printers-scanners"},
-    "networking": {"file": "networking.csv", "target": "networking", "fallback": "networking"},
+    "electronics": {
+        "file": "electronics.csv",
+        "target": "other-electronics",
+        "fallback": "electronics",
+    },
+    "printers-scanners": {
+        "file": "printers-scanners.csv",
+        "target": "printers-scanners",
+        "fallback": "printers-scanners",
+    },
+    "networking": {
+        "file": "networking.csv",
+        "target": "networking",
+        "fallback": "networking",
+    },
     "gaming": {"file": "gaming.csv", "target": "gaming", "fallback": "gaming"},
     "cameras": {"file": "cameras.csv", "target": "cameras", "fallback": "cameras"},
     "audio": {"file": "audio.csv", "target": "audio", "fallback": "audio"},
-    "tvs-video": {"file": "tvs-video.csv", "target": "tvs-video", "fallback": "tvs-video"},
-    "smart-watches": {"file": "smart-watches.csv", "target": "smart-watches", "fallback": "smart-watches"},
+    "tvs-video": {
+        "file": "tvs-video.csv",
+        "target": "tvs-video",
+        "fallback": "tvs-video",
+    },
+    "smart-watches": {
+        "file": "smart-watches.csv",
+        "target": "smart-watches",
+        "fallback": "smart-watches",
+    },
     "tablets": {"file": "tablets.csv", "target": "tablets", "fallback": "tablets"},
     "dogs": {"file": "dogs.csv", "target": "dogs", "fallback": "dogs"},
     "cats": {"file": "cats.csv", "target": "cats", "fallback": "cats"},
     "birds": {"file": "birds.csv", "target": "birds", "fallback": "birds"},
-    "livestock": {"file": "livestock.csv", "target": "livestock", "fallback": "livestock"},
-    "other-pets": {"file": "other-pets.csv", "target": "other-pets", "fallback": "other-pets"},
+    "livestock": {
+        "file": "livestock.csv",
+        "target": "livestock",
+        "fallback": "livestock",
+    },
+    "other-pets": {
+        "file": "other-pets.csv",
+        "target": "other-pets",
+        "fallback": "other-pets",
+    },
 }
 
 

@@ -15,15 +15,32 @@ from django.db.models import Count
 
 from categories.models import Category
 from uploads.models import UploadAsset
-from uploads.services import claim_upload, complete_upload, prepare_upload, retire_upload
+from uploads.services import (
+    claim_upload,
+    complete_upload,
+    prepare_upload,
+    retire_upload,
+)
 from uploads.storage import get_storage_backend
-
 
 GENERIC_SLUG_PREFIXES = ("other-",)
 BAD_TITLE_WORDS = {
-    "logo", "icon", "diagram", "map", "flag", "coat of arms", "poster",
-    "drawing", "illustration", "symbol", "chart", "screenshot", "svg",
-    "painting", "stamp", "sign",
+    "logo",
+    "icon",
+    "diagram",
+    "map",
+    "flag",
+    "coat of arms",
+    "poster",
+    "drawing",
+    "illustration",
+    "symbol",
+    "chart",
+    "screenshot",
+    "svg",
+    "painting",
+    "stamp",
+    "sign",
 }
 ALLOWED_LICENSE_PREFIXES = (
     "cc0",
@@ -90,9 +107,7 @@ class Command(BaseCommand):
         if user is None:
             user = qs.filter(is_staff=True).order_by("date_joined").first()
         if user is None:
-            raise CommandError(
-                "No active staff user exists. Pass --owner-email."
-            )
+            raise CommandError("No active staff user exists. Pass --owner-email.")
         return user
 
     def _query_map(self):
@@ -111,10 +126,14 @@ class Command(BaseCommand):
 
         # The image is inherited/shared when another active category references
         # the same UploadAsset. Those are exactly the duplicates we want to fix.
-        return Category.objects.filter(
-            active=True,
-            image_upload_id=category.image_upload_id,
-        ).exclude(pk=category.pk).exists()
+        return (
+            Category.objects.filter(
+                active=True,
+                image_upload_id=category.image_upload_id,
+            )
+            .exclude(pk=category.pk)
+            .exists()
+        )
 
     def _search_commons(
         self,
@@ -139,7 +158,7 @@ class Command(BaseCommand):
             },
         )
         response.raise_for_status()
-        pages = ((response.json().get("query") or {}).get("pages") or [])
+        pages = (response.json().get("query") or {}).get("pages") or []
 
         candidates = []
         for page in pages:
@@ -211,9 +230,9 @@ class Command(BaseCommand):
                 break
             retry_after = response.headers.get("retry-after")
             try:
-                delay = float(retry_after) if retry_after else (2 ** attempt)
+                delay = float(retry_after) if retry_after else (2**attempt)
             except (TypeError, ValueError):
-                delay = 2 ** attempt
+                delay = 2**attempt
             time.sleep(max(1.0, min(delay, 12.0)))
         else:
             raise CommandError(
@@ -222,10 +241,7 @@ class Command(BaseCommand):
 
         payload = response.content
         content_type = (
-            response.headers.get("content-type", "")
-            .split(";", 1)[0]
-            .strip()
-            .lower()
+            response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
         )
         if content_type not in {"image/jpeg", "image/png", "image/webp"}:
             content_type = candidate["mime_type"]
@@ -362,8 +378,7 @@ class Command(BaseCommand):
             timeout=httpx.Timeout(30.0),
             headers={
                 "User-Agent": (
-                    "MarketliftCategoryVisualSeeder/2.0 "
-                    "(category image curation)"
+                    "MarketliftCategoryVisualSeeder/2.0 " "(category image curation)"
                 ),
                 "Accept": "application/json,image/*;q=0.9,*/*;q=0.2",
             },
@@ -405,9 +420,7 @@ class Command(BaseCommand):
                     succeeded += 1
                     time.sleep(0.75)
                     self.stdout.write(
-                        self.style.SUCCESS(
-                            f"{category.slug}: {candidate['title']}"
-                        )
+                        self.style.SUCCESS(f"{category.slug}: {candidate['title']}")
                     )
                 except Exception as exc:
                     failed.append((category.slug, str(exc)))
@@ -428,7 +441,6 @@ class Command(BaseCommand):
         if failed:
             self.stdout.write(
                 self.style.WARNING(
-                    "Review these in Admin: "
-                    + ", ".join(slug for slug, _ in failed)
+                    "Review these in Admin: " + ", ".join(slug for slug, _ in failed)
                 )
             )

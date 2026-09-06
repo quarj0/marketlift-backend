@@ -1,4 +1,5 @@
 from django.urls import path
+from accounts.export import AccountActivityExportView
 from .views import (
     AdminInvitationAcceptView,
     AdminLoginView,
@@ -15,6 +16,11 @@ from .views import (
 )
 
 urlpatterns = [
+    path(
+        "activity-export/",
+        AccountActivityExportView.as_view(),
+        name="account-activity-export",
+    ),
     path("csrf/", CsrfView.as_view(), name="auth-csrf"),
     path("session/", SessionView.as_view(), name="auth-session"),
     path("login/", LoginView.as_view(), name="auth-login"),

@@ -19,12 +19,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         listing_id = (options.get("listing") or "").strip()
-        qs = Listing.objects.filter(
-            seller_deleted_at__isnull=True
-        ).select_related(
-            "category", "seller"
-        ).prefetch_related(
-            "media", "attribute_values"
+        qs = (
+            Listing.objects.filter(seller_deleted_at__isnull=True)
+            .select_related("category", "seller")
+            .prefetch_related("media", "attribute_values")
         )
 
         listing = (
@@ -45,9 +43,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Images: {listing.media.count()}")
         self.stdout.write(
             "Attributes: "
-            + ", ".join(
-                sorted(item.key for item in listing.attribute_values.all())
-            )
+            + ", ".join(sorted(item.key for item in listing.attribute_values.all()))
         )
 
         with transaction.atomic():
@@ -57,9 +53,7 @@ class Command(BaseCommand):
                 if hasattr(exc, "message_dict"):
                     self.stderr.write(self.style.ERROR(str(exc.message_dict)))
                 else:
-                    self.stderr.write(
-                        self.style.ERROR("; ".join(exc.messages))
-                    )
+                    self.stderr.write(self.style.ERROR("; ".join(exc.messages)))
                 transaction.set_rollback(True)
                 return
 

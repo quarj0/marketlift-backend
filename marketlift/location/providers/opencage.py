@@ -38,7 +38,9 @@ def _state_code(components: dict) -> str:
 def _candidate_from_result(result: dict) -> LocationCandidate:
     components = result.get("components") or {}
     geometry = result.get("geometry") or {}
-    lat, lng = validate_coordinates(geometry.get("lat"), geometry.get("lng"), required=True)
+    lat, lng = validate_coordinates(
+        geometry.get("lat"), geometry.get("lng"), required=True
+    )
     return LocationCandidate(
         latitude=lat,
         longitude=lng,
@@ -47,8 +49,12 @@ def _candidate_from_result(result: dict) -> LocationCandidate:
         country=_first(components, "country")[:120],
         state=_first(components, "state", "region", "province")[:100],
         state_code=_state_code(components),
-        city=_first(components, "city", "town", "municipality", "village", "county")[:100],
-        district=_first(components, "suburb", "neighbourhood", "city_district", "borough", "quarter")[:120],
+        city=_first(components, "city", "town", "municipality", "village", "county")[
+            :100
+        ],
+        district=_first(
+            components, "suburb", "neighbourhood", "city_district", "borough", "quarter"
+        )[:120],
         provider="opencage",
         provider_id="",
     )
@@ -70,11 +76,17 @@ class OpenCageGeocoder(GeocoderBackend):
         ).rstrip("/")
         self.timeout = max(
             1.0,
-            min(float(getattr(settings, "MARKETLIFT_GEOCODER_TIMEOUT_SECONDS", 4.0)), 10.0),
+            min(
+                float(getattr(settings, "MARKETLIFT_GEOCODER_TIMEOUT_SECONDS", 4.0)),
+                10.0,
+            ),
         )
-        self.language = str(
-            getattr(settings, "MARKETLIFT_GEOCODER_LANGUAGE", "pt-BR,en")
-        ).split(",", 1)[0].strip() or "pt-BR"
+        self.language = (
+            str(getattr(settings, "MARKETLIFT_GEOCODER_LANGUAGE", "pt-BR,en"))
+            .split(",", 1)[0]
+            .strip()
+            or "pt-BR"
+        )
         self.cache_seconds = int(
             getattr(settings, "MARKETLIFT_GEOCODER_CACHE_SECONDS", 86400)
         )
@@ -107,7 +119,9 @@ class OpenCageGeocoder(GeocoderBackend):
         rows = payload.get("results") if isinstance(payload, dict) else None
         return [row for row in (rows or []) if isinstance(row, dict)]
 
-    def geocode(self, query: str, *, limit: int = 5, country_code: str | None = None) -> list[LocationCandidate]:
+    def geocode(
+        self, query: str, *, limit: int = 5, country_code: str | None = None
+    ) -> list[LocationCandidate]:
         query = (query or "").strip()
         limit = max(1, min(int(limit), 8))
         country = (country_code or default_country_code()).strip().lower()
@@ -115,28 +129,44 @@ class OpenCageGeocoder(GeocoderBackend):
             raise ValidationError(
                 {"country_code": "Country code must be a two-letter ISO code."}
             )
-        cache_key = "marketlift:geocode:opencage:" + hashlib.sha256(
-            f"{self.language}|{country}|{query}|{limit}".encode()
-        ).hexdigest()
+        cache_key = (
+            "marketlift:geocode:opencage:"
+            + hashlib.sha256(
+                f"{self.language}|{country}|{query}|{limit}".encode()
+            ).hexdigest()
+        )
         cached = cache.get(cache_key)
         if cached is not None:
             return [LocationCandidate(**item) for item in cached]
         candidates = [
             _candidate_from_result(row)
-            for row in self._request({"q": query, "countrycode": country, "limit": limit})
+            for row in self._request(
+                {"q": query, "countrycode": country, "limit": limit}
+            )
         ]
-        cache.set(cache_key, [item.__dict__ for item in candidates], timeout=self.cache_seconds)
+        cache.set(
+            cache_key,
+            [item.__dict__ for item in candidates],
+            timeout=self.cache_seconds,
+        )
         return candidates
 
     def reverse(self, latitude: float, longitude: float) -> LocationCandidate | None:
         lat, lng = validate_coordinates(latitude, longitude, required=True)
-        cache_key = "marketlift:reverse:opencage:" + hashlib.sha256(
-            f"{self.language}|{lat:.5f}|{lng:.5f}".encode()
-        ).hexdigest()
+        cache_key = (
+            "marketlift:reverse:opencage:"
+            + hashlib.sha256(
+                f"{self.language}|{lat:.5f}|{lng:.5f}".encode()
+            ).hexdigest()
+        )
         cached = cache.get(cache_key)
         if cached is not None:
             return LocationCandidate(**cached) if cached else None
         rows = self._request({"q": f"{lat:.6f},{lng:.6f}", "limit": 1})
         candidate = _candidate_from_result(rows[0]) if rows else None
-        cache.set(cache_key, candidate.__dict__ if candidate else {}, timeout=self.cache_seconds)
+        cache.set(
+            cache_key,
+            candidate.__dict__ if candidate else {},
+            timeout=self.cache_seconds,
+        )
         return candidate

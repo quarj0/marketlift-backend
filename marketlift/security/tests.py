@@ -300,9 +300,7 @@ class SecurityHardeningTests(TestCase):
         code = re.search(r"\b(\d{6})\b", mail.outbox[0].body).group(1)
         verified = self.client.post(
             "/api/v1/auth/admin-login/verify/",
-            data=json.dumps(
-                {"challengeId": payload["challengeId"], "code": code}
-            ),
+            data=json.dumps({"challengeId": payload["challengeId"], "code": code}),
             content_type="application/json",
         )
         self.assertEqual(verified.status_code, 200)
@@ -330,7 +328,9 @@ class SecurityHardeningTests(TestCase):
         middleware = SecurityRateLimitMiddleware(
             lambda request: JsonResponse({"ok": True})
         )
-        body = json.dumps({"query": "query Dashboard { adminDashboard { counts { totalUsers } } }"})
+        body = json.dumps(
+            {"query": "query Dashboard { adminDashboard { counts { totalUsers } } }"}
+        )
         for _ in range(3):
             response = middleware(
                 self.factory.post(
@@ -348,9 +348,7 @@ class SecurityHardeningTests(TestCase):
         middleware = SecurityRateLimitMiddleware(
             lambda request: JsonResponse({"ok": True})
         )
-        body = json.dumps(
-            {"query": "mutation MarkRead { markAllNotificationsRead }"}
-        )
+        body = json.dumps({"query": "mutation MarkRead { markAllNotificationsRead }"})
         first = middleware(
             self.factory.post(
                 "/graphql/",
@@ -373,4 +371,3 @@ class SecurityHardeningTests(TestCase):
             json.loads(second.content)["errors"][0]["extensions"]["code"],
             "GRAPHQL_MUTATION_RATE_LIMITED",
         )
-

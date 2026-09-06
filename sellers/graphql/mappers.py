@@ -51,6 +51,15 @@ def admin_seller_to_type(seller) -> AdminSellerType:
     return AdminSellerType(
         id=str(seller.id),
         user_id=str(seller.user_id),
+        owner_name=seller.user.full_name or seller.user.email,
+        location=LocationType(
+            country_code=seller.country_code,
+            state=seller.user.state,
+            state_code=seller.user.state_code,
+            city=seller.user.city,
+            district=seller.user.district or None,
+        ),
+        plan_name=getattr(seller, "_admin_plan_name", None),
         name=seller.display_name or seller.user.full_name or seller.user.email,
         email=seller.user.email,
         seller_type=seller.seller_type,

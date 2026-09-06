@@ -22,7 +22,10 @@ from accounts.auth_services import (
 )
 from accounts.models import User
 from audit.services import record_audit_event
-from marketlift.security.rate_limit import enforce_identity_rate_limit, enforce_rate_limit
+from marketlift.security.rate_limit import (
+    enforce_identity_rate_limit,
+    enforce_rate_limit,
+)
 from platform_settings.models import PlatformConfiguration
 
 from .serializers import (
@@ -36,7 +39,6 @@ from .serializers import (
     VerifySerializer,
     serialize_session_user,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -155,9 +157,7 @@ class AdminLoginView(APIView):
         challenge_id = uuid.uuid4()
         if user is not None:
             try:
-                challenge, _ = create_admin_login_challenge(
-                    user=user, request=request
-                )
+                challenge, _ = create_admin_login_challenge(user=user, request=request)
             except Exception:
                 logger.exception(
                     "Could not deliver administrator sign-in code for user %s",
