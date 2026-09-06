@@ -16,11 +16,17 @@ from categories.management.commands.import_vehicle_catalog_dataset import (
 )
 from categories.models import Category
 
-FIPE_BASE_URL = "https://fipe.parallelum.com.br/api/v2"
+FIPE_BASE_URL = os.environ.get(
+    "FIPE_API_BASE_URL", "https://fipe.parallelum.com.br/api/v2"
+).rstrip("/")
 FIPE_TYPES = {
     "cars": "cars",
     "motorcycles": "motorcycles",
     "trucks": "trucks",
+    # FIPE exposes trucks/microbuses as one dataset. Marketlift keeps
+    # buses/vans as a user-facing category and uses that catalog with
+    # "Other / Not listed" available for vans classified elsewhere by FIPE.
+    "buses": "trucks",
 }
 RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
@@ -69,7 +75,9 @@ def _year_from_code(value: object, *, current_year: int) -> int | None:
         year = current_year if raw_year == "32000" else int(raw_year)
     except ValueError:
         return None
-    return year if 1886 <= year <= current_year else None
+    # Brazilian model years commonly appear one calendar year ahead
+    # (for example a 2027 model during 2026), so preserve next-model-year data.
+    return year if 1886 <= year <= current_year + 1 else None
 
 
 def fetch_fipe_rows(
@@ -159,8 +167,8 @@ def fetch_fipe_rows(
 
 class Command(BaseCommand):
     help = (
-        "Refresh Brazil-specific car, motorcycle, and truck make/model/year "
-        "selectors from the FIPE-compatible API."
+        "Refresh Brazil-specific car, motorcycle, truck, and bus/van "
+        "make/model/year selectors from the FIPE-compatible API."
     )
 
     def add_arguments(self, parser):
@@ -181,8 +189,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "--max-requests",
             type=int,
-            default=500,
-            help="Safety cap for FIPE HTTP requests (default: 500).",
+            default=None,
+            help=(
+                "Safety cap for FIPE HTTP requests. Defaults to 500 without "
+                "a token, or FIPE_SYNC_MAX_REQUESTS/10000 when authenticated."
+            ),
         )
         parser.add_argument(
             "--request-retries",
@@ -200,7 +211,23 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         selected = options["category"] or list(FIPE_TYPES)
+        token = (
+            os.environ.get("FIPE_API_TOKEN", "").strip()
+            or os.environ.get("FIPE_API_KEY", "").strip()
+            or os.environ.get("FIPE_TOKEN", "").strip()
+        )
         max_requests = options["max_requests"]
+        if max_requests is None:
+            configured_limit = os.environ.get("FIPE_SYNC_MAX_REQUESTS", "").strip()
+            if configured_limit:
+                try:
+                    max_requests = int(configured_limit)
+                except ValueError as exc:
+                    raise CommandError(
+                        "FIPE_SYNC_MAX_REQUESTS must be a positive integer."
+                    ) from exc
+            else:
+                max_requests = 10000 if token else 500
         if max_requests < 1:
             raise CommandError("--max-requests must be greater than zero.")
         request_retries = options["request_retries"]
@@ -211,13 +238,24 @@ class Command(BaseCommand):
             raise CommandError("--retry-backoff cannot be negative.")
 
         headers = {"User-Agent": "Marketlift catalog sync/1.0 (marketlift.com.br)"}
-        token = os.environ.get("FIPE_API_TOKEN", "").strip()
         if token:
             headers["X-Subscription-Token"] = token
 
         fetched = {}
+        fetched_by_endpoint = {}
         with httpx.Client(timeout=httpx.Timeout(30.0), headers=headers) as client:
             for vehicle_type in selected:
+                endpoint = FIPE_TYPES[vehicle_type]
+                cached = fetched_by_endpoint.get(endpoint)
+                if cached is not None:
+                    cached_rows, cached_brands, _ = cached
+                    fetched[vehicle_type] = (
+                        set(cached_rows),
+                        set(cached_brands),
+                        0,
+                    )
+                    continue
+
                 rows, brands, requests = fetch_fipe_rows(
                     client,
                     vehicle_type=vehicle_type,
@@ -231,6 +269,11 @@ class Command(BaseCommand):
                     raise CommandError(
                         f"FIPE returned no usable {vehicle_type} model-year rows."
                     )
+                fetched_by_endpoint[endpoint] = (
+                    set(rows),
+                    set(brands),
+                    requests,
+                )
                 fetched[vehicle_type] = (rows, brands, requests)
 
         with transaction.atomic():

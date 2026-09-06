@@ -118,7 +118,7 @@ def _read_source(path: Path) -> dict[str, set[tuple[str, str, int]]]:
                 ) from exc
             if not make or not model:
                 raise CommandError(f"Row {row_number}: make and model are required.")
-            if not 1886 <= year <= date.today().year:
+            if not 1886 <= year <= date.today().year + 1:
                 raise CommandError(
                     f"Row {row_number}: year {year} is outside the valid range."
                 )
@@ -254,7 +254,7 @@ def existing_vehicle_rows(category: Category) -> set[tuple[str, str, int]]:
             year = int(link.option.value)
         except ValueError:
             continue
-        if make and 1886 <= year <= current_year:
+        if make and 1886 <= year <= current_year + 1:
             rows.add((make, link.parent_option.label, year))
     return rows
 

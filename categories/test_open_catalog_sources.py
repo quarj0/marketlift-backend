@@ -7,6 +7,7 @@ import httpx
 from django.test import SimpleTestCase
 
 from categories.management.commands.sync_fipe_vehicle_catalog import (
+    FIPE_TYPES,
     _year_from_code,
     fetch_fipe_rows,
 )
@@ -69,10 +70,14 @@ class OpenVehicleCatalogTests(SimpleTestCase):
 
 
 class FipeVehicleCatalogTests(SimpleTestCase):
-    def test_future_model_years_are_rejected_until_calendar_reaches_them(self):
+    def test_next_model_year_is_supported_for_brazilian_catalogs(self):
         self.assertEqual(_year_from_code("32000-1", current_year=2026), 2026)
         self.assertEqual(_year_from_code("2026-5", current_year=2026), 2026)
-        self.assertIsNone(_year_from_code("2027-5", current_year=2026))
+        self.assertEqual(_year_from_code("2027-5", current_year=2026), 2027)
+        self.assertIsNone(_year_from_code("2028-5", current_year=2026))
+
+    def test_buses_vans_use_fipe_truck_microbus_dataset(self):
+        self.assertEqual(FIPE_TYPES["buses"], "trucks")
 
     def test_fipe_rows_follow_exact_brand_model_year_combinations(self):
         client = MagicMock()
@@ -85,19 +90,26 @@ class FipeVehicleCatalogTests(SimpleTestCase):
                 ]
             ),
             response([{"code": "7693", "name": "Civic Sedan EXL"}]),
+            response([{"code": "7693", "name": "Civic Sedan EXL"}]),
         ]
 
         rows, brands, requests = fetch_fipe_rows(
             client,
             vehicle_type="cars",
             requested_brands=["Honda"],
-            max_requests=3,
+            max_requests=4,
             current_year=2026,
         )
 
-        self.assertEqual(rows, {("Honda", "Civic Sedan EXL", 2020)})
+        self.assertEqual(
+            rows,
+            {
+                ("Honda", "Civic Sedan EXL", 2020),
+                ("Honda", "Civic Sedan EXL", 2027),
+            },
+        )
         self.assertEqual(brands, {"Honda"})
-        self.assertEqual(requests, 3)
+        self.assertEqual(requests, 4)
         self.assertIn(
             "/cars/brands/25/years/2020-5/models",
             client.get.call_args_list[-1].args[0],
