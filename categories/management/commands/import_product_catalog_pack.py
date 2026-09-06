@@ -13,6 +13,7 @@ PACKS = {
         "target": "computers",
         "fallback": "computers",
     },
+    "vehicles": {"file": "vehicles.csv", "target": "cars", "fallback": "vehicles"},
     "electronics": {
         "file": "electronics.csv",
         "target": "other-electronics",

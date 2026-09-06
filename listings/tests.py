@@ -6,14 +6,14 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from accounts.models import User
-from categories.models import Category
+from categories.models import Category, CategoryField
 from promotions.models import PromotionProduct
 from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan
 
 from .models import Listing
 from .search import apply_listing_filters
-from .services import create_listing, publish_listing, update_listing
+from .services import _validate_scalar, create_listing, publish_listing, update_listing
 
 
 class MarketplaceDomainTests(TestCase):
@@ -137,6 +137,23 @@ class MarketplaceDomainTests(TestCase):
 
         with self.assertRaises(ValidationError):
             create_listing(**payload)
+
+    def test_vehicle_listing_accepts_next_model_year(self):
+        category = Category.objects.create(slug="cars", name="Cars")
+        field = CategoryField.objects.create(
+            category=category,
+            key="year",
+            label="Model year",
+            field_type=CategoryField.FieldType.SELECT,
+            allow_custom_value=True,
+        )
+
+        self.assertEqual(
+            _validate_scalar(field, str(date.today().year + 1)),
+            str(date.today().year + 1),
+        )
+        with self.assertRaises(ValidationError):
+            _validate_scalar(field, str(date.today().year + 2))
 
     def test_parent_category_filter_includes_descendant_listings(self):
         parent = Category.objects.get(slug="electronics")

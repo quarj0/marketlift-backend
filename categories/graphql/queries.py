@@ -3,6 +3,8 @@ from categories.dynamic_catalogs import enrich_category_field_options
 from categories.models import Category, CategoryField
 from categories.options import option_is_current
 from marketlift.graphql.auth import require_staff
+from marketlift.graphql.auth import request_from_info
+from marketlift.security.rate_limit import enforce_rate_limit
 from .mappers import category_to_type
 from .types import CategoryFieldOptionType, CategoryType
 
@@ -40,6 +42,7 @@ class CategoryQuery:
     @strawberry.field
     def category_field_options(
         self,
+        info: strawberry.Info,
         category_id: str,
         field_id: str,
         parent_value: str | None = None,
@@ -52,6 +55,14 @@ class CategoryQuery:
             )
         except CategoryField.DoesNotExist:
             return []
+
+        if field.lazy_options:
+            enforce_rate_limit(
+                request_from_info(info),
+                "dynamic-catalog-options",
+                limit=120,
+                window=60,
+            )
 
         term = (search or "").strip()
         parent_option = None

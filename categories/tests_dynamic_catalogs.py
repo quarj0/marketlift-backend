@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from django.core.cache import cache
 from django.test import TestCase, override_settings
 
-from categories.dynamic_catalogs import fipe
+from categories.dynamic_catalogs import fipe, icecat
 from categories.dynamic_catalogs.service import enrich_category_field_options
 from categories.models import (
     Category,
@@ -141,3 +141,30 @@ class DynamicCatalogTests(TestCase):
         self.assertIsNone(fipe.brands("cars"))
         self.assertIsNone(fipe.brands("cars"))
         get.assert_called_once()
+
+    @patch.dict(
+        "os.environ",
+        {
+            "ICECAT_USERNAME": "marketlift",
+            "ICECAT_API_TOKEN": "secret-api-token",
+            "ICECAT_CONTENT_TOKEN": "secret-content-token",
+            "ICECAT_LANGUAGE": "PT",
+        },
+        clear=False,
+    )
+    @patch("categories.dynamic_catalogs.icecat.httpx.get")
+    def test_icecat_lookup_uses_supported_identifier_and_token_headers(self, get):
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = {"data": {"GeneralInfo": {"IcecatId": "123"}}}
+        get.return_value = response
+
+        result = icecat.lookup_product(gtin="7891234567890")
+
+        self.assertEqual(result["GeneralInfo"]["IcecatId"], "123")
+        _, kwargs = get.call_args
+        self.assertEqual(kwargs["params"]["GTIN"], "7891234567890")
+        self.assertEqual(kwargs["params"]["shopname"], "marketlift")
+        self.assertEqual(kwargs["params"]["lang"], "PT")
+        self.assertEqual(kwargs["headers"]["api-token"], "secret-api-token")
+        self.assertEqual(kwargs["headers"]["content-token"], "secret-content-token")
