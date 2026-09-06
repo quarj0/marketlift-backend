@@ -11,6 +11,8 @@ The previous checkout Neon URL is obsolete. Run the following inside the Railway
 5. Deploy the backend before the marketplace/admin frontends: the new clients require `adminRecordPage`, support message paging, conversation paging, geographic search metadata and sitemap endpoints.
 6. Check `/api/v1/ready/`, an anonymous search, support creation/reply and authenticated admin pagination. Save the revision and check output with the release record.
 
+The backend must include the production GraphQL GET-query fix in `marketlift/urls.py`: cached frontend server reads use GET. Mutation requests still require POST. GraphQL HTTP responses are marked private/no-store; public frontend function caches remain explicitly scoped. Run `python manage.py collectstatic --noinput` during the build or release if the deployment does not already collect backend static assets.
+
 ## Service topology and jobs
 
 Use separate Railway services from the same backend revision and database/Redis environment:

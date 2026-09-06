@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
+from django.views.decorators.cache import never_cache
 from marketlift.api.views import market_profile
 from marketlift.graphql.schema import schema
 from marketlift.graphql.views import MarketliftGraphQLView
@@ -14,10 +15,16 @@ urlpatterns = [
     path("api/v1/", include("marketlift.api.urls")),
     path(
         "graphql/",
-        MarketliftGraphQLView.as_view(
-            schema=schema,
-            graphql_ide="graphiql" if settings.MARKETLIFT_GRAPHQL_IDE_ENABLED else None,
-            allow_queries_via_get=not settings.IS_PRODUCTION,
+        never_cache(
+            MarketliftGraphQLView.as_view(
+                schema=schema,
+                graphql_ide=(
+                    "graphiql" if settings.MARKETLIFT_GRAPHQL_IDE_ENABLED else None
+                ),
+                # Public server-rendered frontend queries use GET. Strawberry still
+                # rejects mutations over GET; POST mutations retain CSRF protection.
+                allow_queries_via_get=True,
+            )
         ),
         name="graphql",
     ),
