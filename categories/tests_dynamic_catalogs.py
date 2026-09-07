@@ -1,5 +1,7 @@
+import importlib
 from unittest.mock import MagicMock, patch
 
+from django.apps import apps as django_apps
 from django.core.cache import cache
 from django.test import TestCase, override_settings
 
@@ -47,6 +49,35 @@ class DynamicCatalogTests(TestCase):
         )
         brands.assert_called_once_with("cars")
 
+    def test_fipe_make_snapshot_covers_the_full_provider_index(self):
+        brands = fipe.brands("cars")
+
+        self.assertGreaterEqual(len(brands), 100)
+        self.assertIn({"code": "161", "name": "Chery"}, brands)
+        self.assertIn({"code": "245", "name": "CAOA Chery"}, brands)
+        self.assertIn({"code": "23", "name": "Chevrolet"}, brands)
+        self.assertIn({"code": "59", "name": "Volkswagen"}, brands)
+
+    def test_complete_fipe_make_migration_replaces_the_curated_subset(self):
+        category = Category.objects.create(slug="cars", name="Cars")
+        make = self.field(category, "make")
+        retired = CategoryFieldOption.objects.create(
+            field=make,
+            value="not-a-fipe-make",
+            label="Not a FIPE make",
+        )
+        migration = importlib.import_module(
+            "categories.migrations.0008_seed_complete_fipe_makes"
+        )
+
+        migration.seed_complete_fipe_makes(django_apps, None)
+
+        self.assertEqual(make.options.filter(active=True).count(), 107)
+        self.assertTrue(make.options.filter(value="chevrolet", active=True).exists())
+        self.assertTrue(make.options.filter(value="chery", active=True).exists())
+        retired.refresh_from_db()
+        self.assertFalse(retired.active)
+
     @patch("categories.dynamic_catalogs.service.fipe.models")
     @patch("categories.dynamic_catalogs.service.fipe.brands")
     def test_fipe_model_hydration_fetches_only_selected_make(self, brands, models):
@@ -85,9 +116,7 @@ class DynamicCatalogTests(TestCase):
         civic = CategoryFieldOption.objects.create(
             field=model, value="Civic Sedan EXL", label="Civic Sedan EXL"
         )
-        CategoryFieldOptionDependency.objects.create(
-            option=civic, parent_option=honda
-        )
+        CategoryFieldOptionDependency.objects.create(option=civic, parent_option=honda)
         brands.return_value = [{"code": "25", "name": "Honda"}]
         models.return_value = [{"code": "7693", "name": "Civic Sedan EXL"}]
         years.return_value = [
@@ -98,19 +127,13 @@ class DynamicCatalogTests(TestCase):
 
         enrich_category_field_options(year, parent_option=civic)
 
-        self.assertTrue(
-            year.options.filter(value="2027", active=True).exists()
-        )
-        self.assertTrue(
-            year.options.filter(value="2026", active=True).exists()
-        )
+        self.assertTrue(year.options.filter(value="2027", active=True).exists())
+        self.assertTrue(year.options.filter(value="2026", active=True).exists())
         years.assert_called_once_with("cars", "25", "7693")
 
     @patch("categories.dynamic_catalogs.service.wikidata.models_for_brand")
     @patch("categories.dynamic_catalogs.service.wikidata.brands_for_category")
-    def test_wikidata_adds_models_to_curated_electronics_branch(
-        self, brands, models
-    ):
+    def test_wikidata_adds_models_to_curated_electronics_branch(self, brands, models):
         category = Category.objects.create(slug="phones", name="Phones")
         brand = self.field(category, "brand")
         model = self.field(category, "model", parent=brand)
@@ -138,8 +161,8 @@ class DynamicCatalogTests(TestCase):
         response.headers = {"Retry-After": "600"}
         get.return_value = response
 
-        self.assertIsNone(fipe.brands("cars"))
-        self.assertIsNone(fipe.brands("cars"))
+        self.assertIsNone(fipe.models("cars", "1"))
+        self.assertIsNone(fipe.models("cars", "1"))
         get.assert_called_once()
 
     @patch.dict(
