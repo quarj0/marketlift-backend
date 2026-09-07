@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from datetime import date
+from functools import lru_cache
+from pathlib import Path
 
 import httpx
 from django.conf import settings
@@ -14,6 +17,17 @@ VEHICLE_SCOPES = {
     "motorcycles": "motorcycles",
     "trucks-commercial-vehicles": "trucks",
     "buses-vans": "trucks",
+}
+BRAND_SNAPSHOT = (
+    Path(__file__).resolve().parents[1] / "catalog_data" / "fipe_brands_2026_09_07.json"
+)
+BRAND_ALIASES = {
+    "caoa changan": ("caoa-changan", "CAOA Changan"),
+    "caoa chery": ("caoa-chery", "CAOA Chery"),
+    "caoa chery/chery": ("chery", "Chery"),
+    "gm - chevrolet": ("chevrolet", "Chevrolet"),
+    "kia motors": ("kia", "Kia"),
+    "vw - volkswagen": ("volkswagen", "Volkswagen"),
 }
 
 
@@ -107,8 +121,36 @@ def _items(path: str) -> list[dict] | None:
         cache.delete(lock_key)
 
 
+@lru_cache(maxsize=3)
+def _snapshot_brands(scope: str) -> tuple[tuple[str, str], ...]:
+    try:
+        payload = json.loads(BRAND_SNAPSHOT.read_text(encoding="utf-8"))
+        rows = payload["scopes"][scope]
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return ()
+
+    result = []
+    seen = set()
+    for item in rows:
+        code = str(item.get("code") or "").strip()
+        raw_name = " ".join(str(item.get("name") or "").split())
+        value, name = BRAND_ALIASES.get(
+            raw_name.casefold(),
+            ("", raw_name),
+        )
+        key = value or name.casefold()
+        if code and name and key not in seen:
+            seen.add(key)
+            result.append((code, name))
+    return tuple(sorted(result, key=lambda item: item[1].casefold()))
+
+
 def brands(scope: str) -> list[dict] | None:
-    return _items(f"{scope}/brands")
+    """Return the bundled FIPE make index without delaying public requests."""
+    snapshot = _snapshot_brands(scope)
+    if not snapshot:
+        return _items(f"{scope}/brands")
+    return [{"code": code, "name": name} for code, name in snapshot]
 
 
 def models(scope: str, brand_code: str) -> list[dict] | None:
