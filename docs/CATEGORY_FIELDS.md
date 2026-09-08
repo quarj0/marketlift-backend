@@ -21,6 +21,11 @@ refreshes normally require a subscription because the public service has a
 daily request allowance. Although FIPE sources can publish a coming model year
 early, Marketlift discards years later than the server's current calendar year.
 
+To populate only the bundled make lists after categories have been created, run
+`python manage.py seed_fipe_vehicle_makes`. This repeatable command seeds cars,
+motorcycles, commercial vehicles, and buses/vans without fetching models or
+years. Use `--dry-run` first when running it against an existing database.
+
 For open-data expansion, `sync_open_vehicle_catalog` imports exact model-year
 combinations from the US Department of Transportation NHTSA vPIC service. It
 supports cars, motorcycles, trucks, and buses and never imports a year later
