@@ -299,6 +299,7 @@ class Command(BaseCommand):
                     raise CommandError(f"Category '{slug}' does not exist.") from exc
 
                 rows, brands, requests = fetched[vehicle_type]
+                refreshed_rows = set(rows)
                 if options["brand"]:
                     refreshed = {name.casefold() for name in brands}
                     rows |= {
@@ -312,12 +313,27 @@ class Command(BaseCommand):
                     csv_text=_catalog_csv(rows),
                     replace_current=True,
                 )
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"{vehicle_type}: {len(brands)} refreshed brands, "
-                        f"{len({(make, model) for make, model, _ in rows})} models, "
-                        f"{len(rows)} model-year links, {requests} API requests."
+                refreshed_models = len(
+                    {(make, model) for make, model, _ in refreshed_rows}
+                )
+                total_models = len({(make, model) for make, model, _ in rows})
+                brand_word = "brand" if len(brands) == 1 else "brands"
+                if options["brand"]:
+                    summary = (
+                        f"{vehicle_type}: refreshed {len(brands)} {brand_word} with "
+                        f"{refreshed_models} models and "
+                        f"{len(refreshed_rows)} model-year links; "
+                        f"catalog total is {total_models} models and "
+                        f"{len(rows)} model-year links; {requests} API requests."
                     )
+                else:
+                    summary = (
+                        f"{vehicle_type}: refreshed {len(brands)} {brand_word} with "
+                        f"{total_models} models and {len(rows)} model-year links; "
+                        f"{requests} API requests."
+                    )
+                self.stdout.write(
+                    self.style.SUCCESS(summary)
                 )
                 if result.dependencies_created < len(rows):
                     raise CommandError("FIPE dependency import was incomplete.")
