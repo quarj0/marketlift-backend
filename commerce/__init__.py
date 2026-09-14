@@ -26,3 +26,12 @@ _set_default("PAGARME_STATEMENT_DESCRIPTOR", os.getenv("PAGARME_STATEMENT_DESCRI
 _set_default("MARKETLIFT_COMMERCE_FEE_BPS", int(os.getenv("MARKETLIFT_COMMERCE_FEE_BPS", "500")))
 _set_default("MARKETLIFT_BUYER_PROTECTION_HOURS", int(os.getenv("MARKETLIFT_BUYER_PROTECTION_HOURS", "48")))
 _set_default("MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", int(os.getenv("MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", "0")))
+
+if hasattr(settings, "CELERY_BEAT_SCHEDULE"):
+    settings.CELERY_BEAT_SCHEDULE.setdefault(
+        "release-due-commerce-settlements",
+        {
+            "task": "payments.tasks.release_due_commerce_settlements",
+            "schedule": 300.0,
+        },
+    )
