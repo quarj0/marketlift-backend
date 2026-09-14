@@ -245,7 +245,6 @@ def activate_seller_payments(
     payload = dict(recipient_payload)
     payload["code"] = payload.get("code") or f"marketlift-{seller.id}"
     transfer_settings = dict(payload.get("transfer_settings") or {})
-    # Marketlift releases seller proceeds only after delivery / dispute protection.
     transfer_settings["transfer_enabled"] = False
     payload["transfer_settings"] = transfer_settings
 
@@ -335,7 +334,7 @@ def _payment_payload(
     *, method: str, card_id: str | None, split: list[dict]
 ) -> dict:
     if method == CommercePayment.Method.PIX:
-        payment = {
+        return {
             "payment_method": "pix",
             "pix": {
                 "expires_in": int(
@@ -344,7 +343,6 @@ def _payment_payload(
             },
             "split": split,
         }
-        return payment
     if method == CommercePayment.Method.CARD:
         if not card_id:
             raise ValidationError({"cardId": "A tokenized card id is required."})
@@ -430,7 +428,6 @@ def create_checkout_order(
             getattr(settings, "MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", 0)
         )
     else:
-        # Shipping integrations can replace this with a quoted amount later.
         shipping_amount_cents = 0
     total_cents = subtotal_cents + shipping_amount_cents
     seller_proceeds_cents = subtotal_cents - marketplace_fee_cents
@@ -633,8 +630,14 @@ def confirm_order_delivered(
     order = Order.objects.select_for_update().get(pk=order.pk)
     if buyer is not None and order.buyer_id != buyer.id:
         raise ValidationError("Only this order's buyer can confirm delivery.")
-    if order.status in {Order.Status.DISPUTED, Order.Status.REFUNDED}:
-        raise ValidationError("Delivery cannot be confirmed for this order.")
+    allowed_statuses = {
+        Order.Status.AWAITING_SELLER,
+        Order.Status.PROCESSING,
+        Order.Status.SHIPPED,
+        Order.Status.OUT_FOR_DELIVERY,
+    }
+    if order.paid_at is None or order.status not in allowed_statuses:
+        raise ValidationError("Only a paid order in fulfillment can be confirmed delivered.")
     shipment = Shipment.objects.select_for_update().get(order=order)
     if delivery_pin is not None:
         if not shipment.delivery_pin_hash or not check_password(
@@ -742,13 +745,18 @@ def withdraw_available_balance(*, seller) -> dict:
         raise ValidationError("There is no available balance to withdraw.")
     provider = get_commerce_provider()
     balance = provider.get_recipient_balance(account.provider_recipient_id)
-    available_provider = int(
+    raw_available = (
         balance.get("available_amount")
-        or balance.get("available")
-        or balance.get("amount")
-        or 0
+        if balance.get("available_amount") is not None
+        else balance.get("available")
     )
-    if available_provider and available_provider < amount:
+    if raw_available is None:
+        raw_available = balance.get("amount")
+    try:
+        available_provider = int(raw_available)
+    except (TypeError, ValueError):
+        raise ValidationError("The payment provider balance could not be verified.")
+    if available_provider < amount:
         raise ValidationError("The payment provider has not released all proceeds yet.")
     idempotency_key = f"seller-payout:{seller.id}:{uuid.uuid4().hex}"
     transfer = provider.create_transfer(
@@ -757,6 +765,8 @@ def withdraw_available_balance(*, seller) -> dict:
         idempotency_key=idempotency_key,
     )
     transfer_id = str(transfer.get("id") or "")
+    if not transfer_id:
+        raise CommerceProviderError("Pagar.me did not return a transfer id.")
     now = timezone.now()
     for settlement in settlements:
         settlement.status = Settlement.Status.PAYOUT_REQUESTED
@@ -778,13 +788,21 @@ def withdraw_available_balance(*, seller) -> dict:
             currency=settlement.order.currency,
             provider_reference=transfer_id,
         )
-    return {"transfer_id": transfer_id, "amount_cents": amount, "status": transfer.get("status") or "requested"}
+    return {
+        "transfer_id": transfer_id,
+        "amount_cents": amount,
+        "status": transfer.get("status") or "requested",
+    }
 
 
 @transaction.atomic
 def refund_order(*, order: Order, reason: str = "") -> Order:
     order = Order.objects.select_for_update().get(pk=order.pk)
-    payment = order.payments.filter(status=CommercePayment.Status.APPROVED).order_by("-created_at").first()
+    payment = (
+        order.payments.filter(status=CommercePayment.Status.APPROVED)
+        .order_by("-created_at")
+        .first()
+    )
     if not payment or not payment.provider_charge_id:
         raise ValidationError("No refundable approved payment was found.")
     provider = get_commerce_provider()
