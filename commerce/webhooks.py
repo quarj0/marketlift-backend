@@ -5,6 +5,7 @@ import hmac
 import json
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
@@ -50,6 +51,17 @@ def _restore_order_stock(payment: CommercePayment) -> None:
     order.save(update_fields=("status", "cancelled_at", "updated_at"))
 
 
+def _marketlift_order_id(data: dict) -> str:
+    metadata = data.get("metadata") or {}
+    nested_order = data.get("order") or {}
+    nested_metadata = nested_order.get("metadata") or {}
+    return str(
+        metadata.get("marketlift_order_id")
+        or nested_metadata.get("marketlift_order_id")
+        or ""
+    ).strip()
+
+
 def _find_payment(data: dict) -> CommercePayment | None:
     data_id = str(data.get("id") or "")
     order = data.get("order") or {}
@@ -65,8 +77,58 @@ def _find_payment(data: dict) -> CommercePayment | None:
         if payment:
             return payment
     if order_id:
-        return qs.filter(provider_order_id=order_id).first()
+        payment = qs.filter(provider_order_id=order_id).first()
+        if payment:
+            return payment
+
+    # If the provider accepted checkout but Marketlift lost the HTTP response,
+    # provider ids have not yet been persisted. The request metadata is durable
+    # at Pagar.me and lets the webhook recover the exact local order/payment.
+    local_order_id = _marketlift_order_id(data)
+    if local_order_id:
+        try:
+            return qs.filter(order_id=local_order_id).order_by("-created_at").first()
+        except (ValidationError, ValueError):
+            return None
     return None
+
+
+def _sync_payment_provider_references(
+    payment: CommercePayment, data: dict, event_type: str
+) -> None:
+    lowered = event_type.lower()
+    data_id = str(data.get("id") or "").strip()
+    nested_order = data.get("order") or {}
+    nested_order_id = str(
+        nested_order.get("id") or data.get("order_id") or ""
+    ).strip()
+    charges = data.get("charges") or []
+    charge = charges[0] if charges else {}
+    last_tx = data.get("last_transaction") or charge.get("last_transaction") or {}
+
+    changed: list[str] = []
+    if "order" in lowered and data_id and not payment.provider_order_id:
+        payment.provider_order_id = data_id
+        changed.append("provider_order_id")
+    elif nested_order_id and not payment.provider_order_id:
+        payment.provider_order_id = nested_order_id
+        changed.append("provider_order_id")
+
+    charge_id = str(charge.get("id") or "").strip()
+    if not charge_id and "charge" in lowered:
+        charge_id = data_id
+    if charge_id and not payment.provider_charge_id:
+        payment.provider_charge_id = charge_id
+        changed.append("provider_charge_id")
+
+    transaction_id = str(last_tx.get("id") or "").strip()
+    if transaction_id and not payment.provider_transaction_id:
+        payment.provider_transaction_id = transaction_id
+        changed.append("provider_transaction_id")
+
+    if changed:
+        changed.append("updated_at")
+        payment.save(update_fields=tuple(changed))
 
 
 def _recipient_status(status: str) -> tuple[str, bool]:
@@ -159,6 +221,7 @@ def process_pagarme_event(payload: dict, raw: bytes) -> bool:
 
     payment = _find_payment(data)
     if payment:
+        _sync_payment_provider_references(payment, data, event_type)
         if "refund" in lowered:
             finalize_order_refund(
                 payment=payment,
