@@ -3,13 +3,14 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
 
+from accounts.models import User
 from categories.models import Category
 from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
 from marketlift.graphql.errors import not_found_error, validation_error
 
 from commerce.models import Dispute, Order, SellerPaymentAccount, Settlement
-from commerce.policy_models import CategoryCommercePolicy
+from commerce.policy_models import CategoryCommercePolicy, ListingCommerceSettings
 from commerce.services import (
     listing_commerce_state,
     money_to_cents,
@@ -59,6 +60,8 @@ PAID_ORDER_STATES = {
     Order.Status.DISPUTED,
 }
 
+COMMERCE_ADMIN_ROLES = {User.AdminRole.ADMIN, User.AdminRole.FINANCE}
+
 
 def _listing(value: str) -> Listing:
     query = Listing.objects.select_related(
@@ -82,13 +85,32 @@ def _slice(qs, *, offset: int, limit: int, max_limit: int):
     return qs[safe_offset : safe_offset + safe_limit]
 
 
+def _listing_state_with_package_settings(listing: Listing) -> dict:
+    state = listing_commerce_state(listing)
+    try:
+        config = listing.commerce_settings
+    except ListingCommerceSettings.DoesNotExist:
+        config = None
+    state.update(
+        {
+            "package_weight_grams": config.package_weight_grams if config else None,
+            "package_length_cm": config.package_length_cm if config else None,
+            "package_width_cm": config.package_width_cm if config else None,
+            "package_height_cm": config.package_height_cm if config else None,
+        }
+    )
+    return state
+
+
 @strawberry.type
 class CommerceQuery:
     @strawberry.field
     def listing_commerce(
         self, info: strawberry.Info, listing_id: str
     ) -> ListingCommerceType:
-        return listing_commerce_to_type(listing_commerce_state(_listing(listing_id)))
+        return listing_commerce_to_type(
+            _listing_state_with_package_settings(_listing(listing_id))
+        )
 
     @strawberry.field
     def commerce_checkout_quote(
@@ -104,9 +126,13 @@ class CommerceQuery:
             if quantity < 1:
                 raise ValidationError({"quantity": "Quantity must be at least one."})
             if not state["checkout_enabled"]:
-                raise ValidationError({"checkout": "Online checkout is unavailable for this listing."})
+                raise ValidationError(
+                    {"checkout": "Online checkout is unavailable for this listing."}
+                )
             if fulfillment_method not in state["fulfillment_methods"]:
-                raise ValidationError({"fulfillmentMethod": "This delivery method is unavailable."})
+                raise ValidationError(
+                    {"fulfillmentMethod": "This delivery method is unavailable."}
+                )
             if quantity > state["stock_quantity"]:
                 raise ValidationError({"quantity": "Not enough stock is available."})
 
@@ -114,7 +140,9 @@ class CommerceQuery:
             subtotal_cents = unit_price_cents * quantity
             cap = state["max_checkout_value_cents"]
             if cap is not None and subtotal_cents > cap:
-                raise ValidationError({"quantity": "This quantity exceeds the category checkout-value limit."})
+                raise ValidationError(
+                    {"quantity": "This quantity exceeds the category checkout-value limit."}
+                )
 
             shipping_amount_cents = (
                 int(getattr(settings, "MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", 0))
@@ -131,7 +159,9 @@ class CommerceQuery:
                 currency="BRL",
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="CHECKOUT_QUOTE_VALIDATION_ERROR") from exc
+            raise validation_error(
+                exc, code="CHECKOUT_QUOTE_VALIDATION_ERROR"
+            ) from exc
 
     @strawberry.field
     def category_commerce_policy(
@@ -222,7 +252,7 @@ class CommerceQuery:
 
     @strawberry.field
     def admin_commerce_summary(self, info: strawberry.Info) -> AdminCommerceSummaryType:
-        require_staff(info)
+        require_staff(info, roles=COMMERCE_ADMIN_ROLES)
         gross_rows = {
             row["currency"]: {
                 "gross": int(row["gross"] or 0),
@@ -241,7 +271,9 @@ class CommerceQuery:
                     Settlement.Status.BLOCKED,
                 )
             )
-            .exclude(order__status__in=(Order.Status.CANCELLED, Order.Status.REFUNDED))
+            .exclude(
+                order__status__in=(Order.Status.CANCELLED, Order.Status.REFUNDED)
+            )
             .values("order__currency")
             .annotate(held=Sum("amount_cents"))
         }
@@ -267,7 +299,7 @@ class CommerceQuery:
         limit: int = 100,
         offset: int = 0,
     ) -> list[OrderType]:
-        require_staff(info)
+        require_staff(info, roles=COMMERCE_ADMIN_ROLES)
         qs = _order_queryset()
         if status:
             qs = qs.filter(status=status)
@@ -282,7 +314,7 @@ class CommerceQuery:
         limit: int = 100,
         offset: int = 0,
     ) -> list[DisputeType]:
-        require_staff(info)
+        require_staff(info, roles=COMMERCE_ADMIN_ROLES)
         qs = Dispute.objects.select_related("order").order_by("-created_at")
         if status:
             qs = qs.filter(status=status)
