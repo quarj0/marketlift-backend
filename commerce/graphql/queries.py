@@ -6,7 +6,7 @@ from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
 from marketlift.graphql.errors import not_found_error
 
-from commerce.models import Order, SellerPaymentAccount, Dispute
+from commerce.models import Dispute, Order, SellerPaymentAccount
 from commerce.policy_models import CategoryCommercePolicy
 from commerce.services import listing_commerce_state, resolve_category_policy, seller_wallet
 
@@ -28,8 +28,21 @@ from .types import (
 )
 
 
+SELLER_ADDRESS_VISIBLE_STATES = {
+    Order.Status.AWAITING_SELLER,
+    Order.Status.PROCESSING,
+    Order.Status.SHIPPED,
+    Order.Status.OUT_FOR_DELIVERY,
+    Order.Status.DELIVERED,
+    Order.Status.COMPLETED,
+    Order.Status.DISPUTED,
+}
+
+
 def _listing(value: str) -> Listing:
-    query = Listing.objects.select_related("seller", "seller__user", "category", "category__parent")
+    query = Listing.objects.select_related(
+        "seller", "seller__user", "category", "category__parent"
+    )
     try:
         return query.get(Q(pk=value) | Q(slug=value))
     except (Listing.DoesNotExist, ValueError) as exc:
@@ -37,13 +50,23 @@ def _listing(value: str) -> Listing:
 
 
 def _order_queryset():
-    return Order.objects.select_related("buyer", "seller", "seller__user", "listing").prefetch_related("payments", "disputes")
+    return Order.objects.select_related(
+        "buyer", "seller", "seller__user", "listing"
+    ).prefetch_related("payments", "disputes")
+
+
+def _slice(qs, *, offset: int, limit: int, max_limit: int):
+    safe_offset = max(0, offset)
+    safe_limit = max(1, min(limit, max_limit))
+    return qs[safe_offset : safe_offset + safe_limit]
 
 
 @strawberry.type
 class CommerceQuery:
     @strawberry.field
-    def listing_commerce(self, info: strawberry.Info, listing_id: str) -> ListingCommerceType:
+    def listing_commerce(
+        self, info: strawberry.Info, listing_id: str
+    ) -> ListingCommerceType:
         return listing_commerce_to_type(listing_commerce_state(_listing(listing_id)))
 
     @strawberry.field
@@ -67,9 +90,19 @@ class CommerceQuery:
         return category_policy_to_type(category, policy)
 
     @strawberry.field
-    def my_orders(self, info: strawberry.Info, limit: int = 50) -> list[OrderType]:
+    def my_orders(
+        self,
+        info: strawberry.Info,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[OrderType]:
         user = require_user(info)
-        orders = _order_queryset().filter(buyer=user)[: max(1, min(limit, 100))]
+        orders = _slice(
+            _order_queryset().filter(buyer=user),
+            offset=offset,
+            limit=limit,
+            max_limit=100,
+        )
         return [order_to_type(order, buyer_view=True) for order in orders]
 
     @strawberry.field
@@ -82,14 +115,27 @@ class CommerceQuery:
         return order_to_type(order, buyer_view=True)
 
     @strawberry.field
-    def my_seller_orders(self, info: strawberry.Info, limit: int = 100) -> list[OrderType]:
+    def my_seller_orders(
+        self,
+        info: strawberry.Info,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[OrderType]:
         seller = require_seller(info)
-        orders = _order_queryset().filter(seller=seller)[: max(1, min(limit, 200))]
+        orders = _slice(
+            _order_queryset().filter(seller=seller),
+            offset=offset,
+            limit=limit,
+            max_limit=200,
+        )
         return [
             order_to_type(
                 order,
                 buyer_view=False,
-                include_shipping_address=True,
+                include_shipping_address=(
+                    order.paid_at is not None
+                    and order.status in SELLER_ADDRESS_VISIBLE_STATES
+                ),
             )
             for order in orders
         ]
@@ -112,20 +158,30 @@ class CommerceQuery:
 
     @strawberry.field
     def admin_commerce_orders(
-        self, info: strawberry.Info, status: str | None = None, limit: int = 100
+        self,
+        info: strawberry.Info,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> list[OrderType]:
         require_staff(info)
         qs = _order_queryset()
         if status:
             qs = qs.filter(status=status)
-        return [order_to_type(order, buyer_view=False) for order in qs[: max(1, min(limit, 250))]]
+        orders = _slice(qs, offset=offset, limit=limit, max_limit=250)
+        return [order_to_type(order, buyer_view=False) for order in orders]
 
     @strawberry.field
     def admin_commerce_disputes(
-        self, info: strawberry.Info, status: str | None = None, limit: int = 100
+        self,
+        info: strawberry.Info,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> list[DisputeType]:
         require_staff(info)
         qs = Dispute.objects.select_related("order").order_by("-created_at")
         if status:
             qs = qs.filter(status=status)
-        return [dispute_to_type(row) for row in qs[: max(1, min(limit, 250))]]
+        rows = _slice(qs, offset=offset, limit=limit, max_limit=250)
+        return [dispute_to_type(row) for row in rows]
