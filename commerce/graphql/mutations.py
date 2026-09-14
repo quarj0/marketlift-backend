@@ -237,7 +237,10 @@ class CommerceMutation:
         delivery_pin: str,
         proof: JSON | None = None,
     ) -> OrderType:
-        require_staff(info)
+        require_staff(
+            info,
+            roles={User.AdminRole.ADMIN, User.AdminRole.FINANCE},
+        )
         try:
             order = Order.objects.get(pk=str(order_id))
         except (Order.DoesNotExist, ValueError) as exc:
