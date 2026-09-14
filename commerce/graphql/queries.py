@@ -1,14 +1,21 @@
 import strawberry
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 
 from categories.models import Category
 from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
-from marketlift.graphql.errors import not_found_error
+from marketlift.graphql.errors import not_found_error, validation_error
 
 from commerce.models import Dispute, Order, SellerPaymentAccount
 from commerce.policy_models import CategoryCommercePolicy
-from commerce.services import listing_commerce_state, resolve_category_policy, seller_wallet
+from commerce.services import (
+    listing_commerce_state,
+    money_to_cents,
+    resolve_category_policy,
+    seller_wallet,
+)
 
 from .mappers import (
     category_policy_to_type,
@@ -20,6 +27,7 @@ from .mappers import (
 )
 from .types import (
     CategoryCommercePolicyType,
+    CheckoutQuoteType,
     DisputeType,
     ListingCommerceType,
     OrderType,
@@ -68,6 +76,49 @@ class CommerceQuery:
         self, info: strawberry.Info, listing_id: str
     ) -> ListingCommerceType:
         return listing_commerce_to_type(listing_commerce_state(_listing(listing_id)))
+
+    @strawberry.field
+    def commerce_checkout_quote(
+        self,
+        info: strawberry.Info,
+        listing_id: str,
+        fulfillment_method: str,
+        quantity: int = 1,
+    ) -> CheckoutQuoteType:
+        listing = _listing(listing_id)
+        state = listing_commerce_state(listing)
+        try:
+            if quantity < 1:
+                raise ValidationError({"quantity": "Quantity must be at least one."})
+            if not state["checkout_enabled"]:
+                raise ValidationError({"checkout": "Online checkout is unavailable for this listing."})
+            if fulfillment_method not in state["fulfillment_methods"]:
+                raise ValidationError({"fulfillmentMethod": "This delivery method is unavailable."})
+            if quantity > state["stock_quantity"]:
+                raise ValidationError({"quantity": "Not enough stock is available."})
+
+            unit_price_cents = money_to_cents(listing.price)
+            subtotal_cents = unit_price_cents * quantity
+            cap = state["max_checkout_value_cents"]
+            if cap is not None and subtotal_cents > cap:
+                raise ValidationError({"quantity": "This quantity exceeds the category checkout-value limit."})
+
+            shipping_amount_cents = (
+                int(getattr(settings, "MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", 0))
+                if fulfillment_method == Order.FulfillmentMethod.LOCAL_DELIVERY
+                else 0
+            )
+            return CheckoutQuoteType(
+                listing_id=str(listing.id),
+                fulfillment_method=fulfillment_method,
+                quantity=quantity,
+                subtotal_cents=subtotal_cents,
+                shipping_amount_cents=shipping_amount_cents,
+                total_cents=subtotal_cents + shipping_amount_cents,
+                currency="BRL",
+            )
+        except ValidationError as exc:
+            raise validation_error(exc, code="CHECKOUT_QUOTE_VALIDATION_ERROR") from exc
 
     @strawberry.field
     def category_commerce_policy(
