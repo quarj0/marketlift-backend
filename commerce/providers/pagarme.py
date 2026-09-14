@@ -16,7 +16,9 @@ class PagarMeCommerceProvider(CommerceProvider):
         ).rstrip("/")
         self.timeout = float(getattr(settings, "PAGARME_TIMEOUT_SECONDS", 15))
         if not self.secret_key:
-            raise CommerceProviderError("PAGARME_SECRET_KEY is not configured.")
+            raise CommerceProviderError(
+                "PAGARME_SECRET_KEY is not configured.", retryable=False
+            )
 
     def _request(
         self,
@@ -41,14 +43,22 @@ class PagarMeCommerceProvider(CommerceProvider):
             ) as client:
                 response = client.request(method, path, json=json)
         except httpx.HTTPError as exc:
-            raise CommerceProviderError("Pagar.me is temporarily unavailable.") from exc
+            # A transport failure is ambiguous: Pagar.me may already have
+            # accepted the request. Callers must retry with the same idempotency
+            # key rather than creating a second payment/transfer.
+            raise CommerceProviderError(
+                "Pagar.me is temporarily unavailable.", retryable=True
+            ) from exc
         if response.status_code >= 400:
             try:
                 detail = response.json()
             except ValueError:
                 detail = response.text[:500]
+            retryable = response.status_code >= 500 or response.status_code in {408, 429}
             raise CommerceProviderError(
-                f"Pagar.me request failed ({response.status_code}): {detail}"
+                f"Pagar.me request failed ({response.status_code}): {detail}",
+                retryable=retryable,
+                status_code=response.status_code,
             )
         if response.status_code == 204 or not response.content:
             return {}
@@ -100,7 +110,9 @@ class PagarMeCommerceProvider(CommerceProvider):
         )
         adjustment = split_total - item_total
         if adjustment < 0:
-            raise CommerceProviderError("Pagar.me order items exceed the payment total.")
+            raise CommerceProviderError(
+                "Pagar.me order items exceed the payment total.", retryable=False
+            )
         if adjustment:
             items.append(
                 {
