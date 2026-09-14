@@ -302,7 +302,7 @@ class CommerceMutation:
         local_delivery_allowed: bool = False,
         pickup_allowed: bool = True,
     ) -> CategoryCommercePolicyType:
-        require_staff(info)
+        require_staff(info, roles={User.AdminRole.ADMIN})
         try:
             category = Category.objects.get(slug=category_id)
         except Category.DoesNotExist as exc:
