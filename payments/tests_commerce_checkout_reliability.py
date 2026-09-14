@@ -57,12 +57,14 @@ class DurableCheckoutTests(TestCase):
             category=self.category,
             mode=CategoryCommercePolicy.Mode.ENABLED,
             requires_verified_seller=True,
+            local_delivery_allowed=True,
             pickup_allowed=True,
         )
         self.config = ListingCommerceSettings.objects.create(
             listing=self.listing,
             checkout_enabled=True,
             stock_quantity=1,
+            local_delivery_enabled=True,
             pickup_enabled=True,
         )
         SellerPaymentAccount.objects.create(
@@ -206,3 +208,56 @@ class DurableCheckoutTests(TestCase):
         self.assertEqual(payment.status, CommercePayment.Status.FAILED)
         self.assertEqual(payment.provider_status, "request_failed_422")
         self.assertEqual(self.config.stock_quantity, 1)
+
+    @override_settings(MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS=1500)
+    def test_local_delivery_fee_is_included_in_provider_items_and_split(self):
+        provider = Mock()
+        provider.create_order.return_value = {
+            "id": "or_local_delivery",
+            "status": "pending",
+            "charges": [
+                {
+                    "id": "ch_local_delivery",
+                    "status": "pending",
+                    "last_transaction": {"id": "tx_local_delivery"},
+                }
+            ],
+        }
+        address = {
+            "street": "Rua Teste",
+            "number": "10",
+            "district": "Centro",
+            "city": "Sao Paulo",
+            "state": "SP",
+            "zipCode": "01001000",
+            "country": "BR",
+        }
+        with patch(
+            "commerce.checkout_reliability.get_commerce_provider",
+            return_value=provider,
+        ):
+            order, _payment = create_checkout_order(
+                buyer=self.buyer,
+                listing_id=self.listing.id,
+                quantity=1,
+                fulfillment_method=Order.FulfillmentMethod.LOCAL_DELIVERY,
+                shipping_address=address,
+                payment_method=CommercePayment.Method.PIX,
+                customer_document="12345678901",
+                customer_phone="11999999999",
+                card_id=None,
+                idempotency_key="local-delivery-total",
+            )
+
+        payload = provider.create_order.call_args.kwargs["payload"]
+        item_total = sum(
+            item["amount"] * item["quantity"] for item in payload["items"]
+        )
+        split = payload["payments"][0]["pix"]["split"]
+        split_total = sum(row["amount"] for row in split)
+
+        self.assertEqual(order.subtotal_cents, 10000)
+        self.assertEqual(order.shipping_amount_cents, 1500)
+        self.assertEqual(order.total_cents, 11500)
+        self.assertEqual(item_total, order.total_cents)
+        self.assertEqual(split_total, order.total_cents)
