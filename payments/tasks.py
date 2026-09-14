@@ -41,9 +41,6 @@ def sync_paystack_transaction(self, reference: str):
         provider="paystack", provider_order_id=reference
     ).first()
     if payment is None:
-        # The initialize response always uses our own payment.reference as the
-        # Paystack reference. This fallback also handles a webhook racing the DB
-        # update that stores provider_order_id.
         payment = Payment.objects.filter(
             provider="paystack", reference=reference
         ).first()
@@ -75,3 +72,10 @@ def reconcile_pending_payments(self):
         sync_payment_from_provider(payment=payment, result=result)
         checked += 1
     return {"checked": checked}
+
+
+@shared_task
+def release_due_commerce_settlements():
+    from commerce.services import release_due_settlements
+
+    return {"released": release_due_settlements()}
