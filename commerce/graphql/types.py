@@ -14,6 +14,10 @@ class ListingCommerceType:
     reasons: list[str]
     requires_verified_seller: bool
     max_checkout_value_cents: int | None
+    package_weight_grams: int | None
+    package_length_cm: int | None
+    package_width_cm: int | None
+    package_height_cm: int | None
 
 
 @strawberry.type
