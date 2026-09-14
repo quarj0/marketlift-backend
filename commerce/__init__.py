@@ -27,9 +27,6 @@ _set_default("MARKETLIFT_COMMERCE_FEE_BPS", int(os.getenv("MARKETLIFT_COMMERCE_F
 _set_default("MARKETLIFT_BUYER_PROTECTION_HOURS", int(os.getenv("MARKETLIFT_BUYER_PROTECTION_HOURS", "48")))
 _set_default("MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", int(os.getenv("MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", "0")))
 
-# Keep the schedule fallback for application processes that import commerce directly.
-# The canonical beat registration also lives in marketlift.settings so standalone beat
-# workers receive it without relying on package-import side effects.
 if hasattr(settings, "CELERY_BEAT_SCHEDULE"):
     settings.CELERY_BEAT_SCHEDULE.setdefault(
         "release-due-commerce-settlements",
@@ -39,12 +36,10 @@ if hasattr(settings, "CELERY_BEAT_SCHEDULE"):
         },
     )
 
-# Apply narrowly-scoped financial safety wrappers before GraphQL/webhook modules import
-# the service functions. Keeping the wrappers separate makes the review hardening easy
-# to regression-test without changing the provider-neutral service API.
 from . import services as _services  # noqa: E402
 from . import review_fixes as _review_fixes  # noqa: E402
 
+_services.activate_seller_payments = _review_fixes.activate_seller_payments
 _services.open_order_dispute = _review_fixes.open_order_dispute
 _services.seller_wallet = _review_fixes.seller_wallet
 _services.finalize_order_refund = _review_fixes.finalize_order_refund
