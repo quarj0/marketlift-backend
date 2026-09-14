@@ -107,6 +107,7 @@ def serialize_session_user(user):
         "sellerProfile": (
             {
                 "sellerId": str(seller.id),
+                "sellerType": seller.seller_type,
                 "activatedAt": seller.activated_at.isoformat(),
                 "verified": seller.verified,
                 "suspended": seller.is_suspended,
