@@ -99,10 +99,11 @@ def _record_chargeback_recovery(payment: CommercePayment, event_type: str) -> No
     )
     order.status = Order.Status.DISPUTED
     order.save(update_fields=("status", "updated_at"))
-    settlement = (
-        Settlement.objects.select_for_update().filter(order=order).first()
-    )
-    if settlement and settlement.status != Settlement.Status.PAID:
+    settlement = Settlement.objects.select_for_update().filter(order=order).first()
+    if settlement and settlement.status not in {
+        Settlement.Status.PAID,
+        Settlement.Status.PAYOUT_REQUESTED,
+    }:
         settlement.status = Settlement.Status.BLOCKED
         settlement.release_after = None
         settlement.save(update_fields=("status", "release_after", "updated_at"))
