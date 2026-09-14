@@ -10,7 +10,7 @@ from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
 from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 
-from commerce.models import Dispute, Order, Settlement
+from commerce.models import CommercePayment, Dispute, Order, Settlement
 from commerce.providers.base import CommerceProviderError
 from commerce.services import (
     activate_seller_payments,
@@ -358,6 +358,15 @@ class CommerceMutation:
                     )
                     dispute.status = Dispute.Status.RESOLVED_BUYER
                 elif resolution == "seller":
+                    payment = (
+                        order.payments.select_for_update()
+                        .order_by("-created_at")
+                        .first()
+                    )
+                    if not payment or payment.status != CommercePayment.Status.APPROVED:
+                        raise ValidationError(
+                            "Seller proceeds can only be released for an approved payment."
+                        )
                     settlement = Settlement.objects.select_for_update().get(
                         order=order
                     )
