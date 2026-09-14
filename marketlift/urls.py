@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from django.views.decorators.cache import never_cache
+from commerce.webhooks import pagarme_webhook
 from marketlift.api.views import market_profile
 from marketlift.graphql.schema import schema
 from marketlift.graphql.views import MarketliftGraphQLView
@@ -12,6 +13,7 @@ urlpatterns = [
     # market-capabilities URL as a compatibility alias so deployed clients do
     # not receive a 404 during the multi-market migration.
     path("api/market/", market_profile, name="market-profile-compat"),
+    path("api/v1/webhooks/pagarme/<str:token>/", pagarme_webhook, name="pagarme-webhook"),
     path("api/v1/", include("marketlift.api.urls")),
     path(
         "graphql/",
