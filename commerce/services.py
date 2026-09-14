@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 from categories.models import Category
@@ -103,7 +103,16 @@ def listing_commerce_state(listing: Listing) -> dict:
         reasons.append("price_above_checkout_limit")
     if config is not None and config.stock_quantity < 1:
         reasons.append("out_of_stock")
-    if listing.status != Listing.Status.PUBLISHED or listing.seller_deleted_at is not None:
+
+    is_public = (
+        listing.status == Listing.Status.PUBLISHED
+        and not listing.seller.is_suspended
+        and listing.seller.user.is_active
+        and listing.category_id is not None
+        and listing.category.active
+        and listing.seller_deleted_at is None
+    )
+    if not is_public:
         reasons.append("listing_unavailable")
 
     methods: list[str] = []
@@ -372,6 +381,89 @@ def _checkout_data(result: dict) -> dict:
     }
 
 
+def _scoped_checkout_idempotency_key(*, buyer_id, raw_key: str) -> str:
+    clean = str(raw_key or "").strip()
+    if not clean:
+        raise ValidationError({"idempotencyKey": "An idempotency key is required."})
+    digest = hashlib.sha256(f"{buyer_id}:{clean}".encode("utf-8")).hexdigest()
+    return f"checkout:{digest}"
+
+
+def _normalize_shipping_address(
+    fulfillment_method: str, shipping_address: dict | None
+) -> dict:
+    if fulfillment_method == Order.FulfillmentMethod.PICKUP:
+        return {}
+    if fulfillment_method not in {
+        Order.FulfillmentMethod.SHIPPING,
+        Order.FulfillmentMethod.LOCAL_DELIVERY,
+    }:
+        raise ValidationError({"fulfillmentMethod": "Unsupported fulfillment method."})
+    if not isinstance(shipping_address, dict):
+        raise ValidationError({"shippingAddress": "A delivery address is required."})
+
+    required = ("street", "number", "district", "city", "state", "zipCode")
+    cleaned = {
+        key: str(shipping_address.get(key) or "").strip()
+        for key in required
+    }
+    missing = [key for key, value in cleaned.items() if not value]
+    if missing:
+        raise ValidationError(
+            {
+                "shippingAddress": (
+                    "Complete the delivery address before paying. Missing: "
+                    + ", ".join(missing)
+                )
+            }
+        )
+
+    cleaned["state"] = cleaned["state"].upper()
+    if len(cleaned["state"]) != 2:
+        raise ValidationError({"shippingAddress": "State must be a two-letter UF code."})
+    zip_digits = "".join(ch for ch in cleaned["zipCode"] if ch.isdigit())
+    if len(zip_digits) != 8:
+        raise ValidationError({"shippingAddress": "Enter a valid eight-digit CEP."})
+    cleaned["zipCode"] = zip_digits
+    country = str(shipping_address.get("country") or "BR").strip().upper()
+    if country != "BR":
+        raise ValidationError({"shippingAddress": "Commerce delivery is currently Brazil-only."})
+    cleaned["country"] = "BR"
+    complement = str(shipping_address.get("complement") or "").strip()
+    if complement:
+        cleaned["complement"] = complement
+    return cleaned
+
+
+def _validate_checkout_replay(
+    *,
+    previous: CommercePayment,
+    buyer,
+    listing_id,
+    quantity: int,
+    fulfillment_method: str,
+    payment_method: str,
+    shipping_address: dict,
+) -> None:
+    order = previous.order
+    matches = (
+        order.buyer_id == buyer.id
+        and str(order.listing_id) == str(listing_id)
+        and order.quantity == quantity
+        and order.fulfillment_method == fulfillment_method
+        and previous.method == payment_method
+        and order.shipping_address == shipping_address
+    )
+    if not matches:
+        raise ValidationError(
+            {
+                "idempotencyKey": (
+                    "This idempotency key was already used for different checkout parameters."
+                )
+            }
+        )
+
+
 @transaction.atomic
 def create_checkout_order(
     *,
@@ -386,6 +478,32 @@ def create_checkout_order(
     card_id: str | None,
     idempotency_key: str,
 ) -> tuple[Order, CommercePayment]:
+    if quantity < 1:
+        raise ValidationError({"quantity": "Quantity must be at least one."})
+    normalized_address = _normalize_shipping_address(
+        fulfillment_method, shipping_address
+    )
+    scoped_key = _scoped_checkout_idempotency_key(
+        buyer_id=buyer.id, raw_key=idempotency_key
+    )
+
+    previous = (
+        CommercePayment.objects.select_related("order")
+        .filter(idempotency_key=scoped_key)
+        .first()
+    )
+    if previous:
+        _validate_checkout_replay(
+            previous=previous,
+            buyer=buyer,
+            listing_id=listing_id,
+            quantity=quantity,
+            fulfillment_method=fulfillment_method,
+            payment_method=payment_method,
+            shipping_address=normalized_address,
+        )
+        return previous.order, previous
+
     try:
         listing = (
             Listing.objects.select_for_update()
@@ -405,22 +523,23 @@ def create_checkout_order(
         )
     if fulfillment_method not in state["fulfillment_methods"]:
         raise ValidationError({"fulfillmentMethod": "This delivery method is unavailable."})
-    if quantity < 1:
-        raise ValidationError({"quantity": "Quantity must be at least one."})
 
     config = ListingCommerceSettings.objects.select_for_update().get(listing=listing)
     if config.stock_quantity < quantity:
         raise ValidationError({"quantity": "Not enough stock is available."})
     account = SellerPaymentAccount.objects.select_for_update().get(seller=listing.seller)
 
-    previous = CommercePayment.objects.select_related("order").filter(
-        idempotency_key=idempotency_key
-    ).first()
-    if previous:
-        return previous.order, previous
-
     unit_price_cents = money_to_cents(listing.price)
     subtotal_cents = unit_price_cents * quantity
+    max_checkout_value_cents = state["max_checkout_value_cents"]
+    if (
+        max_checkout_value_cents is not None
+        and subtotal_cents > max_checkout_value_cents
+    ):
+        raise ValidationError(
+            {"quantity": "This quantity exceeds the category checkout-value limit."}
+        )
+
     fee_bps = int(getattr(settings, "MARKETLIFT_COMMERCE_FEE_BPS", 500))
     marketplace_fee_cents = subtotal_cents * fee_bps // 10000
     if fulfillment_method == Order.FulfillmentMethod.LOCAL_DELIVERY:
@@ -447,7 +566,7 @@ def create_checkout_order(
         marketplace_fee_cents=marketplace_fee_cents,
         seller_proceeds_cents=seller_proceeds_cents,
         currency="BRL",
-        shipping_address=shipping_address or {},
+        shipping_address=normalized_address,
         listing_snapshot=_snapshot_listing(listing),
     )
     shipment = Shipment.objects.create(order=order)
@@ -468,7 +587,7 @@ def create_checkout_order(
         order=order,
         method=payment_method,
         amount_cents=total_cents,
-        idempotency_key=idempotency_key,
+        idempotency_key=scoped_key,
     )
 
     marketplace_recipient = getattr(
@@ -522,7 +641,7 @@ def create_checkout_order(
     }
     provider = get_commerce_provider()
     result = provider.create_order(
-        payload=provider_payload, idempotency_key=idempotency_key
+        payload=provider_payload, idempotency_key=scoped_key
     )
     payment.provider_order_id = str(result.get("id") or "")
     charges = result.get("charges") or []
@@ -532,12 +651,34 @@ def create_checkout_order(
     payment.provider_transaction_id = str(last_tx.get("id") or "")
     payment.provider_status = str(charge.get("status") or result.get("status") or "")
     payment.checkout_data = _checkout_data(result)
-    payment.save()
 
+    provider_status = payment.provider_status.lower()
+    cancelled_statuses = {"canceled", "cancelled"}
+    failed_statuses = {
+        "failed",
+        "refused",
+        "declined",
+        "not_authorized",
+        "not_authorised",
+    }
+    if provider_status in cancelled_statuses | failed_statuses:
+        payment.status = (
+            CommercePayment.Status.CANCELLED
+            if provider_status in cancelled_statuses
+            else CommercePayment.Status.FAILED
+        )
+        payment.failure_message = str(last_tx.get("acquirer_message") or "")
+        payment.save()
+        order.status = Order.Status.CANCELLED
+        order.cancelled_at = timezone.now()
+        order.save(update_fields=("status", "cancelled_at", "updated_at"))
+        return order, payment
+
+    payment.save()
     config.stock_quantity -= quantity
     config.save(update_fields=("stock_quantity", "updated_at"))
 
-    if payment.provider_status.lower() in {"paid", "approved"}:
+    if provider_status in {"paid", "approved"}:
         approve_commerce_payment(payment)
     return order, payment
 
@@ -549,11 +690,19 @@ def approve_commerce_payment(payment: CommercePayment) -> CommercePayment:
     )
     if payment.status == CommercePayment.Status.APPROVED:
         return payment
+    if payment.status in {
+        CommercePayment.Status.REFUNDED,
+        CommercePayment.Status.CHARGEBACK,
+        CommercePayment.Status.CANCELLED,
+    }:
+        raise ValidationError("A terminal payment cannot be approved.")
     now = timezone.now()
     payment.status = CommercePayment.Status.APPROVED
     payment.paid_at = now
     payment.save(update_fields=("status", "paid_at", "updated_at"))
     order = payment.order
+    if order.status == Order.Status.CANCELLED:
+        raise ValidationError("A cancelled order cannot be approved.")
     order.status = Order.Status.AWAITING_SELLER
     order.paid_at = now
     order.save(update_fields=("status", "paid_at", "updated_at"))
@@ -710,41 +859,51 @@ def release_due_settlements(*, seller=None) -> int:
 
 def seller_wallet(seller) -> dict:
     release_due_settlements(seller=seller)
-    rows = Settlement.objects.filter(seller=seller).values("status").annotate(
-        total=Sum("amount_cents")
+    pending_cents = int(
+        Settlement.objects.filter(seller=seller)
+        .filter(
+            Q(status__in=(Settlement.Status.PENDING, Settlement.Status.HELD))
+            | Q(status=Settlement.Status.BLOCKED, order__status=Order.Status.DISPUTED)
+        )
+        .aggregate(total=Sum("amount_cents"))["total"]
+        or 0
     )
-    totals = {row["status"]: int(row["total"] or 0) for row in rows}
+    available_cents = int(
+        Settlement.objects.filter(
+            seller=seller, status=Settlement.Status.AVAILABLE
+        ).aggregate(total=Sum("amount_cents"))["total"]
+        or 0
+    )
+    payout_requested_cents = int(
+        Settlement.objects.filter(
+            seller=seller, status=Settlement.Status.PAYOUT_REQUESTED
+        ).aggregate(total=Sum("amount_cents"))["total"]
+        or 0
+    )
+    paid_out_cents = int(
+        Settlement.objects.filter(
+            seller=seller, status=Settlement.Status.PAID
+        ).aggregate(total=Sum("amount_cents"))["total"]
+        or 0
+    )
     return {
-        "pending_cents": totals.get(Settlement.Status.PENDING, 0)
-        + totals.get(Settlement.Status.HELD, 0)
-        + totals.get(Settlement.Status.BLOCKED, 0),
-        "available_cents": totals.get(Settlement.Status.AVAILABLE, 0),
-        "payout_requested_cents": totals.get(Settlement.Status.PAYOUT_REQUESTED, 0),
-        "paid_out_cents": totals.get(Settlement.Status.PAID, 0),
+        "pending_cents": pending_cents,
+        "available_cents": available_cents,
+        "payout_requested_cents": payout_requested_cents,
+        "paid_out_cents": paid_out_cents,
         "currency": "BRL",
     }
 
 
-@transaction.atomic
-def withdraw_available_balance(*, seller) -> dict:
-    release_due_settlements(seller=seller)
-    account = SellerPaymentAccount.objects.select_for_update().get(seller=seller)
-    if (
-        account.status != SellerPaymentAccount.Status.ACTIVE
-        or not account.payouts_enabled
-        or not account.provider_recipient_id
-    ):
-        raise ValidationError("Seller payouts are not active.")
-    settlements = list(
-        Settlement.objects.select_for_update()
-        .filter(seller=seller, status=Settlement.Status.AVAILABLE)
-        .order_by("created_at")
-    )
-    amount = sum(row.amount_cents for row in settlements)
-    if amount <= 0:
-        raise ValidationError("There is no available balance to withdraw.")
-    provider = get_commerce_provider()
-    balance = provider.get_recipient_balance(account.provider_recipient_id)
+def _payout_batch_key(*, seller_id, settlements: list[Settlement]) -> str:
+    settlement_ids = ":".join(sorted(str(row.id) for row in settlements))
+    digest = hashlib.sha256(
+        f"{seller_id}:{settlement_ids}".encode("utf-8")
+    ).hexdigest()[:40]
+    return f"seller-payout:{seller_id}:{digest}"
+
+
+def _provider_available_amount(balance: dict) -> int:
     raw_available = (
         balance.get("available_amount")
         if balance.get("available_amount") is not None
@@ -753,41 +912,110 @@ def withdraw_available_balance(*, seller) -> dict:
     if raw_available is None:
         raw_available = balance.get("amount")
     try:
-        available_provider = int(raw_available)
-    except (TypeError, ValueError):
-        raise ValidationError("The payment provider balance could not be verified.")
-    if available_provider < amount:
-        raise ValidationError("The payment provider has not released all proceeds yet.")
-    idempotency_key = f"seller-payout:{seller.id}:{uuid.uuid4().hex}"
+        return int(raw_available)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError(
+            "The payment provider balance could not be verified."
+        ) from exc
+
+
+def withdraw_available_balance(*, seller) -> dict:
+    release_due_settlements(seller=seller)
+    provider = get_commerce_provider()
+
+    with transaction.atomic():
+        account = SellerPaymentAccount.objects.select_for_update().get(seller=seller)
+        if (
+            account.status != SellerPaymentAccount.Status.ACTIVE
+            or not account.payouts_enabled
+            or not account.provider_recipient_id
+        ):
+            raise ValidationError("Seller payouts are not active.")
+
+        pending_retry = list(
+            Settlement.objects.select_for_update()
+            .filter(
+                seller=seller,
+                status=Settlement.Status.PAYOUT_REQUESTED,
+                provider_transfer_id="",
+            )
+            .exclude(payout_idempotency_key="")
+            .order_by("payout_requested_at", "created_at")
+        )
+        if pending_retry:
+            batch_key = pending_retry[0].payout_idempotency_key
+            settlements = [
+                row for row in pending_retry if row.payout_idempotency_key == batch_key
+            ]
+            amount = sum(row.amount_cents for row in settlements)
+        else:
+            settlements = list(
+                Settlement.objects.select_for_update()
+                .filter(seller=seller, status=Settlement.Status.AVAILABLE)
+                .order_by("created_at")
+            )
+            amount = sum(row.amount_cents for row in settlements)
+            if amount <= 0:
+                raise ValidationError("There is no available balance to withdraw.")
+
+            balance = provider.get_recipient_balance(account.provider_recipient_id)
+            available_provider = _provider_available_amount(balance)
+            if available_provider < amount:
+                raise ValidationError(
+                    "The payment provider has not released all proceeds yet."
+                )
+
+            batch_key = _payout_batch_key(
+                seller_id=seller.id, settlements=settlements
+            )
+            now = timezone.now()
+            for settlement in settlements:
+                settlement.status = Settlement.Status.PAYOUT_REQUESTED
+                settlement.payout_idempotency_key = batch_key
+                settlement.payout_requested_at = now
+                settlement.save(
+                    update_fields=(
+                        "status",
+                        "payout_idempotency_key",
+                        "payout_requested_at",
+                        "updated_at",
+                    )
+                )
+        recipient_id = account.provider_recipient_id
+
     transfer = provider.create_transfer(
-        recipient_id=account.provider_recipient_id,
+        recipient_id=recipient_id,
         amount_cents=amount,
-        idempotency_key=idempotency_key,
+        idempotency_key=batch_key,
     )
-    transfer_id = str(transfer.get("id") or "")
+    transfer_id = str(transfer.get("id") or "").strip()
     if not transfer_id:
         raise CommerceProviderError("Pagar.me did not return a transfer id.")
-    now = timezone.now()
-    for settlement in settlements:
-        settlement.status = Settlement.Status.PAYOUT_REQUESTED
-        settlement.provider_transfer_id = transfer_id
-        settlement.payout_requested_at = now
-        settlement.save(
-            update_fields=(
-                "status",
-                "provider_transfer_id",
-                "payout_requested_at",
-                "updated_at",
+
+    with transaction.atomic():
+        rows = list(
+            Settlement.objects.select_for_update().filter(
+                seller=seller,
+                status=Settlement.Status.PAYOUT_REQUESTED,
+                payout_idempotency_key=batch_key,
             )
         )
-        LedgerEntry.objects.create(
-            order=settlement.order,
-            seller=seller,
-            kind=LedgerEntry.Kind.SELLER_PAYOUT,
-            amount_cents=-settlement.amount_cents,
-            currency=settlement.order.currency,
-            provider_reference=transfer_id,
-        )
+        for settlement in rows:
+            settlement.provider_transfer_id = transfer_id
+            settlement.save(
+                update_fields=("provider_transfer_id", "updated_at")
+            )
+            LedgerEntry.objects.get_or_create(
+                order=settlement.order,
+                seller=seller,
+                kind=LedgerEntry.Kind.SELLER_PAYOUT,
+                provider_reference=transfer_id,
+                defaults={
+                    "amount_cents": -settlement.amount_cents,
+                    "currency": settlement.order.currency,
+                    "metadata": {"payout_batch_key": batch_key},
+                },
+            )
     return {
         "transfer_id": transfer_id,
         "amount_cents": amount,
@@ -796,33 +1024,73 @@ def withdraw_available_balance(*, seller) -> dict:
 
 
 @transaction.atomic
+def finalize_order_refund(
+    *, payment: CommercePayment, reason: str = "", provider_status: str = "refunded"
+) -> Order:
+    payment = (
+        CommercePayment.objects.select_for_update()
+        .select_related("order", "order__seller")
+        .get(pk=payment.pk)
+    )
+    order = Order.objects.select_for_update().get(pk=payment.order_id)
+    settlement = Settlement.objects.select_for_update().get(order=order)
+    now = timezone.now()
+
+    payment.status = CommercePayment.Status.REFUNDED
+    payment.refunded_at = payment.refunded_at or now
+    payment.provider_status = provider_status or payment.provider_status
+    payment.save(
+        update_fields=("status", "refunded_at", "provider_status", "updated_at")
+    )
+    order.status = Order.Status.REFUNDED
+    order.save(update_fields=("status", "updated_at"))
+
+    if settlement.status != Settlement.Status.PAID:
+        settlement.status = Settlement.Status.BLOCKED
+        settlement.release_after = None
+        settlement.save(
+            update_fields=("status", "release_after", "updated_at")
+        )
+
+    if not order.ledger_entries.filter(
+        kind=LedgerEntry.Kind.REFUND,
+        provider_reference=payment.provider_charge_id,
+    ).exists():
+        LedgerEntry.objects.create(
+            order=order,
+            seller=order.seller,
+            kind=LedgerEntry.Kind.REFUND,
+            amount_cents=-order.total_cents,
+            currency=order.currency,
+            provider_reference=payment.provider_charge_id,
+            metadata={"reason": reason},
+        )
+    return order
+
+
+@transaction.atomic
 def refund_order(*, order: Order, reason: str = "") -> Order:
     order = Order.objects.select_for_update().get(pk=order.pk)
     payment = (
-        order.payments.filter(status=CommercePayment.Status.APPROVED)
+        order.payments.select_for_update()
+        .filter(status=CommercePayment.Status.APPROVED)
         .order_by("-created_at")
         .first()
     )
     if not payment or not payment.provider_charge_id:
         raise ValidationError("No refundable approved payment was found.")
+    settlement = Settlement.objects.select_for_update().get(order=order)
+    if settlement.status in {
+        Settlement.Status.PAYOUT_REQUESTED,
+        Settlement.Status.PAID,
+    }:
+        raise ValidationError(
+            "Seller payout has already started; refund requires manual financial recovery."
+        )
     provider = get_commerce_provider()
     provider.cancel_charge(payment.provider_charge_id)
-    now = timezone.now()
-    payment.status = CommercePayment.Status.REFUNDED
-    payment.refunded_at = now
-    payment.save(update_fields=("status", "refunded_at", "updated_at"))
-    order.status = Order.Status.REFUNDED
-    order.save(update_fields=("status", "updated_at"))
-    settlement = Settlement.objects.select_for_update().get(order=order)
-    settlement.status = Settlement.Status.BLOCKED
-    settlement.save(update_fields=("status", "updated_at"))
-    LedgerEntry.objects.create(
-        order=order,
-        seller=order.seller,
-        kind=LedgerEntry.Kind.REFUND,
-        amount_cents=-order.total_cents,
-        currency=order.currency,
-        provider_reference=payment.provider_charge_id,
-        metadata={"reason": reason},
+    return finalize_order_refund(
+        payment=payment,
+        reason=reason,
+        provider_status="refunded",
     )
-    return order
