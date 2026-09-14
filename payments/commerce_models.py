@@ -13,7 +13,9 @@ class CategoryCommercePolicy(UUIDTimeStampedModel):
     category = models.OneToOneField(
         "categories.Category", on_delete=models.CASCADE, related_name="commerce_policy"
     )
-    mode = models.CharField(max_length=12, choices=Mode.choices, default=Mode.DISABLED, db_index=True)
+    mode = models.CharField(
+        max_length=12, choices=Mode.choices, default=Mode.DISABLED, db_index=True
+    )
     requires_verified_seller = models.BooleanField(default=True)
     max_checkout_value_cents = models.PositiveBigIntegerField(null=True, blank=True)
     shipping_allowed = models.BooleanField(default=False)
@@ -23,7 +25,9 @@ class CategoryCommercePolicy(UUIDTimeStampedModel):
 
 class ListingCommerceSettings(UUIDTimeStampedModel):
     listing = models.OneToOneField(
-        "listings.Listing", on_delete=models.CASCADE, related_name="commerce_settings"
+        "listings.Listing",
+        on_delete=models.CASCADE,
+        related_name="commerce_settings",
     )
     checkout_enabled = models.BooleanField(default=False, db_index=True)
     stock_quantity = models.PositiveIntegerField(default=1)
@@ -49,12 +53,23 @@ class SellerPaymentAccount(UUIDTimeStampedModel):
         BANK_ACCOUNT = "bank_account", "Bank account"
 
     seller = models.OneToOneField(
-        "sellers.SellerProfile", on_delete=models.CASCADE, related_name="payment_account"
+        "sellers.SellerProfile",
+        on_delete=models.CASCADE,
+        related_name="payment_account",
     )
     provider = models.CharField(max_length=32, default="pagarme")
-    provider_recipient_id = models.CharField(max_length=120, null=True, blank=True, unique=True, db_index=True)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NOT_STARTED, db_index=True)
-    payout_method = models.CharField(max_length=20, choices=PayoutMethod.choices, blank=True)
+    provider_recipient_id = models.CharField(
+        max_length=120, null=True, blank=True, unique=True, db_index=True
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.NOT_STARTED,
+        db_index=True,
+    )
+    payout_method = models.CharField(
+        max_length=20, choices=PayoutMethod.choices, blank=True
+    )
     payout_destination_masked = models.CharField(max_length=160, blank=True)
     payouts_enabled = models.BooleanField(default=False)
     kyc_url = models.URLField(max_length=1000, blank=True)
@@ -85,11 +100,30 @@ class Order(UUIDTimeStampedModel):
         PICKUP = "pickup", "Pickup"
 
     reference = models.CharField(max_length=40, unique=True, db_index=True)
-    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="commerce_orders")
-    seller = models.ForeignKey("sellers.SellerProfile", on_delete=models.PROTECT, related_name="commerce_orders")
-    listing = models.ForeignKey("listings.Listing", on_delete=models.PROTECT, related_name="commerce_orders")
-    status = models.CharField(max_length=24, choices=Status.choices, default=Status.PENDING_PAYMENT, db_index=True)
-    fulfillment_method = models.CharField(max_length=20, choices=FulfillmentMethod.choices)
+    buyer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="commerce_orders",
+    )
+    seller = models.ForeignKey(
+        "sellers.SellerProfile",
+        on_delete=models.PROTECT,
+        related_name="commerce_orders",
+    )
+    listing = models.ForeignKey(
+        "listings.Listing",
+        on_delete=models.PROTECT,
+        related_name="commerce_orders",
+    )
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.PENDING_PAYMENT,
+        db_index=True,
+    )
+    fulfillment_method = models.CharField(
+        max_length=20, choices=FulfillmentMethod.choices
+    )
     quantity = models.PositiveIntegerField(default=1)
     unit_price_cents = models.PositiveBigIntegerField()
     subtotal_cents = models.PositiveBigIntegerField()
@@ -109,9 +143,16 @@ class Order(UUIDTimeStampedModel):
     class Meta:
         ordering = ("-created_at",)
         indexes = [
-            models.Index(fields=("buyer", "-created_at"), name="commerce_ord_buyer_idx"),
-            models.Index(fields=("seller", "status", "-created_at"), name="commerce_ord_seller_idx"),
-            models.Index(fields=("listing", "status"), name="commerce_ord_listing_idx"),
+            models.Index(
+                fields=("buyer", "-created_at"), name="commerce_ord_buyer_idx"
+            ),
+            models.Index(
+                fields=("seller", "status", "-created_at"),
+                name="commerce_ord_seller_idx",
+            ),
+            models.Index(
+                fields=("listing", "status"), name="commerce_ord_listing_idx"
+            ),
         ]
 
 
@@ -129,14 +170,23 @@ class CommercePayment(UUIDTimeStampedModel):
         PARTIALLY_REFUNDED = "partially_refunded", "Partially refunded"
         CHARGEBACK = "chargeback", "Chargeback"
 
-    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="payments")
+    order = models.ForeignKey(
+        Order, on_delete=models.PROTECT, related_name="payments"
+    )
     provider = models.CharField(max_length=32, default="pagarme")
     method = models.CharField(max_length=12, choices=Method.choices)
-    status = models.CharField(max_length=24, choices=Status.choices, default=Status.PENDING, db_index=True)
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
     idempotency_key = models.CharField(max_length=100, unique=True)
     provider_order_id = models.CharField(max_length=120, blank=True, db_index=True)
     provider_charge_id = models.CharField(max_length=120, blank=True, db_index=True)
-    provider_transaction_id = models.CharField(max_length=120, blank=True, db_index=True)
+    provider_transaction_id = models.CharField(
+        max_length=120, blank=True, db_index=True
+    )
     amount_cents = models.PositiveBigIntegerField()
     checkout_data = models.JSONField(default=dict, blank=True)
     provider_status = models.CharField(max_length=80, blank=True)
@@ -157,18 +207,37 @@ class Settlement(UUIDTimeStampedModel):
         PAID = "paid", "Paid"
         BLOCKED = "blocked", "Blocked"
 
-    order = models.OneToOneField(Order, on_delete=models.PROTECT, related_name="settlement")
-    seller = models.ForeignKey("sellers.SellerProfile", on_delete=models.PROTECT, related_name="settlements")
-    status = models.CharField(max_length=24, choices=Status.choices, default=Status.PENDING, db_index=True)
+    order = models.OneToOneField(
+        Order, on_delete=models.PROTECT, related_name="settlement"
+    )
+    seller = models.ForeignKey(
+        "sellers.SellerProfile",
+        on_delete=models.PROTECT,
+        related_name="settlements",
+    )
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
     amount_cents = models.PositiveBigIntegerField()
     release_after = models.DateTimeField(null=True, blank=True, db_index=True)
     provider_transfer_id = models.CharField(max_length=120, blank=True, db_index=True)
+    payout_idempotency_key = models.CharField(
+        max_length=160, blank=True, db_index=True
+    )
     payout_requested_at = models.DateTimeField(null=True, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ("-created_at",)
-        indexes = [models.Index(fields=("seller", "status", "release_after"), name="commerce_set_release_idx")]
+        indexes = [
+            models.Index(
+                fields=("seller", "status", "release_after"),
+                name="commerce_set_release_idx",
+            )
+        ]
 
 
 class LedgerEntry(UUIDTimeStampedModel):
@@ -179,8 +248,14 @@ class LedgerEntry(UUIDTimeStampedModel):
         REFUND = "refund", "Refund"
         SELLER_PAYOUT = "seller_payout", "Seller payout"
 
-    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="ledger_entries")
-    seller = models.ForeignKey("sellers.SellerProfile", on_delete=models.PROTECT, related_name="ledger_entries")
+    order = models.ForeignKey(
+        Order, on_delete=models.PROTECT, related_name="ledger_entries"
+    )
+    seller = models.ForeignKey(
+        "sellers.SellerProfile",
+        on_delete=models.PROTECT,
+        related_name="ledger_entries",
+    )
     kind = models.CharField(max_length=24, choices=Kind.choices)
     amount_cents = models.BigIntegerField()
     currency = models.CharField(max_length=3, default="BRL")
@@ -189,7 +264,12 @@ class LedgerEntry(UUIDTimeStampedModel):
 
     class Meta:
         ordering = ("created_at",)
-        indexes = [models.Index(fields=("seller", "kind", "created_at"), name="commerce_led_seller_idx")]
+        indexes = [
+            models.Index(
+                fields=("seller", "kind", "created_at"),
+                name="commerce_led_seller_idx",
+            )
+        ]
 
 
 class Shipment(UUIDTimeStampedModel):
@@ -201,11 +281,18 @@ class Shipment(UUIDTimeStampedModel):
         DELIVERED = "delivered", "Delivered"
         FAILED = "failed", "Failed"
 
-    order = models.OneToOneField(Order, on_delete=models.PROTECT, related_name="shipment")
+    order = models.OneToOneField(
+        Order, on_delete=models.PROTECT, related_name="shipment"
+    )
     provider = models.CharField(max_length=40, blank=True)
     carrier = models.CharField(max_length=80, blank=True)
     tracking_code = models.CharField(max_length=160, blank=True, db_index=True)
-    status = models.CharField(max_length=24, choices=Status.choices, default=Status.PENDING, db_index=True)
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
     delivery_pin_hash = models.CharField(max_length=128, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
     proof = models.JSONField(default=dict, blank=True)
@@ -218,11 +305,19 @@ class Dispute(UUIDTimeStampedModel):
         RESOLVED_SELLER = "resolved_seller", "Resolved for seller"
         CLOSED = "closed", "Closed"
 
-    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="disputes")
-    opened_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="commerce_disputes")
+    order = models.ForeignKey(
+        Order, on_delete=models.PROTECT, related_name="disputes"
+    )
+    opened_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="commerce_disputes",
+    )
     reason = models.CharField(max_length=80)
     description = models.TextField(blank=True)
-    status = models.CharField(max_length=24, choices=Status.choices, default=Status.OPEN, db_index=True)
+    status = models.CharField(
+        max_length=24, choices=Status.choices, default=Status.OPEN, db_index=True
+    )
     evidence = models.JSONField(default=list, blank=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
 
@@ -236,5 +331,8 @@ class ProviderWebhookEvent(UUIDTimeStampedModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=("provider", "provider_event_id"), name="commerce_unique_provider_event")
+            models.UniqueConstraint(
+                fields=("provider", "provider_event_id"),
+                name="commerce_unique_provider_event",
+            )
         ]
