@@ -117,6 +117,20 @@ class OrderType:
 
 
 @strawberry.type
+class CommerceCurrencySummaryType:
+    currency: str
+    gross_cents: int
+    marketplace_fee_cents: int
+    held_seller_funds_cents: int
+
+
+@strawberry.type
+class AdminCommerceSummaryType:
+    currencies: list[CommerceCurrencySummaryType]
+    open_disputes: int
+
+
+@strawberry.type
 class CheckoutPayload:
     order: OrderType
     payment: CommercePaymentType
