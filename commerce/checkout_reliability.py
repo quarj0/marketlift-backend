@@ -275,11 +275,12 @@ def _create_or_get_local_checkout(
             return previous.order, previous
 
         try:
+            # Only lock the Listing row. Category is nullable, so joining it in a
+            # SELECT ... FOR UPDATE makes PostgreSQL reject the query because the
+            # nullable side of an outer join cannot be locked.
             listing = (
                 Listing.objects.select_for_update()
-                .select_related(
-                    "seller", "seller__user", "category", "category__parent"
-                )
+                .select_related("seller", "seller__user")
                 .prefetch_related("media", "attribute_values")
                 .get(pk=str(listing_id))
             )
