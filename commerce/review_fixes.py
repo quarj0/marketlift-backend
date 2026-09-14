@@ -8,6 +8,7 @@ from django.utils import timezone
 from .models import CommercePayment, LedgerEntry, Order, Settlement
 from .policy_models import ListingCommerceSettings
 from .services import (
+    activate_seller_payments as _activate_seller_payments,
     finalize_order_refund as _finalize_order_refund,
     open_order_dispute as _open_order_dispute,
     refund_order as _refund_order,
@@ -31,6 +32,18 @@ RESTOCKABLE_REFUND_STATES = {
 }
 
 SUCCESSFUL_TRANSFER_STATUSES = {"paid", "transferred", "completed", "success", "succeeded"}
+
+
+def activate_seller_payments(*, seller, recipient_payload: dict, payout_method: str):
+    if getattr(seller, "seller_type", "individual") != "individual":
+        raise ValidationError(
+            "Business seller payout onboarding is not available until the CNPJ recipient flow is enabled."
+        )
+    return _activate_seller_payments(
+        seller=seller,
+        recipient_payload=recipient_payload,
+        payout_method=payout_method,
+    )
 
 
 def open_order_dispute(*, order: Order, user, reason: str, description: str):
