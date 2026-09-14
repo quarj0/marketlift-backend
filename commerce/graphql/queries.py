@@ -1,14 +1,14 @@
 import strawberry
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from categories.models import Category
 from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
 from marketlift.graphql.errors import not_found_error, validation_error
 
-from commerce.models import Dispute, Order, SellerPaymentAccount
+from commerce.models import Dispute, Order, SellerPaymentAccount, Settlement
 from commerce.policy_models import CategoryCommercePolicy
 from commerce.services import (
     listing_commerce_state,
@@ -26,8 +26,10 @@ from .mappers import (
     wallet_to_type,
 )
 from .types import (
+    AdminCommerceSummaryType,
     CategoryCommercePolicyType,
     CheckoutQuoteType,
+    CommerceCurrencySummaryType,
     DisputeType,
     ListingCommerceType,
     OrderType,
@@ -37,6 +39,17 @@ from .types import (
 
 
 SELLER_ADDRESS_VISIBLE_STATES = {
+    Order.Status.AWAITING_SELLER,
+    Order.Status.PROCESSING,
+    Order.Status.SHIPPED,
+    Order.Status.OUT_FOR_DELIVERY,
+    Order.Status.DELIVERED,
+    Order.Status.COMPLETED,
+    Order.Status.DISPUTED,
+}
+
+PAID_ORDER_STATES = {
+    Order.Status.PAID,
     Order.Status.AWAITING_SELLER,
     Order.Status.PROCESSING,
     Order.Status.SHIPPED,
@@ -206,6 +219,45 @@ class CommerceQuery:
         except SellerPaymentAccount.DoesNotExist:
             return None
         return payment_account_to_type(account)
+
+    @strawberry.field
+    def admin_commerce_summary(self, info: strawberry.Info) -> AdminCommerceSummaryType:
+        require_staff(info)
+        gross_rows = {
+            row["currency"]: {
+                "gross": int(row["gross"] or 0),
+                "fees": int(row["fees"] or 0),
+            }
+            for row in Order.objects.filter(status__in=PAID_ORDER_STATES)
+            .values("currency")
+            .annotate(gross=Sum("total_cents"), fees=Sum("marketplace_fee_cents"))
+        }
+        held_rows = {
+            row["order__currency"]: int(row["held"] or 0)
+            for row in Settlement.objects.filter(
+                status__in=(
+                    Settlement.Status.PENDING,
+                    Settlement.Status.HELD,
+                    Settlement.Status.BLOCKED,
+                )
+            )
+            .exclude(order__status__in=(Order.Status.CANCELLED, Order.Status.REFUNDED))
+            .values("order__currency")
+            .annotate(held=Sum("amount_cents"))
+        }
+        currencies = sorted(set(gross_rows) | set(held_rows))
+        return AdminCommerceSummaryType(
+            currencies=[
+                CommerceCurrencySummaryType(
+                    currency=currency,
+                    gross_cents=gross_rows.get(currency, {}).get("gross", 0),
+                    marketplace_fee_cents=gross_rows.get(currency, {}).get("fees", 0),
+                    held_seller_funds_cents=held_rows.get(currency, 0),
+                )
+                for currency in currencies
+            ],
+            open_disputes=Dispute.objects.filter(status=Dispute.Status.OPEN).count(),
+        )
 
     @strawberry.field
     def admin_commerce_orders(
