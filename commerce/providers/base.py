@@ -17,6 +17,14 @@ class CommerceProvider(ABC):
     def create_kyc_link(self, recipient_id: str) -> dict: ...
 
     @abstractmethod
+    def create_customer(self, *, payload: dict, idempotency_key: str) -> dict: ...
+
+    @abstractmethod
+    def create_card(
+        self, *, customer_id: str, token: str, idempotency_key: str
+    ) -> dict: ...
+
+    @abstractmethod
     def create_order(self, *, payload: dict, idempotency_key: str) -> dict: ...
 
     @abstractmethod
