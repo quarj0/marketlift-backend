@@ -17,6 +17,7 @@ from commerce.models import (
     Shipment,
 )
 from commerce.policy_models import CategoryCommercePolicy, ListingCommerceSettings
+from commerce.providers.base import CommerceProviderError
 from commerce.services import (
     confirm_order_delivered,
     listing_commerce_state,
@@ -205,3 +206,66 @@ class CommerceServiceTests(TestCase):
             ):
                 withdraw_available_balance(seller=self.seller)
         provider.create_transfer.assert_not_called()
+
+    def test_definitive_transfer_failure_requeues_available_settlement(self):
+        order = self.make_order(paid=True)
+        settlement = order.settlement
+        settlement.status = Settlement.Status.AVAILABLE
+        settlement.release_after = None
+        settlement.save(update_fields=("status", "release_after", "updated_at"))
+
+        provider = Mock()
+        provider.get_recipient_balance.return_value = {"available_amount": 500000}
+        provider.create_transfer.side_effect = CommerceProviderError(
+            "invalid transfer",
+            retryable=False,
+            status_code=422,
+        )
+        with patch("commerce.services.get_commerce_provider", return_value=provider):
+            with self.assertRaises(CommerceProviderError):
+                withdraw_available_balance(seller=self.seller)
+
+        settlement.refresh_from_db()
+        self.assertEqual(settlement.status, Settlement.Status.AVAILABLE)
+        self.assertEqual(settlement.provider_transfer_id, "")
+        self.assertEqual(settlement.payout_idempotency_key, "")
+        self.assertIsNone(settlement.payout_requested_at)
+
+    def test_retryable_transfer_failure_preserves_stable_batch_key(self):
+        order = self.make_order(paid=True)
+        settlement = order.settlement
+        settlement.status = Settlement.Status.AVAILABLE
+        settlement.release_after = None
+        settlement.save(update_fields=("status", "release_after", "updated_at"))
+
+        provider = Mock()
+        provider.get_recipient_balance.return_value = {"available_amount": 500000}
+        provider.create_transfer.side_effect = CommerceProviderError(
+            "provider timeout",
+            retryable=True,
+        )
+        with patch("commerce.services.get_commerce_provider", return_value=provider):
+            with self.assertRaises(CommerceProviderError):
+                withdraw_available_balance(seller=self.seller)
+
+        settlement.refresh_from_db()
+        first_key = settlement.payout_idempotency_key
+        self.assertEqual(settlement.status, Settlement.Status.PAYOUT_REQUESTED)
+        self.assertTrue(first_key)
+        self.assertEqual(settlement.provider_transfer_id, "")
+
+        provider.create_transfer.side_effect = None
+        provider.create_transfer.return_value = {
+            "id": "tr_retry",
+            "status": "pending",
+        }
+        with patch("commerce.services.get_commerce_provider", return_value=provider):
+            payload = withdraw_available_balance(seller=self.seller)
+
+        settlement.refresh_from_db()
+        self.assertEqual(payload["transfer_id"], "tr_retry")
+        self.assertEqual(settlement.payout_idempotency_key, first_key)
+        self.assertEqual(settlement.provider_transfer_id, "tr_retry")
+        first_call = provider.create_transfer.call_args_list[0].kwargs
+        second_call = provider.create_transfer.call_args_list[1].kwargs
+        self.assertEqual(first_call["idempotency_key"], second_call["idempotency_key"])
