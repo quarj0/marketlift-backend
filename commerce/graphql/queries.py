@@ -85,7 +85,14 @@ class CommerceQuery:
     def my_seller_orders(self, info: strawberry.Info, limit: int = 100) -> list[OrderType]:
         seller = require_seller(info)
         orders = _order_queryset().filter(seller=seller)[: max(1, min(limit, 200))]
-        return [order_to_type(order, buyer_view=False) for order in orders]
+        return [
+            order_to_type(
+                order,
+                buyer_view=False,
+                include_shipping_address=True,
+            )
+            for order in orders
+        ]
 
     @strawberry.field
     def my_seller_wallet(self, info: strawberry.Info) -> SellerWalletType:
