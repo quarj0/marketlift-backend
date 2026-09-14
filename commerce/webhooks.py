@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import CommercePayment, ProviderWebhookEvent, SellerPaymentAccount, Settlement
 from .policy_models import ListingCommerceSettings
-from .services import approve_commerce_payment
+from .services import approve_commerce_payment, finalize_order_refund
 
 
 def _event_identity(payload: dict, raw: bytes) -> tuple[str, str, str]:
@@ -30,7 +30,9 @@ def _restore_order_stock(payment: CommercePayment) -> None:
     if order.status != order.Status.PENDING_PAYMENT:
         return
     try:
-        config = ListingCommerceSettings.objects.select_for_update().get(listing=order.listing)
+        config = ListingCommerceSettings.objects.select_for_update().get(
+            listing=order.listing
+        )
     except ListingCommerceSettings.DoesNotExist:
         return
     config.stock_quantity += order.quantity
@@ -49,9 +51,36 @@ def _find_payment(data: dict) -> CommercePayment | None:
         payment = qs.filter(provider_charge_id=data_id).first()
         if payment:
             return payment
+        payment = qs.filter(provider_order_id=data_id).first()
+        if payment:
+            return payment
     if order_id:
         return qs.filter(provider_order_id=order_id).first()
     return None
+
+
+def _recipient_status(status: str) -> tuple[str, bool]:
+    normalized = status.lower().strip()
+    if normalized in {"active", "enabled", "registered"}:
+        return SellerPaymentAccount.Status.ACTIVE, True
+    if normalized in {
+        "rejected",
+        "refused",
+        "denied",
+        "failed",
+        "canceled",
+        "cancelled",
+    }:
+        return SellerPaymentAccount.Status.REJECTED, False
+    if normalized in {
+        "restricted",
+        "blocked",
+        "suspended",
+        "disabled",
+        "inactive",
+    }:
+        return SellerPaymentAccount.Status.RESTRICTED, False
+    return SellerPaymentAccount.Status.PENDING, False
 
 
 @transaction.atomic
@@ -70,45 +99,80 @@ def process_pagarme_event(payload: dict, raw: bytes) -> bool:
 
     if "recipient" in lowered:
         recipient_id = str(data.get("id") or "")
-        account = SellerPaymentAccount.objects.filter(provider_recipient_id=recipient_id).first()
+        account = SellerPaymentAccount.objects.filter(
+            provider_recipient_id=recipient_id
+        ).first()
         if account:
-            status = str(data.get("status") or "").lower()
-            active = status in {"active", "enabled", "registered"}
-            account.status = (
-                SellerPaymentAccount.Status.ACTIVE
-                if active
-                else SellerPaymentAccount.Status.PENDING
+            provider_status = str(data.get("status") or "").lower()
+            account_status, payouts_enabled = _recipient_status(provider_status)
+            account.status = account_status
+            account.payouts_enabled = payouts_enabled
+            account.metadata = {
+                **account.metadata,
+                "provider_status": provider_status,
+            }
+            account.save(
+                update_fields=(
+                    "status",
+                    "payouts_enabled",
+                    "metadata",
+                    "updated_at",
+                )
             )
-            account.payouts_enabled = active
-            account.metadata = {**account.metadata, "provider_status": status}
-            account.save(update_fields=("status", "payouts_enabled", "metadata", "updated_at"))
 
     payment = _find_payment(data)
     if payment:
-        if any(marker in lowered for marker in ("paid", "payment_succeeded", "approved")):
-            payment.provider_status = str(data.get("status") or "paid")
-            payment.save(update_fields=("provider_status", "updated_at"))
-            approve_commerce_payment(payment)
-        elif any(marker in lowered for marker in ("failed", "canceled", "cancelled")):
-            if payment.status == CommercePayment.Status.PENDING:
-                payment.status = CommercePayment.Status.FAILED
-                payment.provider_status = str(data.get("status") or event_type)
-                payment.failure_message = str(data.get("last_transaction", {}).get("acquirer_message") or "")
-                payment.save(update_fields=("status", "provider_status", "failure_message", "updated_at"))
-                _restore_order_stock(payment)
-        elif "refund" in lowered:
-            payment.status = CommercePayment.Status.REFUNDED
-            payment.refunded_at = timezone.now()
-            payment.provider_status = str(data.get("status") or event_type)
-            payment.save(update_fields=("status", "refunded_at", "provider_status", "updated_at"))
+        if "refund" in lowered:
+            finalize_order_refund(
+                payment=payment,
+                reason=f"Pagar.me webhook: {event_type}",
+                provider_status=str(data.get("status") or event_type),
+            )
         elif "chargeback" in lowered:
             payment.status = CommercePayment.Status.CHARGEBACK
             payment.provider_status = str(data.get("status") or event_type)
             payment.save(update_fields=("status", "provider_status", "updated_at"))
-            settlement = Settlement.objects.select_for_update().filter(order=payment.order).first()
+            settlement = (
+                Settlement.objects.select_for_update()
+                .filter(order=payment.order)
+                .first()
+            )
             if settlement and settlement.status != Settlement.Status.PAID:
                 settlement.status = Settlement.Status.BLOCKED
-                settlement.save(update_fields=("status", "updated_at"))
+                settlement.release_after = None
+                settlement.save(
+                    update_fields=("status", "release_after", "updated_at")
+                )
+        elif any(
+            marker in lowered for marker in ("paid", "payment_succeeded", "approved")
+        ):
+            payment.provider_status = str(data.get("status") or "paid")
+            payment.save(update_fields=("provider_status", "updated_at"))
+            approve_commerce_payment(payment)
+        elif any(
+            marker in lowered
+            for marker in ("failed", "canceled", "cancelled", "declined", "refused")
+        ):
+            if payment.status == CommercePayment.Status.PENDING:
+                provider_status = str(data.get("status") or event_type)
+                payment.status = (
+                    CommercePayment.Status.CANCELLED
+                    if any(marker in lowered for marker in ("canceled", "cancelled"))
+                    else CommercePayment.Status.FAILED
+                )
+                payment.provider_status = provider_status
+                payment.failure_message = str(
+                    data.get("last_transaction", {}).get("acquirer_message") or ""
+                )
+                payment.save(
+                    update_fields=(
+                        "status",
+                        "provider_status",
+                        "failure_message",
+                        "updated_at",
+                    )
+                )
+                _restore_order_stock(payment)
 
     if "transfer" in lowered:
         transfer_id = str(data.get("id") or "")
