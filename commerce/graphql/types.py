@@ -17,6 +17,17 @@ class ListingCommerceType:
 
 
 @strawberry.type
+class CheckoutQuoteType:
+    listing_id: strawberry.ID
+    fulfillment_method: str
+    quantity: int
+    subtotal_cents: int
+    shipping_amount_cents: int
+    total_cents: int
+    currency: str
+
+
+@strawberry.type
 class CategoryCommercePolicyType:
     category_id: str
     mode: str
