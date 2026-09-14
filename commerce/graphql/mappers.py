@@ -75,7 +75,12 @@ def settlement_to_type(settlement) -> SettlementType:
     )
 
 
-def order_to_type(order, *, buyer_view: bool = True) -> OrderType:
+def order_to_type(
+    order,
+    *,
+    buyer_view: bool = True,
+    include_shipping_address: bool | None = None,
+) -> OrderType:
     payment = order.payments.order_by("-created_at").first()
     try:
         shipment = order.shipment
@@ -86,9 +91,13 @@ def order_to_type(order, *, buyer_view: bool = True) -> OrderType:
     except Exception:
         settlement = None
     snapshot = dict(order.listing_snapshot or {})
-    # Delivery PIN is buyer-only and is never exposed to the seller/admin order view.
+    # Delivery PIN is buyer-only. Sellers receive the delivery address needed to
+    # fulfil an order, but never the buyer's PIN. Admin order views do not expose
+    # the address unless a resolver explicitly opts in for an operational action.
     if not buyer_view:
         snapshot.pop("delivery_pin", None)
+    if include_shipping_address is None:
+        include_shipping_address = buyer_view
     return OrderType(
         id=str(order.id),
         reference=order.reference,
@@ -105,7 +114,7 @@ def order_to_type(order, *, buyer_view: bool = True) -> OrderType:
         seller_proceeds_cents=order.seller_proceeds_cents,
         total_cents=order.total_cents,
         currency=order.currency,
-        shipping_address=order.shipping_address if buyer_view else {},
+        shipping_address=order.shipping_address if include_shipping_address else {},
         listing_snapshot=snapshot,
         payment=payment_to_type(payment) if payment else None,
         shipment=shipment_to_type(shipment) if shipment else None,
