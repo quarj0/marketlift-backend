@@ -10,7 +10,14 @@ from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import CommercePayment, ProviderWebhookEvent, SellerPaymentAccount, Settlement
+from .models import (
+    CommercePayment,
+    Dispute,
+    Order,
+    ProviderWebhookEvent,
+    SellerPaymentAccount,
+    Settlement,
+)
 from .policy_models import ListingCommerceSettings
 from .review_fixes import requeue_failed_transfer
 from .services import approve_commerce_payment, finalize_order_refund
@@ -47,7 +54,9 @@ def _find_payment(data: dict) -> CommercePayment | None:
     data_id = str(data.get("id") or "")
     order = data.get("order") or {}
     order_id = str(order.get("id") or data.get("order_id") or "")
-    qs = CommercePayment.objects.select_related("order", "order__listing")
+    qs = CommercePayment.objects.select_related(
+        "order", "order__listing", "order__buyer"
+    )
     if data_id:
         payment = qs.filter(provider_charge_id=data_id).first()
         if payment:
@@ -82,6 +91,32 @@ def _recipient_status(status: str) -> tuple[str, bool]:
     }:
         return SellerPaymentAccount.Status.RESTRICTED, False
     return SellerPaymentAccount.Status.PENDING, False
+
+
+def _record_chargeback_recovery(payment: CommercePayment, event_type: str) -> None:
+    order = Order.objects.select_for_update().select_related("buyer").get(
+        pk=payment.order_id
+    )
+    order.status = Order.Status.DISPUTED
+    order.save(update_fields=("status", "updated_at"))
+    settlement = (
+        Settlement.objects.select_for_update().filter(order=order).first()
+    )
+    if settlement and settlement.status != Settlement.Status.PAID:
+        settlement.status = Settlement.Status.BLOCKED
+        settlement.release_after = None
+        settlement.save(update_fields=("status", "release_after", "updated_at"))
+    if not order.disputes.filter(status=Dispute.Status.OPEN).exists():
+        Dispute.objects.create(
+            order=order,
+            opened_by=order.buyer,
+            reason="provider_chargeback",
+            description=(
+                "Payment provider reported a chargeback. Fulfillment is blocked "
+                f"pending financial review ({event_type})."
+            ),
+            evidence=[{"source": "payment_provider", "event_type": event_type}],
+        )
 
 
 @transaction.atomic
@@ -133,19 +168,10 @@ def process_pagarme_event(payload: dict, raw: bytes) -> bool:
             payment.status = CommercePayment.Status.CHARGEBACK
             payment.provider_status = str(data.get("status") or event_type)
             payment.save(update_fields=("status", "provider_status", "updated_at"))
-            settlement = (
-                Settlement.objects.select_for_update()
-                .filter(order=payment.order)
-                .first()
-            )
-            if settlement and settlement.status != Settlement.Status.PAID:
-                settlement.status = Settlement.Status.BLOCKED
-                settlement.release_after = None
-                settlement.save(
-                    update_fields=("status", "release_after", "updated_at")
-                )
+            _record_chargeback_recovery(payment, event_type)
         elif any(
-            marker in lowered for marker in ("paid", "payment_succeeded", "approved")
+            marker in lowered
+            for marker in ("paid", "payment_succeeded", "approved")
         ):
             payment.provider_status = str(data.get("status") or "paid")
             payment.save(update_fields=("provider_status", "updated_at"))
@@ -178,7 +204,13 @@ def process_pagarme_event(payload: dict, raw: bytes) -> bool:
     if "transfer" in lowered:
         transfer_id = str(data.get("id") or "")
         status = str(data.get("status") or "").lower()
-        if transfer_id and status in {"paid", "transferred", "completed", "success", "succeeded"}:
+        if transfer_id and status in {
+            "paid",
+            "transferred",
+            "completed",
+            "success",
+            "succeeded",
+        }:
             rows = Settlement.objects.select_for_update().filter(
                 provider_transfer_id=transfer_id,
                 status=Settlement.Status.PAYOUT_REQUESTED,
