@@ -40,6 +40,7 @@ from . import services as _services  # noqa: E402
 from . import review_fixes as _review_fixes  # noqa: E402
 
 _services.activate_seller_payments = _review_fixes.activate_seller_payments
+_services.create_checkout_order = _review_fixes.create_checkout_order
 _services.open_order_dispute = _review_fixes.open_order_dispute
 _services.seller_wallet = _review_fixes.seller_wallet
 _services.finalize_order_refund = _review_fixes.finalize_order_refund
