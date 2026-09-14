@@ -122,16 +122,26 @@ def _provider_payload(
         },
     ]
     title = str(order.listing_snapshot.get("title") or "Marketlift item")[:255]
+    items = [
+        {
+            "amount": order.unit_price_cents,
+            "description": title,
+            "quantity": order.quantity,
+            "code": str(order.listing_id),
+        }
+    ]
+    if order.shipping_amount_cents:
+        items.append(
+            {
+                "amount": order.shipping_amount_cents,
+                "description": "Marketlift local delivery",
+                "quantity": 1,
+                "code": f"delivery:{order.id}",
+            }
+        )
     return {
         "code": order.reference,
-        "items": [
-            {
-                "amount": order.unit_price_cents,
-                "description": title,
-                "quantity": order.quantity,
-                "code": str(order.listing_id),
-            }
-        ],
+        "items": items,
         "customer": _buyer_customer_payload(
             buyer=buyer,
             document=customer_document,
