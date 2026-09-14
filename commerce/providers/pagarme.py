@@ -62,6 +62,21 @@ class PagarMeCommerceProvider(CommerceProvider):
     def create_kyc_link(self, recipient_id: str) -> dict:
         return self._request("POST", f"/recipients/{recipient_id}/kyc_link")
 
+    def create_customer(self, *, payload: dict, idempotency_key: str) -> dict:
+        return self._request(
+            "POST", "/customers", json=payload, idempotency_key=idempotency_key
+        )
+
+    def create_card(
+        self, *, customer_id: str, token: str, idempotency_key: str
+    ) -> dict:
+        return self._request(
+            "POST",
+            f"/customers/{customer_id}/cards",
+            json={"token": token},
+            idempotency_key=idempotency_key,
+        )
+
     def create_order(self, *, payload: dict, idempotency_key: str) -> dict:
         return self._request(
             "POST", "/orders", json=payload, idempotency_key=idempotency_key
