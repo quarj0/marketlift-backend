@@ -12,7 +12,20 @@ from .types import (
 
 
 def listing_commerce_to_type(state: dict) -> ListingCommerceType:
-    return ListingCommerceType(**state)
+    return ListingCommerceType(
+        mode=state["mode"],
+        checkout_enabled=state["checkout_enabled"],
+        inspection_allowed=state["inspection_allowed"],
+        stock_quantity=state["stock_quantity"],
+        fulfillment_methods=state["fulfillment_methods"],
+        reasons=state["reasons"],
+        requires_verified_seller=state["requires_verified_seller"],
+        max_checkout_value_cents=state["max_checkout_value_cents"],
+        package_weight_grams=state.get("package_weight_grams"),
+        package_length_cm=state.get("package_length_cm"),
+        package_width_cm=state.get("package_width_cm"),
+        package_height_cm=state.get("package_height_cm"),
+    )
 
 
 def category_policy_to_type(category, policy) -> CategoryCommercePolicyType:
