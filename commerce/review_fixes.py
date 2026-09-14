@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from .models import CommercePayment, LedgerEntry, Order, SellerPaymentAccount, Settlement
 from .policy_models import ListingCommerceSettings
+from .providers.base import CommerceProviderError
 from .services import (
     _normalize_shipping_address,
     _scoped_checkout_idempotency_key,
@@ -342,8 +343,58 @@ def refund_order(*, order: Order, reason: str = "") -> Order:
     return _refund_order(order=order, reason=reason)
 
 
+def _requeue_unsubmitted_payout_batch(*, seller) -> int:
+    """Restore a payout batch after a definitive provider-side rejection.
+
+    Retryable/ambiguous failures deliberately keep the batch requested with its
+    stable idempotency key. A definitive 4xx response proves no transfer will be
+    created, so the settlements must become withdrawable again (unless a refund
+    or chargeback financially blocks them).
+    """
+    with transaction.atomic():
+        rows = list(
+            Settlement.objects.select_for_update()
+            .select_related("order")
+            .filter(
+                seller=seller,
+                status=Settlement.Status.PAYOUT_REQUESTED,
+                provider_transfer_id="",
+            )
+            .exclude(payout_idempotency_key="")
+        )
+        for settlement in rows:
+            financially_blocked = (
+                settlement.order.status == Order.Status.REFUNDED
+                or settlement.order.payments.filter(
+                    status=CommercePayment.Status.CHARGEBACK
+                ).exists()
+            )
+            settlement.status = (
+                Settlement.Status.BLOCKED
+                if financially_blocked
+                else Settlement.Status.AVAILABLE
+            )
+            settlement.payout_idempotency_key = ""
+            settlement.payout_requested_at = None
+            settlement.save(
+                update_fields=(
+                    "status",
+                    "payout_idempotency_key",
+                    "payout_requested_at",
+                    "updated_at",
+                )
+            )
+        return len(rows)
+
+
 def withdraw_available_balance(*, seller) -> dict:
-    payload = _withdraw_available_balance(seller=seller)
+    try:
+        payload = _withdraw_available_balance(seller=seller)
+    except CommerceProviderError as exc:
+        if not exc.retryable:
+            _requeue_unsubmitted_payout_batch(seller=seller)
+        raise
+
     transfer_id = str(payload.get("transfer_id") or "").strip()
     status = str(payload.get("status") or "").strip().lower()
     if transfer_id and status in SUCCESSFUL_TRANSFER_STATUSES:
@@ -381,9 +432,12 @@ def requeue_failed_transfer(*, transfer_id: str) -> int:
         for settlement in rows:
             # Refunds and chargebacks must never become withdrawable again if
             # an in-flight provider transfer fails.
-            financially_blocked = settlement.order.status == Order.Status.REFUNDED or settlement.order.payments.filter(
-                status=CommercePayment.Status.CHARGEBACK
-            ).exists()
+            financially_blocked = (
+                settlement.order.status == Order.Status.REFUNDED
+                or settlement.order.payments.filter(
+                    status=CommercePayment.Status.CHARGEBACK
+                ).exists()
+            )
             settlement.status = (
                 Settlement.Status.BLOCKED
                 if financially_blocked
