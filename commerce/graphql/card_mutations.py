@@ -1,4 +1,5 @@
 import strawberry
+from django.core import signing
 from django.core.exceptions import ValidationError
 
 from marketlift.graphql.auth import require_user
@@ -6,6 +7,8 @@ from marketlift.graphql.errors import domain_error, validation_error
 
 from commerce.providers import get_commerce_provider
 from commerce.providers.base import CommerceProviderError
+
+CARD_REFERENCE_SALT = "marketlift.commerce.card-reference.v1"
 
 
 def _customer_payload(user, document: str, phone: str) -> dict:
@@ -32,6 +35,18 @@ def _customer_payload(user, document: str, phone: str) -> dict:
             }
         },
     }
+
+
+def sign_card_reference(*, user_id, customer_id: str, card_id: str) -> str:
+    return signing.dumps(
+        {
+            "buyer_id": str(user_id),
+            "customer_id": customer_id,
+            "card_id": card_id,
+        },
+        salt=CARD_REFERENCE_SALT,
+        compress=True,
+    )
 
 
 @strawberry.type
@@ -78,4 +93,10 @@ class CommerceCardMutation:
                 code="PAYMENT_PROVIDER_ERROR",
                 status=502,
             )
-        return card_id
+        # Clients receive a signed, buyer-bound reference rather than the raw
+        # provider card ID. Checkout verifies ownership before unwrapping it.
+        return sign_card_reference(
+            user_id=user.id,
+            customer_id=customer_id,
+            card_id=card_id,
+        )
