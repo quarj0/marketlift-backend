@@ -6,8 +6,6 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils import timezone
 
-from listings.models import Listing
-
 from .models import CommercePayment, LedgerEntry, Order, SellerPaymentAccount, Settlement
 from .policy_models import ListingCommerceSettings
 from .services import (
@@ -115,8 +113,12 @@ def _unwrap_buyer_card_reference(*, buyer, reference: str | None) -> str | None:
             max_age=CARD_REFERENCE_MAX_AGE_SECONDS,
         )
     except signing.BadSignature as exc:
-        raise ValidationError({"cardId": "This vaulted card reference is invalid or expired."}) from exc
-    if not isinstance(payload, dict) or str(payload.get("buyer_id") or "") != str(buyer.id):
+        raise ValidationError(
+            {"cardId": "This vaulted card reference is invalid or expired."}
+        ) from exc
+    if not isinstance(payload, dict) or str(payload.get("buyer_id") or "") != str(
+        buyer.id
+    ):
         raise ValidationError({"cardId": "This vaulted card does not belong to this buyer."})
     card_id = str(payload.get("card_id") or "").strip()
     if not card_id:
@@ -138,11 +140,12 @@ def create_checkout_order(
     card_id: str | None,
     idempotency_key: str,
 ):
-    """Serialize same-key checkout replays and authorize vaulted cards.
+    """Serialize buyer checkout attempts and authorize vaulted cards.
 
-    The listing row is the checkout serialization point. After acquiring it we
-    re-check the buyer-scoped idempotency key, so concurrent retries return the
-    first order instead of racing the unique payment key or mutable stock.
+    The buyer row is the serialization point. It guarantees that two concurrent
+    requests from the same buyer cannot both observe the same idempotency key as
+    unused, even when the requests target different listings. Once the lock is
+    acquired we re-check the buyer-scoped key before mutable stock validation.
     """
     normalized_address = _normalize_shipping_address(
         fulfillment_method, shipping_address
@@ -174,10 +177,10 @@ def create_checkout_order(
     if replay:
         return replay
 
-    try:
-        Listing.objects.select_for_update().only("pk").get(pk=str(listing_id))
-    except (Listing.DoesNotExist, ValueError) as exc:
-        raise ValidationError({"listingId": "Listing was not found."}) from exc
+    # Serialize all checkout attempts for this buyer. This is intentionally
+    # broader than a listing lock because an idempotency key can otherwise race
+    # across two different listings and hit the unique payment constraint.
+    buyer.__class__.objects.select_for_update().only("pk").get(pk=buyer.pk)
 
     replay = replay_if_present()
     if replay:
@@ -376,11 +379,14 @@ def requeue_failed_transfer(*, transfer_id: str) -> int:
         if not rows:
             return 0
         for settlement in rows:
-            # A buyer refund may arrive while the provider transfer is in flight.
-            # If that transfer then fails, the seller must not regain availability.
+            # Refunds and chargebacks must never become withdrawable again if
+            # an in-flight provider transfer fails.
+            financially_blocked = settlement.order.status == Order.Status.REFUNDED or settlement.order.payments.filter(
+                status=CommercePayment.Status.CHARGEBACK
+            ).exists()
             settlement.status = (
                 Settlement.Status.BLOCKED
-                if settlement.order.status == Order.Status.REFUNDED
+                if financially_blocked
                 else Settlement.Status.AVAILABLE
             )
             settlement.provider_transfer_id = ""
