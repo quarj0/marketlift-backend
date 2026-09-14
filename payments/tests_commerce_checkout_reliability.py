@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
@@ -10,6 +11,7 @@ from commerce.models import CommercePayment, Order, SellerPaymentAccount
 from commerce.policy_models import CategoryCommercePolicy, ListingCommerceSettings
 from commerce.providers.base import CommerceProviderError
 from commerce.services import create_checkout_order
+from commerce.webhooks import process_pagarme_event
 from listings.models import Listing
 from sellers.models import SellerProfile
 
@@ -136,6 +138,52 @@ class DurableCheckoutTests(TestCase):
         self.config.refresh_from_db()
         self.assertEqual(self.config.stock_quantity, 0)
         self.assertEqual(provider.create_order.call_count, 2)
+
+    def test_webhook_metadata_recovers_payment_when_checkout_response_was_lost(self):
+        provider = Mock()
+        provider.create_order.side_effect = CommerceProviderError(
+            "provider timeout", retryable=True
+        )
+        with patch(
+            "commerce.checkout_reliability.get_commerce_provider",
+            return_value=provider,
+        ):
+            with self.assertRaises(CommerceProviderError):
+                self.checkout(key="lost-response")
+
+        order = Order.objects.get()
+        payment = CommercePayment.objects.get(order=order)
+        self.assertFalse(payment.provider_order_id)
+        self.assertEqual(order.status, Order.Status.PENDING_PAYMENT)
+
+        payload = {
+            "id": "hook_lost_response_paid",
+            "type": "order.paid",
+            "data": {
+                "id": "or_recovered",
+                "status": "paid",
+                "metadata": {"marketlift_order_id": str(order.id)},
+                "charges": [
+                    {
+                        "id": "ch_recovered",
+                        "status": "paid",
+                        "last_transaction": {"id": "tx_recovered"},
+                    }
+                ],
+            },
+        }
+        raw = json.dumps(payload, sort_keys=True).encode("utf-8")
+        self.assertTrue(process_pagarme_event(payload, raw))
+
+        order.refresh_from_db()
+        payment.refresh_from_db()
+        self.config.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.AWAITING_SELLER)
+        self.assertEqual(payment.status, CommercePayment.Status.APPROVED)
+        self.assertEqual(payment.provider_order_id, "or_recovered")
+        self.assertEqual(payment.provider_charge_id, "ch_recovered")
+        self.assertEqual(payment.provider_transaction_id, "tx_recovered")
+        self.assertEqual(self.config.stock_quantity, 0)
 
     def test_definitive_provider_rejection_cancels_order_and_restores_stock(self):
         provider = Mock()
