@@ -77,9 +77,48 @@ class PagarMeCommerceProvider(CommerceProvider):
             idempotency_key=idempotency_key,
         )
 
+    @staticmethod
+    def _with_order_adjustment(payload: dict) -> dict:
+        """Ensure item totals match the amount represented by the payment split.
+
+        Marketlift may add a local-delivery fee outside the listing subtotal. Pagar.me
+        requires the order item total to match the amount being charged, so represent
+        that fee as a separate order item before sending the request.
+        """
+        normalized = dict(payload)
+        items = [dict(item) for item in (payload.get("items") or [])]
+        payments = payload.get("payments") or []
+        split_total = 0
+        if payments:
+            split_total = sum(
+                int(row.get("amount") or 0)
+                for row in (payments[0].get("split") or [])
+            )
+        item_total = sum(
+            int(item.get("amount") or 0) * int(item.get("quantity") or 0)
+            for item in items
+        )
+        adjustment = split_total - item_total
+        if adjustment < 0:
+            raise CommerceProviderError("Pagar.me order items exceed the payment total.")
+        if adjustment:
+            items.append(
+                {
+                    "amount": adjustment,
+                    "description": "Marketlift delivery",
+                    "quantity": 1,
+                    "code": "marketlift-delivery",
+                }
+            )
+        normalized["items"] = items
+        return normalized
+
     def create_order(self, *, payload: dict, idempotency_key: str) -> dict:
         return self._request(
-            "POST", "/orders", json=payload, idempotency_key=idempotency_key
+            "POST",
+            "/orders",
+            json=self._with_order_adjustment(payload),
+            idempotency_key=idempotency_key,
         )
 
     def get_recipient_balance(self, recipient_id: str) -> dict:
