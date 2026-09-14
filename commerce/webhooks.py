@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import CommercePayment, ProviderWebhookEvent, SellerPaymentAccount, Settlement
 from .policy_models import ListingCommerceSettings
+from .review_fixes import requeue_failed_transfer
 from .services import approve_commerce_payment, finalize_order_refund
 
 
@@ -177,13 +178,21 @@ def process_pagarme_event(payload: dict, raw: bytes) -> bool:
     if "transfer" in lowered:
         transfer_id = str(data.get("id") or "")
         status = str(data.get("status") or "").lower()
-        if transfer_id and status in {"paid", "transferred", "completed"}:
+        if transfer_id and status in {"paid", "transferred", "completed", "success", "succeeded"}:
             rows = Settlement.objects.select_for_update().filter(
                 provider_transfer_id=transfer_id,
                 status=Settlement.Status.PAYOUT_REQUESTED,
             )
             now = timezone.now()
             rows.update(status=Settlement.Status.PAID, paid_at=now, updated_at=now)
+        elif transfer_id and status in {
+            "failed",
+            "refused",
+            "rejected",
+            "canceled",
+            "cancelled",
+        }:
+            requeue_failed_transfer(transfer_id=transfer_id)
 
     event.processed_at = timezone.now()
     event.save(update_fields=("processed_at", "updated_at"))
