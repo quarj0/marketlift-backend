@@ -253,7 +253,7 @@ class DurableCheckoutTests(TestCase):
         item_total = sum(
             item["amount"] * item["quantity"] for item in payload["items"]
         )
-        split = payload["payments"][0]["pix"]["split"]
+        split = payload["payments"][0]["split"]
         split_total = sum(row["amount"] for row in split)
 
         self.assertEqual(order.subtotal_cents, 10000)
