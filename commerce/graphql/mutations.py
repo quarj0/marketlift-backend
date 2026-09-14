@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 from strawberry.scalars import JSON
 
+from accounts.models import User
 from categories.models import Category
 from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
@@ -42,9 +43,7 @@ from .types import (
 
 
 def _provider_error(exc: CommerceProviderError):
-    return domain_error(
-        str(exc), code="PAYMENT_PROVIDER_ERROR", status=502
-    )
+    return domain_error(str(exc), code="PAYMENT_PROVIDER_ERROR", status=502)
 
 
 def _owned_listing(seller, listing_id) -> Listing:
@@ -107,7 +106,9 @@ class CommerceMutation:
                 package_height_cm=package_height_cm,
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="COMMERCE_LISTING_VALIDATION_ERROR") from exc
+            raise validation_error(
+                exc, code="COMMERCE_LISTING_VALIDATION_ERROR"
+            ) from exc
         return True
 
     @strawberry.mutation
@@ -125,7 +126,9 @@ class CommerceMutation:
                 payout_method=payout_method,
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="SELLER_PAYMENT_VALIDATION_ERROR") from exc
+            raise validation_error(
+                exc, code="SELLER_PAYMENT_VALIDATION_ERROR"
+            ) from exc
         except CommerceProviderError as exc:
             raise _provider_error(exc) from exc
         return payment_account_to_type(account)
@@ -162,7 +165,9 @@ class CommerceMutation:
             raise validation_error(exc, code="CHECKOUT_VALIDATION_ERROR") from exc
         except CommerceProviderError as exc:
             raise _provider_error(exc) from exc
-        order = Order.objects.select_related("buyer", "seller", "listing").get(pk=order.pk)
+        order = Order.objects.select_related("buyer", "seller", "listing").get(
+            pk=order.pk
+        )
         return CheckoutPayload(
             order=order_to_type(order, buyer_view=True),
             payment=payment_to_type(payment),
@@ -178,8 +183,12 @@ class CommerceMutation:
                 order=_order_for_seller(seller, order_id), seller=seller
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="ORDER_TRANSITION_INVALID", status=409) from exc
-        return order_to_type(order, buyer_view=False)
+            raise validation_error(
+                exc, code="ORDER_TRANSITION_INVALID", status=409
+            ) from exc
+        return order_to_type(
+            order, buyer_view=False, include_shipping_address=True
+        )
 
     @strawberry.mutation
     def mark_commerce_order_shipped(
@@ -198,8 +207,12 @@ class CommerceMutation:
                 tracking_code=tracking_code,
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="ORDER_TRANSITION_INVALID", status=409) from exc
-        return order_to_type(order, buyer_view=False)
+            raise validation_error(
+                exc, code="ORDER_TRANSITION_INVALID", status=409
+            ) from exc
+        return order_to_type(
+            order, buyer_view=False, include_shipping_address=True
+        )
 
     @strawberry.mutation
     def confirm_commerce_order_received(
@@ -211,7 +224,9 @@ class CommerceMutation:
                 order=_order_for_buyer(user, order_id), buyer=user
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="ORDER_DELIVERY_INVALID", status=409) from exc
+            raise validation_error(
+                exc, code="ORDER_DELIVERY_INVALID", status=409
+            ) from exc
         return order_to_type(order, buyer_view=True)
 
     @strawberry.mutation
@@ -234,7 +249,9 @@ class CommerceMutation:
                 proof=dict(proof or {}),
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="DELIVERY_PIN_INVALID", status=409) from exc
+            raise validation_error(
+                exc, code="DELIVERY_PIN_INVALID", status=409
+            ) from exc
         return order_to_type(order, buyer_view=False)
 
     @strawberry.mutation
@@ -255,7 +272,9 @@ class CommerceMutation:
                 order=order, user=user, reason=reason, description=description
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="DISPUTE_VALIDATION_ERROR", status=409) from exc
+            raise validation_error(
+                exc, code="DISPUTE_VALIDATION_ERROR", status=409
+            ) from exc
         return dispute_to_type(dispute)
 
     @strawberry.mutation
@@ -264,7 +283,9 @@ class CommerceMutation:
         try:
             payload = withdraw_available_balance(seller=seller)
         except ValidationError as exc:
-            raise validation_error(exc, code="PAYOUT_VALIDATION_ERROR", status=409) from exc
+            raise validation_error(
+                exc, code="PAYOUT_VALIDATION_ERROR", status=409
+            ) from exc
         except CommerceProviderError as exc:
             raise _provider_error(exc) from exc
         return PayoutPayload(**payload)
@@ -297,7 +318,9 @@ class CommerceMutation:
                 pickup_allowed=pickup_allowed,
             )
         except ValidationError as exc:
-            raise validation_error(exc, code="CATEGORY_COMMERCE_VALIDATION_ERROR") from exc
+            raise validation_error(
+                exc, code="CATEGORY_COMMERCE_VALIDATION_ERROR"
+            ) from exc
         return category_policy_to_type(category, policy)
 
     @strawberry.mutation
@@ -307,35 +330,75 @@ class CommerceMutation:
         dispute_id: strawberry.ID,
         resolution: str,
     ) -> DisputeType:
-        require_staff(info)
-        try:
-            dispute = Dispute.objects.select_related("order").get(pk=str(dispute_id))
-        except (Dispute.DoesNotExist, ValueError) as exc:
-            raise not_found_error("Dispute", code="DISPUTE_NOT_FOUND") from exc
-        if dispute.status != Dispute.Status.OPEN:
-            raise domain_error(
-                "This dispute is already final.", code="DISPUTE_FINAL", status=409
-            )
+        require_staff(
+            info,
+            roles={User.AdminRole.ADMIN, User.AdminRole.FINANCE},
+        )
         try:
             with transaction.atomic():
+                dispute = (
+                    Dispute.objects.select_for_update()
+                    .select_related("order")
+                    .get(pk=str(dispute_id))
+                )
+                if dispute.status != Dispute.Status.OPEN:
+                    raise domain_error(
+                        "This dispute is already final.",
+                        code="DISPUTE_FINAL",
+                        status=409,
+                    )
+                order = Order.objects.select_for_update().get(
+                    pk=dispute.order_id
+                )
+
                 if resolution == "buyer":
-                    refund_order(order=dispute.order, reason="Admin dispute resolution")
+                    refund_order(
+                        order=order,
+                        reason="Admin dispute resolution",
+                    )
                     dispute.status = Dispute.Status.RESOLVED_BUYER
                 elif resolution == "seller":
-                    settlement = Settlement.objects.select_for_update().get(order=dispute.order)
+                    settlement = Settlement.objects.select_for_update().get(
+                        order=order
+                    )
+                    if settlement.status != Settlement.Status.BLOCKED:
+                        raise ValidationError(
+                            "Only a blocked disputed settlement can be released."
+                        )
                     settlement.status = Settlement.Status.AVAILABLE
                     settlement.release_after = timezone.now()
-                    settlement.save(update_fields=("status", "release_after", "updated_at"))
-                    dispute.order.status = Order.Status.COMPLETED
-                    dispute.order.completed_at = timezone.now()
-                    dispute.order.save(update_fields=("status", "completed_at", "updated_at"))
+                    settlement.save(
+                        update_fields=(
+                            "status",
+                            "release_after",
+                            "updated_at",
+                        )
+                    )
+                    order.status = Order.Status.COMPLETED
+                    order.completed_at = timezone.now()
+                    order.save(
+                        update_fields=(
+                            "status",
+                            "completed_at",
+                            "updated_at",
+                        )
+                    )
                     dispute.status = Dispute.Status.RESOLVED_SELLER
                 else:
-                    raise ValidationError({"resolution": "Use 'buyer' or 'seller'."})
+                    raise ValidationError(
+                        {"resolution": "Use 'buyer' or 'seller'."}
+                    )
+
                 dispute.resolved_at = timezone.now()
-                dispute.save(update_fields=("status", "resolved_at", "updated_at"))
+                dispute.save(
+                    update_fields=("status", "resolved_at", "updated_at")
+                )
+        except (Dispute.DoesNotExist, ValueError) as exc:
+            raise not_found_error("Dispute", code="DISPUTE_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(exc, code="DISPUTE_RESOLUTION_INVALID") from exc
+            raise validation_error(
+                exc, code="DISPUTE_RESOLUTION_INVALID"
+            ) from exc
         except CommerceProviderError as exc:
             raise _provider_error(exc) from exc
         return dispute_to_type(dispute)
