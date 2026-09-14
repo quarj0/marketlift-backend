@@ -4,7 +4,24 @@ from abc import ABC, abstractmethod
 
 
 class CommerceProviderError(RuntimeError):
-    pass
+    """Provider failure with enough metadata to make retry decisions safely.
+
+    ``retryable`` means the caller cannot know whether the provider accepted the
+    request (transport errors, rate limits, and server errors). In that case an
+    idempotent retry must reuse the exact same operation key. Client/request
+    validation failures are definitive and can release any local reservation.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        retryable: bool = True,
+        status_code: int | None = None,
+    ):
+        super().__init__(message)
+        self.retryable = retryable
+        self.status_code = status_code
 
 
 class CommerceProvider(ABC):
