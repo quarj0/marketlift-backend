@@ -8,7 +8,7 @@ urlpatterns = [
     path("telemetry/web-vitals/", WebVitalsView.as_view(), name="web-vitals"),
     path("sitemap/", SitemapView.as_view(), name="sitemap-data"),
     path("health/", health, name="health"),
-    path("maintenance/", maintenance_status, name="maintenance-status"),
+    path("health/maintenance/", maintenance_status, name="maintenance-status"),
     path("market/", market_profile, name="market-profile"),
     path("ready/", readiness, name="readiness"),
     path("auth/", include("marketlift.api.auth.urls")),
