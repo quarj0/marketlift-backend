@@ -7,10 +7,12 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from categories.models import Category
+from commerce.delivery_guards import buyer_confirm_non_local_delivery
 from commerce.delivery_services import (
     admin_override_delivery,
     assign_delivery_rider,
     confirm_rider_delivery_pin,
+    secure_local_delivery_pin,
     set_delivery_rider_access,
     start_rider_delivery,
 )
@@ -23,7 +25,6 @@ from commerce.models import (
     Settlement,
     Shipment,
 )
-from commerce.services import confirm_order_delivered
 from listings.models import Listing
 from sellers.models import SellerProfile
 
@@ -125,10 +126,11 @@ class RiderDeliverySecurityTests(TestCase):
             amount_cents=11000,
             paid_at=now,
         )
-        # Reproduce the checkout service's legacy final save. The post-save
-        # security hook must encrypt and scrub this value synchronously.
+        # Reproduce checkout's temporary snapshot handoff, then call the same
+        # synchronous security helper used before the checkout transaction commits.
         order.listing_snapshot = {"title": "Delivered item", "delivery_pin": pin}
         order.save(update_fields=("listing_snapshot", "updated_at"))
+        secure_local_delivery_pin(order)
         order.refresh_from_db()
         shipment.refresh_from_db()
         return order, shipment
@@ -161,13 +163,13 @@ class RiderDeliverySecurityTests(TestCase):
         self.assertIsNone(seller_view.shipment.delivery_pin)
         self.assertNotIn("delivery_pin", seller_view.listing_snapshot)
 
-    def test_generic_buyer_confirmation_cannot_bypass_rider_for_local_delivery(self):
+    def test_buyer_confirmation_cannot_bypass_rider_for_local_delivery(self):
         order, _ = self.make_local_order(status=Order.Status.SHIPPED)
         with self.assertRaisesMessage(
             ValidationError,
             "Local delivery must be confirmed by the assigned rider",
         ):
-            confirm_order_delivered(order=order, buyer=self.buyer)
+            buyer_confirm_non_local_delivery(order=order, buyer=self.buyer)
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.SHIPPED)
 
@@ -280,6 +282,7 @@ class RiderDeliverySecurityTests(TestCase):
             reason="Buyer called support and confirmed handoff after rider device failure.",
         )
         delivered.refresh_from_db()
+        shipment.refresh_from_db()
         assignment = DeliveryAssignment.objects.get(shipment=shipment)
         self.assertEqual(delivered.status, Order.Status.DELIVERED)
         self.assertEqual(
