@@ -22,12 +22,14 @@ class Command(BaseCommand):
 
         self.stdout.write("Add these values to the backend environment:")
         self.stdout.write(f"MARKETLIFT_VAPID_PRIVATE_KEY={_b64url(private_value)}")
-        self.stdout.write(f"MARKETLIFT_VAPID_PUBLIC_KEY={_b64url(public_value)}")
+        self.stdout.write("MARKETLIFT_VAPID_SUBJECT=mailto:support@marketlift.com.br")
+        self.stdout.write("")
         self.stdout.write(
-            "MARKETLIFT_VAPID_SUBJECT=mailto:support@marketlift.com.br"
+            "Derived public key (informational; Marketlift serves this from the API):"
         )
+        self.stdout.write(_b64url(public_value))
         self.stdout.write(
             self.style.WARNING(
-                "Keep MARKETLIFT_VAPID_PRIVATE_KEY secret. The public key may be shared."
+                "Keep MARKETLIFT_VAPID_PRIVATE_KEY secret. Never put it in a frontend or NEXT_PUBLIC_* variable."
             )
         )
