@@ -201,6 +201,14 @@ class AdminLoginVerifyView(APIView):
         enforce_rate_limit(request, "auth-admin-login-verify", limit=12, window=900)
         serializer = AdminLoginVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # A global session invalidation may have removed the database copy of the
+        # browser's admin session while an older cached copy still exists. Clear
+        # that cookie/session before consuming a one-time login challenge so a
+        # successful OTP cannot be followed by SessionInterrupted/HTTP 400 while
+        # Django tries to save the stale session key.
+        request.session.flush()
+
         try:
             user = verify_admin_login_challenge(
                 challenge_id=serializer.validated_data["challengeId"],
