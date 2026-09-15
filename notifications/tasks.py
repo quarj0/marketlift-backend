@@ -114,6 +114,14 @@ def deliver_pending_notification_emails():
                     "updated_at",
                 )
             )
+
+    # This task already runs every minute from Celery Beat. Reuse that sweep to
+    # recover push rows whose initial broker handoff failed, without requiring a
+    # second independently configured periodic schedule.
+    try:
+        recover_pending_web_push_deliveries()
+    except Exception:
+        pass
     return sent
 
 
