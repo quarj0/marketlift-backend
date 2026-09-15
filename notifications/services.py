@@ -11,6 +11,18 @@ from .models import Notification, WebPushSubscription
 from .web_push import validate_subscription_endpoint, validate_subscription_keys
 
 
+def _safe_href(value: str, *, fallback: str = "/notifications") -> str:
+    value = (value or "").strip()
+    if not value:
+        return ""
+    # Notification destinations are application routes, never arbitrary links.
+    # This protects service-worker/page click handlers even if a future caller
+    # accidentally passes an absolute or protocol-relative URL.
+    if not value.startswith("/") or value.startswith("//"):
+        return fallback
+    return value[:500]
+
+
 def create_notification(
     *, user, notification_type: str, title: str, body: str, href: str = "", data=None
 ):
@@ -19,7 +31,7 @@ def create_notification(
         notification_type=notification_type,
         title=title,
         body=body,
-        href=href,
+        href=_safe_href(href),
         data=data or {},
     )
     notification_id = item.pk
@@ -34,8 +46,6 @@ def create_notification(
 
         fanout_web_push.delay(str(notification_id))
 
-    # Keep realtime and Web Push independent. A temporary Redis/channel-layer
-    # failure must not prevent the durable push task from being queued.
     transaction.on_commit(_publish_realtime, robust=True)
     transaction.on_commit(_enqueue_web_push, robust=True)
     return item
@@ -130,12 +140,7 @@ def create_admin_notifications(
     data=None,
     preference: str | None = None,
 ):
-    """Fan out an operational notification to active staff accounts.
-
-    `preference` is a PlatformConfiguration boolean field. Keeping preference
-    evaluation here means payment/verification services do not need to know
-    how administrators are stored or how notifications are delivered.
-    """
+    """Fan out an operational notification to active staff accounts."""
     if preference:
         try:
             from platform_settings.models import PlatformConfiguration
@@ -143,8 +148,6 @@ def create_admin_notifications(
             if not getattr(PlatformConfiguration.load(), preference):
                 return 0
         except Exception:
-            # Notification fan-out should not fail the domain operation if the
-            # settings table is temporarily unavailable during startup/migrate.
             pass
 
     staff_ids = list(
@@ -154,13 +157,14 @@ def create_admin_notifications(
     )
     payload = dict(data or {})
     payload["adminOperational"] = True
+    safe_href = _safe_href(href)
     rows = [
         Notification(
             user_id=user_id,
             notification_type=notification_type,
             title=title,
             body=body,
-            href=href,
+            href=safe_href,
             data=payload,
         )
         for user_id in staff_ids
