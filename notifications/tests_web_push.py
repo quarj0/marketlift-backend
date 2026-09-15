@@ -70,9 +70,61 @@ class WebPushTests(TestCase):
         subscription.refresh_from_db()
         self.assertFalse(subscription.active)
 
+    def test_shared_browser_endpoint_is_reassigned_to_current_authenticated_user(self):
+        first = User.objects.create_user(
+            email="first-device-owner@example.com",
+            full_name="First Device Owner",
+            password="secret123",
+        )
+        subscription = register_web_push_subscription(
+            user=first,
+            endpoint=self.endpoint,
+            p256dh=self.p256dh,
+            auth=self.auth,
+        )
+        new_p256dh, new_auth = _subscription_keys()
+
+        rebound = register_web_push_subscription(
+            user=self.user,
+            endpoint=self.endpoint,
+            p256dh=new_p256dh,
+            auth=new_auth,
+            user_agent="New login",
+        )
+
+        self.assertEqual(rebound.pk, subscription.pk)
+        self.assertEqual(rebound.user, self.user)
+        self.assertEqual(rebound.p256dh, new_p256dh)
+        self.assertEqual(rebound.auth, new_auth)
+        self.assertIsNone(rebound.disabled_at)
+
+    def test_unregister_cannot_disable_another_users_endpoint(self):
+        other = User.objects.create_user(
+            email="other-push@example.com",
+            full_name="Other Push",
+            password="secret123",
+        )
+        subscription = register_web_push_subscription(
+            user=other,
+            endpoint=self.endpoint,
+            p256dh=self.p256dh,
+            auth=self.auth,
+        )
+
+        self.assertFalse(
+            unregister_web_push_subscription(user=self.user, endpoint=self.endpoint)
+        )
+        subscription.refresh_from_db()
+        self.assertTrue(subscription.active)
+
     def test_endpoint_validation_blocks_arbitrary_hosts(self):
-        with self.assertRaisesMessage(ValueError, "Unsupported push service"):
-            validate_subscription_endpoint("https://example.com/internal-callback")
+        for endpoint in (
+            "https://example.com/internal-callback",
+            "https://fcm.googleapis.com.attacker.example/push",
+            "http://fcm.googleapis.com/fcm/send/insecure",
+        ):
+            with self.subTest(endpoint=endpoint), self.assertRaises(ValueError):
+                validate_subscription_endpoint(endpoint)
 
     def test_fanout_honors_message_push_preference(self):
         register_web_push_subscription(
@@ -142,6 +194,7 @@ class WebPushTests(TestCase):
         _, kwargs = post.call_args
         self.assertEqual(kwargs["headers"]["Content-Encoding"], "aes128gcm")
         self.assertTrue(kwargs["headers"]["Authorization"].startswith("vapid t="))
+        self.assertFalse(kwargs["follow_redirects"])
         self.assertGreater(len(kwargs["content"]), 100)
 
     def test_gone_subscription_is_disabled(self):
