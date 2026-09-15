@@ -15,3 +15,4 @@ class PaymentsConfig(AppConfig):
         # GraphQL or webhook module imports the commerce package. Importing the
         # package here guarantees its settlement-release beat entry is registered.
         import commerce  # noqa: F401
+        from . import delivery_signals  # noqa: F401
