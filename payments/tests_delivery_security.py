@@ -126,8 +126,9 @@ class RiderDeliverySecurityTests(TestCase):
             amount_cents=11000,
             paid_at=now,
         )
-        # Reproduce checkout's temporary snapshot handoff, then call the same
-        # synchronous security helper used before the checkout transaction commits.
+        # Reproduce the legacy checkout handoff. The pre-save guard must scrub the
+        # plaintext value before the order SQL write, while the helper remains
+        # defense-in-depth for callers created before that guard existed.
         order.listing_snapshot = {"title": "Delivered item", "delivery_pin": pin}
         order.save(update_fields=("listing_snapshot", "updated_at"))
         secure_local_delivery_pin(order)
@@ -148,7 +149,7 @@ class RiderDeliverySecurityTests(TestCase):
         )
         return rider
 
-    def test_plaintext_delivery_pin_is_scrubbed_and_only_buyer_can_read_it(self):
+    def test_plaintext_delivery_pin_is_scrubbed_and_hidden_until_out_for_delivery(self):
         order, _ = self.make_local_order()
         self.assertNotIn("delivery_pin", order.listing_snapshot)
         assignment = DeliveryAssignment.objects.get(shipment__order=order)
@@ -159,9 +160,19 @@ class RiderDeliverySecurityTests(TestCase):
         seller_view = order_to_type(
             order, buyer_view=False, include_shipping_address=True
         )
-        self.assertEqual(buyer_view.shipment.delivery_pin, "123456")
+        self.assertIsNone(buyer_view.shipment.delivery_pin)
         self.assertIsNone(seller_view.shipment.delivery_pin)
+        self.assertNotIn("delivery_pin", buyer_view.listing_snapshot)
         self.assertNotIn("delivery_pin", seller_view.listing_snapshot)
+
+        self.assign(order)
+        started = start_rider_delivery(order=order, rider_user=self.rider_user)
+        buyer_in_delivery = order_to_type(started, buyer_view=True)
+        seller_in_delivery = order_to_type(
+            started, buyer_view=False, include_shipping_address=True
+        )
+        self.assertEqual(buyer_in_delivery.shipment.delivery_pin, "123456")
+        self.assertIsNone(seller_in_delivery.shipment.delivery_pin)
 
     def test_buyer_confirmation_cannot_bypass_rider_for_local_delivery(self):
         order, _ = self.make_local_order(status=Order.Status.SHIPPED)
@@ -225,7 +236,11 @@ class RiderDeliverySecurityTests(TestCase):
     def test_correct_pin_delivers_and_clears_pin_credentials(self):
         order, shipment = self.make_local_order()
         rider = self.assign(order)
-        start_rider_delivery(order=order, rider_user=self.rider_user)
+        started = start_rider_delivery(order=order, rider_user=self.rider_user)
+        self.assertEqual(
+            order_to_type(started, buyer_view=True).shipment.delivery_pin,
+            "123456",
+        )
         delivered = confirm_rider_delivery_pin(
             order=order,
             rider_user=self.rider_user,
