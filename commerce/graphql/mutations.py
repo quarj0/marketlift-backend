@@ -15,7 +15,7 @@ from marketlift.graphql.auth import (
 )
 from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 
-from commerce.delivery_services import buyer_confirm_non_local_delivery
+from commerce.delivery_guards import buyer_confirm_non_local_delivery
 from commerce.models import CommercePayment, Dispute, Order, Settlement
 from commerce.providers.base import CommerceProviderError
 from commerce.services import (
