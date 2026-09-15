@@ -2,6 +2,7 @@ import strawberry
 from marketlift.graphql.auth import require_user
 from marketlift.realtime.counts import unread_notification_count
 from notifications.models import Notification
+from notifications.web_push import web_push_public_key
 from .types import NotificationType
 
 
@@ -39,3 +40,8 @@ class NotificationQuery:
     @strawberry.field
     def unread_notification_count(self, info: strawberry.Info) -> int:
         return unread_notification_count(require_user(info))
+
+    @strawberry.field
+    def web_push_public_key(self, info: strawberry.Info) -> str:
+        require_user(info)
+        return web_push_public_key()
