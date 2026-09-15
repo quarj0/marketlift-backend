@@ -1,6 +1,5 @@
 import strawberry
 from django.conf import settings
-from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
@@ -10,6 +9,7 @@ from marketlift.graphql.errors import not_found_error, validation_error
 from marketlift.markets.profiles import get_market_profile
 from payments.models import Payment
 from platform_settings.readiness import market_readiness
+from platform_settings.services import invalidate_all_sessions as invalidate_sessions
 from platform_settings.models import (
     Market,
     PlatformConfiguration,
@@ -358,8 +358,7 @@ class PlatformSettingsMutation:
                 code="PLATFORM_SETTINGS_VALIDATION_ERROR",
             )
 
-        count = Session.objects.count()
-        Session.objects.all().delete()
+        count = invalidate_sessions()
         record_audit_event(
             actor=staff,
             action="security.sessions_invalidated",
