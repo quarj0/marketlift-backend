@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 class RealtimeConsumer(JsonWebsocketConsumer):
     """One authenticated socket for chat and notification realtime events."""
 
+    presence_timeout_seconds = 75
+
     def connect(self):
         user = self.scope.get("user")
         if not user or not user.is_authenticated or not user.is_active:
@@ -46,6 +48,7 @@ class RealtimeConsumer(JsonWebsocketConsumer):
             logger.exception("Unable to join realtime channel group")
             self.close(code=1011)
             return
+        self._touch_presence()
         self.accept()
         self.send_json(
             {
@@ -67,6 +70,9 @@ class RealtimeConsumer(JsonWebsocketConsumer):
                 )
             except Exception:
                 logger.warning("Unable to leave realtime channel group", exc_info=True)
+        # Presence uses a short TTL rather than deleting here. A user can have
+        # several tabs/devices connected, and one closing must not make the
+        # others appear offline.
 
     def receive_json(self, content, **kwargs):
         if not isinstance(content, dict):
@@ -84,6 +90,7 @@ class RealtimeConsumer(JsonWebsocketConsumer):
             self.close(code=4401)
             return
         self.user = current_user
+        self._touch_presence()
 
         action = str(content.get("type") or "").strip()
         request_id = content.get("requestId")
@@ -212,6 +219,17 @@ class RealtimeConsumer(JsonWebsocketConsumer):
                     for message in messages
                 )
         return str(exc)
+
+    def _touch_presence(self) -> None:
+        try:
+            cache.set(
+                f"ml:presence:{self.user.pk}",
+                True,
+                timeout=self.presence_timeout_seconds,
+            )
+        except Exception:
+            # Presence is advisory only and must never break chat/notifications.
+            logger.warning("Unable to update realtime presence", exc_info=True)
 
     def _rate_limited(self) -> bool:
         limit = max(
