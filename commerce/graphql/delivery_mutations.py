@@ -12,10 +12,16 @@ from commerce.delivery_services import (
     set_delivery_rider_access,
     start_rider_delivery,
 )
-from commerce.models import DeliveryRider, Order
+from commerce.models import DeliveryAssignment, DeliveryRider, Order, Shipment
 
 from .mappers import order_to_type, rider_admin_to_type
 from .types import DeliveryRiderAdminType, OrderType
+
+
+ASSIGNABLE_DELIVERY_STATES = {
+    Order.Status.PROCESSING,
+    Order.Status.SHIPPED,
+}
 
 
 def _order(order_id) -> Order:
@@ -40,6 +46,33 @@ def _response_order(order_id) -> Order:
         .prefetch_related("payments")
         .get(pk=order_id)
     )
+
+
+def _require_assignable_order(order: Order) -> None:
+    if order.fulfillment_method != Order.FulfillmentMethod.LOCAL_DELIVERY:
+        raise ValidationError("Only local-delivery orders can be assigned to riders.")
+    if order.status not in ASSIGNABLE_DELIVERY_STATES:
+        raise ValidationError(
+            "A rider can be assigned only after the seller is processing or has prepared the order."
+        )
+
+
+def _require_override_ready(order: Order) -> None:
+    if order.fulfillment_method != Order.FulfillmentMethod.LOCAL_DELIVERY:
+        raise ValidationError("Only local deliveries can use a delivery override.")
+    if order.status != Order.Status.OUT_FOR_DELIVERY:
+        raise ValidationError(
+            "Administrator delivery override is available only after an assigned rider has started delivery."
+        )
+    ready = DeliveryAssignment.objects.filter(
+        shipment__order=order,
+        shipment__status=Shipment.Status.OUT_FOR_DELIVERY,
+        rider__isnull=False,
+    ).exists()
+    if not ready:
+        raise ValidationError(
+            "Administrator delivery override requires an active rider assignment already out for delivery."
+        )
 
 
 @strawberry.type
@@ -85,8 +118,10 @@ class DeliveryMutation:
                 "Delivery rider", code="DELIVERY_RIDER_NOT_FOUND"
             ) from exc
         try:
+            order = _order(order_id)
+            _require_assignable_order(order)
             order = assign_delivery_rider(
-                order=_order(order_id),
+                order=order,
                 rider=rider,
                 actor=actor,
                 request=request_from_info(info),
@@ -150,8 +185,10 @@ class DeliveryMutation:
     ) -> OrderType:
         actor = require_staff(info, roles={User.AdminRole.ADMIN})
         try:
+            order = _order(order_id)
+            _require_override_ready(order)
             order = admin_override_delivery(
-                order=_order(order_id),
+                order=order,
                 actor=actor,
                 reason=reason,
                 request=request_from_info(info),
