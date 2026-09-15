@@ -48,6 +48,18 @@ def _push_enabled(item):
     return False
 
 
+def _record_subscription_failure(subscription: WebPushSubscription, message: str, *, disable=False):
+    now = timezone.now()
+    updates = {
+        "failure_count": min(32767, subscription.failure_count + 1),
+        "last_error": message[:1000],
+        "updated_at": now,
+    }
+    if disable:
+        updates["disabled_at"] = now
+    WebPushSubscription.objects.filter(pk=subscription.pk).update(**updates)
+
+
 @shared_task
 def deliver_pending_notification_emails():
     sent = 0
@@ -148,7 +160,7 @@ def deliver_web_push_delivery(self, delivery_id: str):
     if not _push_enabled(delivery.notification):
         return "preference-disabled"
 
-    delivery.attempts = min(65535, delivery.attempts + 1)
+    delivery.attempts = min(32767, delivery.attempts + 1)
     delivery.save(update_fields=("attempts", "updated_at"))
 
     try:
@@ -157,27 +169,25 @@ def deliver_web_push_delivery(self, delivery_id: str):
             notification=delivery.notification,
         )
     except WebPushHTTPError as exc:
-        delivery.last_error = str(exc)[:1000]
+        message = str(exc)[:1000]
+        delivery.last_error = message
         delivery.save(update_fields=("last_error", "updated_at"))
+        _record_subscription_failure(
+            delivery.subscription,
+            message,
+            disable=exc.permanent_subscription_failure,
+        )
         if exc.permanent_subscription_failure:
-            now = timezone.now()
-            WebPushSubscription.objects.filter(
-                pk=delivery.subscription_id,
-                disabled_at__isnull=True,
-            ).update(
-                disabled_at=now,
-                failure_count=delivery.subscription.failure_count + 1,
-                last_error=str(exc)[:1000],
-                updated_at=now,
-            )
             return "subscription-gone"
         if exc.retryable:
             countdown = min(300, 10 * (2 ** self.request.retries))
             raise self.retry(exc=exc, countdown=countdown)
         return "rejected"
     except WebPushError as exc:
-        delivery.last_error = str(exc)[:1000]
+        message = str(exc)[:1000]
+        delivery.last_error = message
         delivery.save(update_fields=("last_error", "updated_at"))
+        _record_subscription_failure(delivery.subscription, message)
         countdown = min(300, 10 * (2 ** self.request.retries))
         raise self.retry(exc=exc, countdown=countdown)
 
