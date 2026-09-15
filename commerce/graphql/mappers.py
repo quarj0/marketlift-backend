@@ -98,6 +98,12 @@ def shipment_to_type(shipment, *, buyer_view: bool = False) -> ShipmentType:
     except Exception:
         assignment = None
     rider = assignment.rider if assignment and assignment.rider_id else None
+    pin_visible = (
+        buyer_view
+        and shipment.status == "out_for_delivery"
+        and shipment.order.status == "out_for_delivery"
+        and shipment.delivered_at is None
+    )
     return ShipmentType(
         status=shipment.status,
         carrier=shipment.carrier or None,
@@ -105,7 +111,7 @@ def shipment_to_type(shipment, *, buyer_view: bool = False) -> ShipmentType:
         delivered_at=shipment.delivered_at,
         assigned_at=assignment.assigned_at if assignment else None,
         confirmation_source=(assignment.confirmation_source or None) if assignment else None,
-        delivery_pin=buyer_delivery_pin(shipment) if buyer_view else None,
+        delivery_pin=buyer_delivery_pin(shipment) if pin_visible else None,
         rider=rider_summary_to_type(rider) if rider else None,
     )
 
@@ -136,11 +142,11 @@ def order_to_type(
     except Exception:
         settlement = None
     snapshot = dict(order.listing_snapshot or {})
-    # Local-delivery PINs must never be read from listing snapshots. Existing
-    # non-local test/legacy data keeps its old buyer-only behavior for backward
-    # compatibility, while seller/admin views always strip the field.
-    if not buyer_view or order.fulfillment_method == "local_delivery":
-        snapshot.pop("delivery_pin", None)
+    # Delivery credentials never belong in listing snapshots. This also protects
+    # legacy rows that may still contain the old key until the migration scrubs
+    # them. The live PIN is exposed only through the buyer shipment view while
+    # an assigned local delivery is actually out for delivery.
+    snapshot.pop("delivery_pin", None)
     if include_shipping_address is None:
         include_shipping_address = buyer_view
     return OrderType(
