@@ -311,8 +311,15 @@ class MaintenanceModeMiddleware:
             except Exception:
                 maintenance = False
 
+        # Only authenticated staff requests coming from the dedicated admin
+        # surface may bypass maintenance. A staff account browsing the public
+        # marketplace must see the same maintenance state as every other user.
+        is_admin_surface = (
+            getattr(request, "marketlift_session_surface", "") == "admin"
+        )
         if maintenance and not (
-            getattr(request, "user", None)
+            is_admin_surface
+            and getattr(request, "user", None)
             and request.user.is_authenticated
             and request.user.is_staff
         ):
