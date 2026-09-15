@@ -8,6 +8,7 @@ class PaymentsConfig(AppConfig):
     def import_models(self):
         super().import_models()
         from . import commerce_models  # noqa: F401
+        from . import delivery_models  # noqa: F401
 
     def ready(self):
         # Standalone Celery workers/beat load installed Django apps even when no
