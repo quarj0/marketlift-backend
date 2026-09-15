@@ -10,6 +10,8 @@ class ConversationUserType:
     avatar_url: str | None
     verified_seller: bool
     is_seller: bool
+    phone: str | None
+    online: bool
 
 
 @strawberry.type
