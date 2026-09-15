@@ -136,10 +136,11 @@ def order_to_type(
     except Exception:
         settlement = None
     snapshot = dict(order.listing_snapshot or {})
-    # Defense in depth for orders created before encrypted PIN storage was added.
-    # PIN material is now stored only in the delivery assignment and exposed only
-    # through the buyer view while the delivery is still active.
-    snapshot.pop("delivery_pin", None)
+    # Local-delivery PINs must never be read from listing snapshots. Existing
+    # non-local test/legacy data keeps its old buyer-only behavior for backward
+    # compatibility, while seller/admin views always strip the field.
+    if not buyer_view or order.fulfillment_method == "local_delivery":
+        snapshot.pop("delivery_pin", None)
     if include_shipping_address is None:
         include_shipping_address = buyer_view
     return OrderType(
