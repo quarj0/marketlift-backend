@@ -33,22 +33,14 @@ def _email_enabled(item):
 
 
 def _push_enabled(item):
-    # Admin operational alerts belong to the administrator console, which does
-    # not register marketplace PWA subscriptions.
-    if (item.data or {}).get("adminOperational"):
-        return False
-    try:
-        account_settings = item.user.settings
-    except Exception:
-        return False
-    if item.notification_type == "message":
-        return account_settings.push_messages
-    if item.notification_type in {"listing", "moderation", "seller"}:
-        return account_settings.push_listing_updates
-    return False
+    from .services import push_enabled_for_notification
+
+    return push_enabled_for_notification(item)
 
 
-def _record_subscription_failure(subscription: WebPushSubscription, message: str, *, disable=False):
+def _record_subscription_failure(
+    subscription: WebPushSubscription, message: str, *, disable=False
+):
     now = timezone.now()
     updates = {
         "failure_count": min(32767, subscription.failure_count + 1),
@@ -58,6 +50,21 @@ def _record_subscription_failure(subscription: WebPushSubscription, message: str
     if disable:
         updates["disabled_at"] = now
     WebPushSubscription.objects.filter(pk=subscription.pk).update(**updates)
+
+
+def enqueue_web_push_delivery(delivery_id: str) -> bool:
+    """Publish a durable delivery and record successful broker handoff."""
+    try:
+        deliver_web_push_delivery.delay(str(delivery_id))
+    except Exception:
+        # The delivery row intentionally remains recoverable with enqueued_at=NULL.
+        return False
+    now = timezone.now()
+    WebPushDelivery.objects.filter(
+        pk=delivery_id,
+        sent_at__isnull=True,
+    ).update(enqueued_at=now, updated_at=now)
+    return True
 
 
 @shared_task
@@ -112,34 +119,38 @@ def deliver_pending_notification_emails():
 
 @shared_task
 def fanout_web_push(notification_id: str) -> int:
-    """Create one durable delivery per active browser subscription."""
-
+    """Persist and enqueue one delivery per active browser subscription."""
     if not web_push_configured():
         return 0
     try:
-        item = Notification.objects.select_related("user", "user__settings").get(
-            pk=notification_id
-        )
+        item = Notification.objects.select_related("user").get(pk=notification_id)
     except (Notification.DoesNotExist, ValueError):
         return 0
-    if not _push_enabled(item):
-        return 0
 
-    subscriptions = WebPushSubscription.objects.filter(
-        user=item.user,
-        disabled_at__isnull=True,
-    )
-    queued = 0
-    for subscription in subscriptions.iterator():
-        delivery, _ = WebPushDelivery.objects.get_or_create(
-            notification=item,
-            subscription=subscription,
+    from .services import prepare_web_push_deliveries
+
+    delivery_ids = prepare_web_push_deliveries(item)
+    return sum(1 for delivery_id in delivery_ids if enqueue_web_push_delivery(delivery_id))
+
+
+@shared_task
+def recover_pending_web_push_deliveries() -> int:
+    """Recover rows whose initial Celery publication failed before handoff."""
+    if not web_push_configured():
+        return 0
+    candidates = list(
+        WebPushDelivery.objects.filter(
+            sent_at__isnull=True,
+            enqueued_at__isnull=True,
+            attempts=0,
+            subscription__disabled_at__isnull=True,
         )
-        if delivery.sent_at is not None:
-            continue
-        deliver_web_push_delivery.delay(str(delivery.id))
-        queued += 1
-    return queued
+        .order_by("created_at")
+        .values_list("id", flat=True)[:200]
+    )
+    return sum(
+        1 for delivery_id in candidates if enqueue_web_push_delivery(str(delivery_id))
+    )
 
 
 @shared_task(bind=True, max_retries=4)
@@ -147,7 +158,6 @@ def deliver_web_push_delivery(self, delivery_id: str):
     try:
         delivery = WebPushDelivery.objects.select_related(
             "notification__user",
-            "notification__user__settings",
             "subscription",
         ).get(pk=delivery_id)
     except (WebPushDelivery.DoesNotExist, ValueError):
@@ -157,6 +167,11 @@ def deliver_web_push_delivery(self, delivery_id: str):
         return "sent"
     if delivery.subscription.disabled_at is not None:
         return "disabled"
+    if delivery.subscription.user_id != delivery.notification.user_id:
+        # A browser endpoint may have been rebound to a different account after
+        # this delivery was created. Never cross that account boundary.
+        delivery.delete()
+        return "owner-mismatch"
     if not _push_enabled(delivery.notification):
         return "preference-disabled"
 
