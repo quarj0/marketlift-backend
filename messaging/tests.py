@@ -3,9 +3,11 @@ import io
 from PIL import Image
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
+from accounts.models import AccountSettings
 from categories.models import Category
 from listings.models import Listing
 from messaging.graphql.mappers import conversation_to_type
@@ -16,7 +18,7 @@ from messaging.services import (
     send_message,
     start_conversation,
 )
-from sellers.models import SellerProfile
+from sellers.models import SellerProfile, SellerSettings
 from uploads.models import UploadAsset
 from uploads.services import complete_upload, prepare_upload, store_proxy_upload
 
@@ -129,6 +131,61 @@ class MessagingServiceTests(TestCase):
         conversation.refresh_from_db()
         payload = conversation_to_type(conversation, self.buyer)
         self.assertTrue(payload.listing.deleted)
+
+    def test_buyer_phone_is_private_to_seller_by_default(self):
+        self.buyer.phone = "+233200000001"
+        self.buyer.save(update_fields=("phone", "updated_at"))
+        conversation = start_conversation(buyer=self.buyer, listing=self.listing)
+
+        payload = conversation_to_type(conversation, self.seller_user)
+
+        self.assertIsNone(payload.participant.phone)
+
+    def test_buyer_can_share_phone_with_contacted_seller(self):
+        self.buyer.phone = "+233200000001"
+        self.buyer.save(update_fields=("phone", "updated_at"))
+        AccountSettings.objects.create(
+            user=self.buyer,
+            show_phone_to_sellers=True,
+        )
+        conversation = start_conversation(buyer=self.buyer, listing=self.listing)
+
+        payload = conversation_to_type(conversation, self.seller_user)
+
+        self.assertEqual(payload.participant.phone, self.buyer.phone)
+
+    def test_seller_phone_respects_storefront_setting(self):
+        self.seller_user.phone = "+233200000002"
+        self.seller_user.save(update_fields=("phone", "updated_at"))
+        seller_settings = SellerSettings.objects.create(
+            user_profile=self.seller,
+            show_phone=False,
+        )
+        conversation = start_conversation(buyer=self.buyer, listing=self.listing)
+
+        hidden = conversation_to_type(conversation, self.buyer)
+        self.assertIsNone(hidden.participant.phone)
+
+        seller_settings.show_phone = True
+        seller_settings.save(update_fields=("show_phone", "updated_at"))
+        visible = conversation_to_type(conversation, self.buyer)
+        self.assertEqual(visible.participant.phone, self.seller_user.phone)
+
+    def test_online_presence_respects_account_privacy(self):
+        settings = AccountSettings.objects.create(
+            user=self.buyer,
+            show_online_status=True,
+        )
+        cache.set(f"ml:presence:{self.buyer.pk}", True, timeout=75)
+        conversation = start_conversation(buyer=self.buyer, listing=self.listing)
+
+        visible = conversation_to_type(conversation, self.seller_user)
+        self.assertTrue(visible.participant.online)
+
+        settings.show_online_status = False
+        settings.save(update_fields=("show_online_status", "updated_at"))
+        hidden = conversation_to_type(conversation, self.seller_user)
+        self.assertFalse(hidden.participant.online)
 
     def test_received_message_can_be_reported(self):
         from reports.models import Report
