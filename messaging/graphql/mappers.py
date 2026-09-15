@@ -1,5 +1,8 @@
 from decimal import Decimal
 
+from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
+
 from messaging.models import Message
 from messaging.services import is_blocked_by_current_user, message_is_read
 
@@ -22,6 +25,42 @@ def _seller_profile(user):
 def _seller_verified(user) -> bool:
     profile = _seller_profile(user)
     return bool(profile and profile.verified)
+
+
+def _participant_phone(conversation, viewer, other) -> str | None:
+    """Return a participant phone only when the relevant privacy control allows it."""
+
+    role = conversation.role_for(viewer)
+    if role == "seller":
+        # A buyer's phone is private by default and may only be exposed to the
+        # seller they contacted when the buyer explicitly opts in.
+        try:
+            allowed = other.settings.show_phone_to_sellers
+        except ObjectDoesNotExist:
+            allowed = False
+        return (other.phone or None) if allowed else None
+
+    # Buyers viewing the seller follow the seller storefront phone preference.
+    profile = _seller_profile(other)
+    if profile is None:
+        return None
+    try:
+        allowed = profile.settings.show_phone
+    except ObjectDoesNotExist:
+        allowed = True
+    return (other.phone or None) if allowed else None
+
+
+def _participant_online(other) -> bool:
+    """Expose ephemeral presence only when the account opted in to visibility."""
+
+    try:
+        if not other.settings.show_online_status:
+            return False
+    except ObjectDoesNotExist:
+        # AccountSettings.show_online_status defaults to true.
+        pass
+    return bool(cache.get(f"ml:presence:{other.pk}"))
 
 
 def conversation_to_type(conversation, user) -> ConversationType:
@@ -57,6 +96,8 @@ def conversation_to_type(conversation, user) -> ConversationType:
             avatar_url=other.avatar_url or None,
             verified_seller=_seller_verified(other),
             is_seller=_seller_profile(other) is not None,
+            phone=_participant_phone(conversation, user, other),
+            online=_participant_online(other),
         ),
         listing=ConversationListingType(
             id=str(listing.id) if listing else None,
