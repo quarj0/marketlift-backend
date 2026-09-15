@@ -75,11 +75,32 @@ class CommercePaymentType:
 
 
 @strawberry.type
+class DeliveryRiderSummaryType:
+    id: strawberry.ID
+    user_id: strawberry.ID
+    name: str
+    active: bool
+
+
+@strawberry.type
+class DeliveryRiderAdminType:
+    id: strawberry.ID
+    user_id: strawberry.ID
+    name: str
+    email: str
+    active: bool
+
+
+@strawberry.type
 class ShipmentType:
     status: str
     carrier: str | None
     tracking_code: str | None
     delivered_at: datetime | None
+    assigned_at: datetime | None
+    confirmation_source: str | None
+    delivery_pin: str | None
+    rider: DeliveryRiderSummaryType | None
 
 
 @strawberry.type
