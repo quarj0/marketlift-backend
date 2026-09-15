@@ -129,7 +129,8 @@ def listing_commerce_state(listing: Listing) -> dict:
     return {
         "mode": policy.mode,
         "checkout_enabled": not reasons,
-        "inspection_allowed": policy.mode in {
+        "inspection_allowed": policy.mode
+        in {
             CategoryCommercePolicy.Mode.OPTIONAL,
             CategoryCommercePolicy.Mode.DISABLED,
         },
@@ -155,7 +156,9 @@ def set_category_commerce_policy(
     if mode not in CategoryCommercePolicy.Mode.values:
         raise ValidationError({"mode": "Unsupported commerce mode."})
     if max_checkout_value_cents is not None and max_checkout_value_cents <= 0:
-        raise ValidationError({"maxCheckoutValueCents": "Maximum value must be positive."})
+        raise ValidationError(
+            {"maxCheckoutValueCents": "Maximum value must be positive."}
+        )
     policy, _ = CategoryCommercePolicy.objects.update_or_create(
         category=category,
         defaults={
@@ -191,7 +194,11 @@ def configure_listing_commerce(
     policy = resolve_category_policy(listing.category)
     if checkout_enabled and policy.mode == CategoryCommercePolicy.Mode.DISABLED:
         raise ValidationError("Checkout is disabled for this category.")
-    if checkout_enabled and policy.requires_verified_seller and not listing.seller.verified:
+    if (
+        checkout_enabled
+        and policy.requires_verified_seller
+        and not listing.seller.verified
+    ):
         raise ValidationError("Seller verification is required for online checkout.")
     if checkout_enabled and (listing.price is None or listing.price <= 0):
         raise ValidationError("A fixed positive price is required for online checkout.")
@@ -245,7 +252,9 @@ def activate_seller_payments(
     *, seller, recipient_payload: dict, payout_method: str
 ) -> SellerPaymentAccount:
     if seller.country_code != "BR":
-        raise ValidationError("Pagar.me seller payouts are currently enabled for Brazil only.")
+        raise ValidationError(
+            "Pagar.me seller payouts are currently enabled for Brazil only."
+        )
     if payout_method not in SellerPaymentAccount.PayoutMethod.values:
         raise ValidationError({"payoutMethod": "Unsupported payout method."})
     if not isinstance(recipient_payload, dict):
@@ -339,9 +348,7 @@ def _buyer_customer_payload(*, buyer, document: str, phone: str) -> dict:
     }
 
 
-def _payment_payload(
-    *, method: str, card_id: str | None, split: list[dict]
-) -> dict:
+def _payment_payload(*, method: str, card_id: str | None, split: list[dict]) -> dict:
     if method == CommercePayment.Method.PIX:
         return {
             "payment_method": "pix",
@@ -403,10 +410,7 @@ def _normalize_shipping_address(
         raise ValidationError({"shippingAddress": "A delivery address is required."})
 
     required = ("street", "number", "district", "city", "state", "zipCode")
-    cleaned = {
-        key: str(shipping_address.get(key) or "").strip()
-        for key in required
-    }
+    cleaned = {key: str(shipping_address.get(key) or "").strip() for key in required}
     missing = [key for key, value in cleaned.items() if not value]
     if missing:
         raise ValidationError(
@@ -420,14 +424,18 @@ def _normalize_shipping_address(
 
     cleaned["state"] = cleaned["state"].upper()
     if len(cleaned["state"]) != 2:
-        raise ValidationError({"shippingAddress": "State must be a two-letter UF code."})
+        raise ValidationError(
+            {"shippingAddress": "State must be a two-letter UF code."}
+        )
     zip_digits = "".join(ch for ch in cleaned["zipCode"] if ch.isdigit())
     if len(zip_digits) != 8:
         raise ValidationError({"shippingAddress": "Enter a valid eight-digit CEP."})
     cleaned["zipCode"] = zip_digits
     country = str(shipping_address.get("country") or "BR").strip().upper()
     if country != "BR":
-        raise ValidationError({"shippingAddress": "Commerce delivery is currently Brazil-only."})
+        raise ValidationError(
+            {"shippingAddress": "Commerce delivery is currently Brazil-only."}
+        )
     cleaned["country"] = "BR"
     complement = str(shipping_address.get("complement") or "").strip()
     if complement:
@@ -522,12 +530,16 @@ def create_checkout_order(
             {"checkout": "Online checkout is unavailable for this listing."}
         )
     if fulfillment_method not in state["fulfillment_methods"]:
-        raise ValidationError({"fulfillmentMethod": "This delivery method is unavailable."})
+        raise ValidationError(
+            {"fulfillmentMethod": "This delivery method is unavailable."}
+        )
 
     config = ListingCommerceSettings.objects.select_for_update().get(listing=listing)
     if config.stock_quantity < quantity:
         raise ValidationError({"quantity": "Not enough stock is available."})
-    account = SellerPaymentAccount.objects.select_for_update().get(seller=listing.seller)
+    account = SellerPaymentAccount.objects.select_for_update().get(
+        seller=listing.seller
+    )
 
     unit_price_cents = money_to_cents(listing.price)
     subtotal_cents = unit_price_cents * quantity
@@ -640,9 +652,7 @@ def create_checkout_order(
         },
     }
     provider = get_commerce_provider()
-    result = provider.create_order(
-        payload=provider_payload, idempotency_key=scoped_key
-    )
+    result = provider.create_order(payload=provider_payload, idempotency_key=scoped_key)
     payment.provider_order_id = str(result.get("id") or "")
     charges = result.get("charges") or []
     charge = charges[0] if charges else {}
@@ -685,8 +695,10 @@ def create_checkout_order(
 
 @transaction.atomic
 def approve_commerce_payment(payment: CommercePayment) -> CommercePayment:
-    payment = CommercePayment.objects.select_for_update().select_related("order").get(
-        pk=payment.pk
+    payment = (
+        CommercePayment.objects.select_for_update()
+        .select_related("order")
+        .get(pk=payment.pk)
     )
     if payment.status == CommercePayment.Status.APPROVED:
         return payment
@@ -766,15 +778,17 @@ def mark_order_shipped(
     shipment.status = Shipment.Status.SHIPPED
     shipment.carrier = carrier.strip()
     shipment.tracking_code = tracking_code.strip()
-    shipment.save(
-        update_fields=("status", "carrier", "tracking_code", "updated_at")
-    )
+    shipment.save(update_fields=("status", "carrier", "tracking_code", "updated_at"))
     return order
 
 
 @transaction.atomic
 def confirm_order_delivered(
-    *, order: Order, buyer=None, delivery_pin: str | None = None, proof: dict | None = None
+    *,
+    order: Order,
+    buyer=None,
+    delivery_pin: str | None = None,
+    proof: dict | None = None,
 ) -> Order:
     order = Order.objects.select_for_update().get(pk=order.pk)
     if buyer is not None and order.buyer_id != buyer.id:
@@ -786,7 +800,9 @@ def confirm_order_delivered(
         Order.Status.OUT_FOR_DELIVERY,
     }
     if order.paid_at is None or order.status not in allowed_statuses:
-        raise ValidationError("Only a paid order in fulfillment can be confirmed delivered.")
+        raise ValidationError(
+            "Only a paid order in fulfillment can be confirmed delivered."
+        )
     shipment = Shipment.objects.select_for_update().get(order=order)
     if delivery_pin is not None:
         if not shipment.delivery_pin_hash or not check_password(
@@ -814,7 +830,11 @@ def open_order_dispute(*, order: Order, user, reason: str, description: str) -> 
     order = Order.objects.select_for_update().get(pk=order.pk)
     if user.id not in {order.buyer_id, order.seller.user_id}:
         raise ValidationError("You are not part of this order.")
-    if order.status in {Order.Status.COMPLETED, Order.Status.CANCELLED, Order.Status.REFUNDED}:
+    if order.status in {
+        Order.Status.COMPLETED,
+        Order.Status.CANCELLED,
+        Order.Status.REFUNDED,
+    }:
         raise ValidationError("This order can no longer be disputed.")
     existing = order.disputes.filter(status=Dispute.Status.OPEN).first()
     if existing:
@@ -965,9 +985,7 @@ def withdraw_available_balance(*, seller) -> dict:
                     "The payment provider has not released all proceeds yet."
                 )
 
-            batch_key = _payout_batch_key(
-                seller_id=seller.id, settlements=settlements
-            )
+            batch_key = _payout_batch_key(seller_id=seller.id, settlements=settlements)
             now = timezone.now()
             for settlement in settlements:
                 settlement.status = Settlement.Status.PAYOUT_REQUESTED
@@ -1002,9 +1020,7 @@ def withdraw_available_balance(*, seller) -> dict:
         )
         for settlement in rows:
             settlement.provider_transfer_id = transfer_id
-            settlement.save(
-                update_fields=("provider_transfer_id", "updated_at")
-            )
+            settlement.save(update_fields=("provider_transfer_id", "updated_at"))
             LedgerEntry.objects.get_or_create(
                 order=settlement.order,
                 seller=seller,
@@ -1048,9 +1064,7 @@ def finalize_order_refund(
     if settlement.status != Settlement.Status.PAID:
         settlement.status = Settlement.Status.BLOCKED
         settlement.release_after = None
-        settlement.save(
-            update_fields=("status", "release_after", "updated_at")
-        )
+        settlement.save(update_fields=("status", "release_after", "updated_at"))
 
     if not order.ledger_entries.filter(
         kind=LedgerEntry.Kind.REFUND,

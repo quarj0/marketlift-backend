@@ -30,7 +30,9 @@ class ReviewTests(TestCase):
             )
 
         self.assertFalse(
-            SellerReview.objects.filter(reviewer=self.seller_user, seller=self.seller).exists()
+            SellerReview.objects.filter(
+                reviewer=self.seller_user, seller=self.seller
+            ).exists()
         )
 
     def test_review_requires_marketplace_interaction(self):

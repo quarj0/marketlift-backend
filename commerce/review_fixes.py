@@ -6,7 +6,13 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils import timezone
 
-from .models import CommercePayment, LedgerEntry, Order, SellerPaymentAccount, Settlement
+from .models import (
+    CommercePayment,
+    LedgerEntry,
+    Order,
+    SellerPaymentAccount,
+    Settlement,
+)
 from .policy_models import ListingCommerceSettings
 from .providers.base import CommerceProviderError
 from .services import (
@@ -21,7 +27,6 @@ from .services import (
     release_due_settlements,
     withdraw_available_balance as _withdraw_available_balance,
 )
-
 
 PAID_FULFILLMENT_STATES = {
     Order.Status.AWAITING_SELLER,
@@ -120,7 +125,9 @@ def _unwrap_buyer_card_reference(*, buyer, reference: str | None) -> str | None:
     if not isinstance(payload, dict) or str(payload.get("buyer_id") or "") != str(
         buyer.id
     ):
-        raise ValidationError({"cardId": "This vaulted card does not belong to this buyer."})
+        raise ValidationError(
+            {"cardId": "This vaulted card does not belong to this buyer."}
+        )
     card_id = str(payload.get("card_id") or "").strip()
     if not card_id:
         raise ValidationError({"cardId": "This vaulted card reference is invalid."})
@@ -189,9 +196,7 @@ def create_checkout_order(
 
     provider_card_id = card_id
     if payment_method == CommercePayment.Method.CARD:
-        provider_card_id = _unwrap_buyer_card_reference(
-            buyer=buyer, reference=card_id
-        )
+        provider_card_id = _unwrap_buyer_card_reference(buyer=buyer, reference=card_id)
 
     return _create_checkout_order(
         buyer=buyer,
@@ -244,8 +249,9 @@ def seller_wallet(seller) -> dict:
         or 0
     )
     paid_out_cents = int(
-        Settlement.objects.filter(seller=seller, status=Settlement.Status.PAID)
-        .aggregate(total=Sum("amount_cents"))["total"]
+        Settlement.objects.filter(
+            seller=seller, status=Settlement.Status.PAID
+        ).aggregate(total=Sum("amount_cents"))["total"]
         or 0
     )
     return {

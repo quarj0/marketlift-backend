@@ -314,9 +314,7 @@ class MaintenanceModeMiddleware:
         # Only authenticated staff requests coming from the dedicated admin
         # surface may bypass maintenance. A staff account browsing the public
         # marketplace must see the same maintenance state as every other user.
-        is_admin_surface = (
-            getattr(request, "marketlift_session_surface", "") == "admin"
-        )
+        is_admin_surface = getattr(request, "marketlift_session_surface", "") == "admin"
         if maintenance and not (
             is_admin_surface
             and getattr(request, "user", None)

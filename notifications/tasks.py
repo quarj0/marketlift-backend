@@ -138,7 +138,9 @@ def fanout_web_push(notification_id: str) -> int:
     from .services import prepare_web_push_deliveries
 
     delivery_ids = prepare_web_push_deliveries(item)
-    return sum(1 for delivery_id in delivery_ids if enqueue_web_push_delivery(delivery_id))
+    return sum(
+        1 for delivery_id in delivery_ids if enqueue_web_push_delivery(delivery_id)
+    )
 
 
 @shared_task
@@ -203,7 +205,7 @@ def deliver_web_push_delivery(self, delivery_id: str):
         if exc.permanent_subscription_failure:
             return "subscription-gone"
         if exc.retryable:
-            countdown = min(300, 10 * (2 ** self.request.retries))
+            countdown = min(300, 10 * (2**self.request.retries))
             raise self.retry(exc=exc, countdown=countdown)
         return "rejected"
     except WebPushError as exc:
@@ -211,7 +213,7 @@ def deliver_web_push_delivery(self, delivery_id: str):
         delivery.last_error = message
         delivery.save(update_fields=("last_error", "updated_at"))
         _record_subscription_failure(delivery.subscription, message)
-        countdown = min(300, 10 * (2 ** self.request.retries))
+        countdown = min(300, 10 * (2**self.request.retries))
         raise self.retry(exc=exc, countdown=countdown)
 
     now = timezone.now()

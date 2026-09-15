@@ -150,9 +150,7 @@ class Order(UUIDTimeStampedModel):
                 fields=("seller", "status", "-created_at"),
                 name="commerce_ord_seller_idx",
             ),
-            models.Index(
-                fields=("listing", "status"), name="commerce_ord_listing_idx"
-            ),
+            models.Index(fields=("listing", "status"), name="commerce_ord_listing_idx"),
         ]
 
 
@@ -170,9 +168,7 @@ class CommercePayment(UUIDTimeStampedModel):
         PARTIALLY_REFUNDED = "partially_refunded", "Partially refunded"
         CHARGEBACK = "chargeback", "Chargeback"
 
-    order = models.ForeignKey(
-        Order, on_delete=models.PROTECT, related_name="payments"
-    )
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="payments")
     provider = models.CharField(max_length=32, default="pagarme")
     method = models.CharField(max_length=12, choices=Method.choices)
     status = models.CharField(
@@ -224,9 +220,7 @@ class Settlement(UUIDTimeStampedModel):
     amount_cents = models.PositiveBigIntegerField()
     release_after = models.DateTimeField(null=True, blank=True, db_index=True)
     provider_transfer_id = models.CharField(max_length=120, blank=True, db_index=True)
-    payout_idempotency_key = models.CharField(
-        max_length=160, blank=True, db_index=True
-    )
+    payout_idempotency_key = models.CharField(max_length=160, blank=True, db_index=True)
     payout_requested_at = models.DateTimeField(null=True, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
 
@@ -305,9 +299,7 @@ class Dispute(UUIDTimeStampedModel):
         RESOLVED_SELLER = "resolved_seller", "Resolved for seller"
         CLOSED = "closed", "Closed"
 
-    order = models.ForeignKey(
-        Order, on_delete=models.PROTECT, related_name="disputes"
-    )
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="disputes")
     opened_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

@@ -332,9 +332,7 @@ class Command(BaseCommand):
                         f"{total_models} models and {len(rows)} model-year links; "
                         f"{requests} API requests."
                     )
-                self.stdout.write(
-                    self.style.SUCCESS(summary)
-                )
+                self.stdout.write(self.style.SUCCESS(summary))
                 if result.dependencies_created < len(rows):
                     raise CommandError("FIPE dependency import was incomplete.")
 

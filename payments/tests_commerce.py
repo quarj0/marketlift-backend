@@ -95,9 +95,8 @@ class CommerceServiceTests(TestCase):
             buyer=self.buyer,
             seller=self.seller,
             listing=self.listing,
-            status=status or (
-                Order.Status.SHIPPED if paid else Order.Status.PENDING_PAYMENT
-            ),
+            status=status
+            or (Order.Status.SHIPPED if paid else Order.Status.PENDING_PAYMENT),
             fulfillment_method=Order.FulfillmentMethod.SHIPPING,
             quantity=1,
             unit_price_cents=250000,

@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 VEHICLES = {
     "cars": (
         ("make", "Make", None),
@@ -102,12 +101,8 @@ def prepare_dynamic_catalog_fields(apps, schema_editor):
         category = Category.objects.filter(slug=slug).first()
         if category is None:
             continue
-        brand = _prepare_field(
-            CategoryField, category, "brand", "Brand", None, 10
-        )
-        _prepare_field(
-            CategoryField, category, "model", "Model", brand, 20
-        )
+        brand = _prepare_field(CategoryField, category, "brand", "Brand", None, 10)
+        _prepare_field(CategoryField, category, "model", "Model", brand, 20)
         Category.objects.filter(pk=category.pk).update(
             schema_version=category.schema_version + 1
         )

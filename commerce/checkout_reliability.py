@@ -58,7 +58,9 @@ def _unwrap_buyer_card_reference(*, buyer, reference: str | None) -> str | None:
     if not isinstance(payload, dict) or str(payload.get("buyer_id") or "") != str(
         buyer.id
     ):
-        raise ValidationError({"cardId": "This vaulted card does not belong to this buyer."})
+        raise ValidationError(
+            {"cardId": "This vaulted card does not belong to this buyer."}
+        )
     card_id = str(payload.get("card_id") or "").strip()
     if not card_id:
         raise ValidationError({"cardId": "This vaulted card reference is invalid."})
@@ -201,9 +203,7 @@ def _apply_provider_result(
                 _restore_reserved_stock(order=order)
                 order.status = Order.Status.CANCELLED
                 order.cancelled_at = timezone.now()
-                order.save(
-                    update_fields=("status", "cancelled_at", "updated_at")
-                )
+                order.save(update_fields=("status", "cancelled_at", "updated_at"))
             return order, payment
 
         payment.save()
@@ -364,9 +364,7 @@ def _create_or_get_local_checkout(
             pin = f"{secrets.randbelow(900000) + 100000:06d}"
             shipment.delivery_pin_hash = make_password(pin)
             shipment.proof = {"delivery_pin_issued": True}
-            shipment.save(
-                update_fields=("delivery_pin_hash", "proof", "updated_at")
-            )
+            shipment.save(update_fields=("delivery_pin_hash", "proof", "updated_at"))
             order.listing_snapshot["delivery_pin"] = pin
             order.save(update_fields=("listing_snapshot", "updated_at"))
 
@@ -413,9 +411,7 @@ def create_checkout_order(
     )
     provider_card_id = card_id
     if payment_method == CommercePayment.Method.CARD:
-        provider_card_id = _unwrap_buyer_card_reference(
-            buyer=buyer, reference=card_id
-        )
+        provider_card_id = _unwrap_buyer_card_reference(buyer=buyer, reference=card_id)
 
     # Validate buyer/card data and provider configuration before reserving stock.
     _buyer_customer_payload(

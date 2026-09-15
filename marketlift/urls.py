@@ -13,7 +13,9 @@ urlpatterns = [
     # market-capabilities URL as a compatibility alias so deployed clients do
     # not receive a 404 during the multi-market migration.
     path("api/market/", market_profile, name="market-profile-compat"),
-    path("api/v1/webhooks/pagarme/<str:token>/", pagarme_webhook, name="pagarme-webhook"),
+    path(
+        "api/v1/webhooks/pagarme/<str:token>/", pagarme_webhook, name="pagarme-webhook"
+    ),
     path("api/v1/", include("marketlift.api.urls")),
     path(
         "graphql/",

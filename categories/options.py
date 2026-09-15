@@ -1,6 +1,5 @@
 from datetime import date
 
-
 VEHICLE_CATEGORY_SLUGS = {
     "cars",
     "motorcycles",
@@ -21,8 +20,6 @@ def option_is_current(field, option) -> bool:
     current_year = date.today().year
     category_slug = getattr(getattr(field, "category", None), "slug", "")
     max_year = (
-        current_year + 1
-        if category_slug in VEHICLE_CATEGORY_SLUGS
-        else current_year
+        current_year + 1 if category_slug in VEHICLE_CATEGORY_SLUGS else current_year
     )
     return year <= max_year

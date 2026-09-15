@@ -10,7 +10,6 @@ from accounts.auth_services import create_admin_login_challenge
 from marketlift.security.middleware import MaintenanceModeMiddleware
 from platform_settings.services import invalidate_all_sessions
 
-
 TEST_CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -55,7 +54,9 @@ class SessionInvalidationRegressionTests(TestCase):
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
         MARKETLIFT_ADMIN_LOGIN_CODE_TTL_SECONDS=600,
     )
-    def test_valid_admin_code_survives_stale_cached_session_after_old_invalidation(self):
+    def test_valid_admin_code_survives_stale_cached_session_after_old_invalidation(
+        self,
+    ):
         from importlib import import_module
         from django.conf import settings
 

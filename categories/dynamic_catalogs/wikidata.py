@@ -86,9 +86,7 @@ def _bindings(query: str) -> list[dict] | None:
         rows = payload.get("results", {}).get("bindings", [])
         if not isinstance(rows, list):
             return None
-        ttl = _int_env(
-            "DYNAMIC_CATALOG_WIKIDATA_TTL_SECONDS", 30 * 24 * 60 * 60
-        )
+        ttl = _int_env("DYNAMIC_CATALOG_WIKIDATA_TTL_SECONDS", 30 * 24 * 60 * 60)
         cache.set(_cache_key(query), rows, timeout=ttl)
         return rows
     finally:

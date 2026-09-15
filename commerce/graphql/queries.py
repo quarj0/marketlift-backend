@@ -38,7 +38,6 @@ from .types import (
     SellerWalletType,
 )
 
-
 SELLER_ADDRESS_VISIBLE_STATES = {
     Order.Status.AWAITING_SELLER,
     Order.Status.PROCESSING,
@@ -141,7 +140,9 @@ class CommerceQuery:
             cap = state["max_checkout_value_cents"]
             if cap is not None and subtotal_cents > cap:
                 raise ValidationError(
-                    {"quantity": "This quantity exceeds the category checkout-value limit."}
+                    {
+                        "quantity": "This quantity exceeds the category checkout-value limit."
+                    }
                 )
 
             shipping_amount_cents = (
@@ -159,9 +160,7 @@ class CommerceQuery:
                 currency="BRL",
             )
         except ValidationError as exc:
-            raise validation_error(
-                exc, code="CHECKOUT_QUOTE_VALIDATION_ERROR"
-            ) from exc
+            raise validation_error(exc, code="CHECKOUT_QUOTE_VALIDATION_ERROR") from exc
 
     @strawberry.field
     def category_commerce_policy(
@@ -271,9 +270,7 @@ class CommerceQuery:
                     Settlement.Status.BLOCKED,
                 )
             )
-            .exclude(
-                order__status__in=(Order.Status.CANCELLED, Order.Status.REFUNDED)
-            )
+            .exclude(order__status__in=(Order.Status.CANCELLED, Order.Status.REFUNDED))
             .values("order__currency")
             .annotate(held=Sum("amount_cents"))
         }

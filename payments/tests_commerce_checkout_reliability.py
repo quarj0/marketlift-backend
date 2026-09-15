@@ -90,7 +90,9 @@ class DurableCheckoutTests(TestCase):
             idempotency_key=key,
         )
 
-    def test_ambiguous_provider_failure_keeps_durable_reservation_for_same_key_retry(self):
+    def test_ambiguous_provider_failure_keeps_durable_reservation_for_same_key_retry(
+        self,
+    ):
         provider = Mock()
         provider.create_order.side_effect = CommerceProviderError(
             "provider timeout", retryable=True
@@ -250,9 +252,7 @@ class DurableCheckoutTests(TestCase):
             )
 
         payload = provider.create_order.call_args.kwargs["payload"]
-        item_total = sum(
-            item["amount"] * item["quantity"] for item in payload["items"]
-        )
+        item_total = sum(item["amount"] * item["quantity"] for item in payload["items"])
         split = payload["payments"][0]["split"]
         split_total = sum(row["amount"] for row in split)
 

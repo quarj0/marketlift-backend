@@ -54,7 +54,10 @@ class PagarMeCommerceProvider(CommerceProvider):
                 detail = response.json()
             except ValueError:
                 detail = response.text[:500]
-            retryable = response.status_code >= 500 or response.status_code in {408, 429}
+            retryable = response.status_code >= 500 or response.status_code in {
+                408,
+                429,
+            }
             raise CommerceProviderError(
                 f"Pagar.me request failed ({response.status_code}): {detail}",
                 retryable=retryable,
@@ -101,8 +104,7 @@ class PagarMeCommerceProvider(CommerceProvider):
         split_total = 0
         if payments:
             split_total = sum(
-                int(row.get("amount") or 0)
-                for row in (payments[0].get("split") or [])
+                int(row.get("amount") or 0) for row in (payments[0].get("split") or [])
             )
         item_total = sum(
             int(item.get("amount") or 0) * int(item.get("quantity") or 0)

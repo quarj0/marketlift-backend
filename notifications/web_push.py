@@ -86,7 +86,9 @@ def validate_subscription_endpoint(endpoint: str) -> str:
         raise ValueError("Invalid push subscription endpoint port.")
     hostname = parsed.hostname.lower().rstrip(".")
     allowed = allowed_endpoint_suffixes()
-    if not any(hostname == suffix or hostname.endswith(f".{suffix}") for suffix in allowed):
+    if not any(
+        hostname == suffix or hostname.endswith(f".{suffix}") for suffix in allowed
+    ):
         raise ValueError("Unsupported push service endpoint.")
     return endpoint
 
@@ -114,14 +116,18 @@ def _vapid_private_key() -> ec.EllipticCurvePrivateKey | None:
     try:
         private_bytes = _b64url_decode(raw)
     except Exception as exc:
-        raise WebPushError("MARKETLIFT_VAPID_PRIVATE_KEY is not valid base64url.") from exc
+        raise WebPushError(
+            "MARKETLIFT_VAPID_PRIVATE_KEY is not valid base64url."
+        ) from exc
     if len(private_bytes) != 32:
         raise WebPushError("MARKETLIFT_VAPID_PRIVATE_KEY must decode to 32 bytes.")
     private_value = int.from_bytes(private_bytes, "big")
     try:
         return ec.derive_private_key(private_value, ec.SECP256R1())
     except ValueError as exc:
-        raise WebPushError("MARKETLIFT_VAPID_PRIVATE_KEY is not a valid P-256 key.") from exc
+        raise WebPushError(
+            "MARKETLIFT_VAPID_PRIVATE_KEY is not a valid P-256 key."
+        ) from exc
 
 
 def web_push_configured() -> bool:
@@ -245,7 +251,9 @@ def build_notification_payload(notification) -> bytes:
         "body": notification.body,
         "href": notification.href or "/notifications",
     }
-    return json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode(
+        "utf-8"
+    )
 
 
 def send_web_push(*, subscription, notification) -> None:
@@ -257,7 +265,9 @@ def send_web_push(*, subscription, notification) -> None:
         auth=subscription.auth,
     )
     token, vapid_public_key = _vapid_token(endpoint)
-    ttl = max(60, min(int(os.getenv("MARKETLIFT_WEB_PUSH_TTL_SECONDS", "86400")), 2419200))
+    ttl = max(
+        60, min(int(os.getenv("MARKETLIFT_WEB_PUSH_TTL_SECONDS", "86400")), 2419200)
+    )
     timeout = max(1.0, float(os.getenv("MARKETLIFT_WEB_PUSH_TIMEOUT_SECONDS", "10")))
 
     try:

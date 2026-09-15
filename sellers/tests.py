@@ -21,4 +21,6 @@ class SellerFollowSecurityTests(TestCase):
         ):
             follow_seller(user=user, seller=seller)
 
-        self.assertFalse(SellerFollow.objects.filter(follower=user, seller=seller).exists())
+        self.assertFalse(
+            SellerFollow.objects.filter(follower=user, seller=seller).exists()
+        )

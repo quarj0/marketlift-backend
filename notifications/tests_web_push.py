@@ -207,11 +207,14 @@ class WebPushTests(TestCase):
             href="/messages/123",
         )
 
-        with patch.dict(
-            os.environ,
-            {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
-            clear=False,
-        ), patch("notifications.tasks.deliver_web_push_delivery.delay") as delay:
+        with (
+            patch.dict(
+                os.environ,
+                {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
+                clear=False,
+            ),
+            patch("notifications.tasks.deliver_web_push_delivery.delay") as delay,
+        ):
             self.assertEqual(fanout_web_push(str(item.id)), 1)
             delay.assert_called_once()
 
@@ -223,11 +226,14 @@ class WebPushTests(TestCase):
             title="Another message",
             body="No push",
         )
-        with patch.dict(
-            os.environ,
-            {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
-            clear=False,
-        ), patch("notifications.tasks.deliver_web_push_delivery.delay") as delay:
+        with (
+            patch.dict(
+                os.environ,
+                {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
+                clear=False,
+            ),
+            patch("notifications.tasks.deliver_web_push_delivery.delay") as delay,
+        ):
             self.assertEqual(fanout_web_push(str(second.id)), 0)
             delay.assert_not_called()
 
@@ -251,11 +257,14 @@ class WebPushTests(TestCase):
             body="Default preferences should allow this push.",
         )
 
-        with patch.dict(
-            os.environ,
-            {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
-            clear=False,
-        ), patch("notifications.tasks.deliver_web_push_delivery.delay") as delay:
+        with (
+            patch.dict(
+                os.environ,
+                {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
+                clear=False,
+            ),
+            patch("notifications.tasks.deliver_web_push_delivery.delay") as delay,
+        ):
             self.assertEqual(fanout_web_push(str(item.id)), 1)
             delay.assert_called_once()
 
@@ -302,11 +311,16 @@ class WebPushTests(TestCase):
             subscription=subscription,
         )
 
-        with patch.dict(
-            os.environ,
-            {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
-            clear=False,
-        ), patch("notifications.tasks.enqueue_web_push_delivery", return_value=True) as enqueue:
+        with (
+            patch.dict(
+                os.environ,
+                {"MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key()},
+                clear=False,
+            ),
+            patch(
+                "notifications.tasks.enqueue_web_push_delivery", return_value=True
+            ) as enqueue,
+        ):
             self.assertEqual(recover_pending_web_push_deliveries(), 1)
             enqueue.assert_called_once_with(str(delivery.id))
 
@@ -326,14 +340,17 @@ class WebPushTests(TestCase):
         )
         response = type("Response", (), {"status_code": 201, "text": ""})()
 
-        with patch.dict(
-            os.environ,
-            {
-                "MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key(),
-                "MARKETLIFT_VAPID_SUBJECT": "mailto:support@marketlift.com.br",
-            },
-            clear=False,
-        ), patch("notifications.web_push.httpx.post", return_value=response) as post:
+        with (
+            patch.dict(
+                os.environ,
+                {
+                    "MARKETLIFT_VAPID_PRIVATE_KEY": _vapid_private_key(),
+                    "MARKETLIFT_VAPID_SUBJECT": "mailto:support@marketlift.com.br",
+                },
+                clear=False,
+            ),
+            patch("notifications.web_push.httpx.post", return_value=response) as post,
+        ):
             send_web_push(subscription=subscription, notification=item)
 
         _, kwargs = post.call_args

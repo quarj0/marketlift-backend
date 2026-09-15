@@ -182,14 +182,17 @@ def _prune_child_branch(
         links.delete()
 
     orphan_ids = list(
-        field.options.filter(active=True, allowed_parent_links__isnull=True)
-        .values_list("pk", flat=True)
+        field.options.filter(
+            active=True, allowed_parent_links__isnull=True
+        ).values_list("pk", flat=True)
     )
     if orphan_ids:
         field.options.filter(pk__in=orphan_ids).update(active=False)
 
 
-def _branch_marker(provider: str, field: CategoryField, parent: CategoryFieldOption | None):
+def _branch_marker(
+    provider: str, field: CategoryField, parent: CategoryFieldOption | None
+):
     parent_token = str(parent.pk) if parent is not None else "root"
     return (
         f"marketlift:dynamic-catalog:hydrated:{provider}:"

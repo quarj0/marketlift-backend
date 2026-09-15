@@ -126,9 +126,7 @@ class CommerceMutation:
                 payout_method=payout_method,
             )
         except ValidationError as exc:
-            raise validation_error(
-                exc, code="SELLER_PAYMENT_VALIDATION_ERROR"
-            ) from exc
+            raise validation_error(exc, code="SELLER_PAYMENT_VALIDATION_ERROR") from exc
         except CommerceProviderError as exc:
             raise _provider_error(exc) from exc
         return payment_account_to_type(account)
@@ -186,9 +184,7 @@ class CommerceMutation:
             raise validation_error(
                 exc, code="ORDER_TRANSITION_INVALID", status=409
             ) from exc
-        return order_to_type(
-            order, buyer_view=False, include_shipping_address=True
-        )
+        return order_to_type(order, buyer_view=False, include_shipping_address=True)
 
     @strawberry.mutation
     def mark_commerce_order_shipped(
@@ -210,9 +206,7 @@ class CommerceMutation:
             raise validation_error(
                 exc, code="ORDER_TRANSITION_INVALID", status=409
             ) from exc
-        return order_to_type(
-            order, buyer_view=False, include_shipping_address=True
-        )
+        return order_to_type(order, buyer_view=False, include_shipping_address=True)
 
     @strawberry.mutation
     def confirm_commerce_order_received(
@@ -350,9 +344,7 @@ class CommerceMutation:
                         code="DISPUTE_FINAL",
                         status=409,
                     )
-                order = Order.objects.select_for_update().get(
-                    pk=dispute.order_id
-                )
+                order = Order.objects.select_for_update().get(pk=dispute.order_id)
 
                 if resolution == "buyer":
                     refund_order(
@@ -370,9 +362,7 @@ class CommerceMutation:
                         raise ValidationError(
                             "Seller proceeds can only be released for an approved payment."
                         )
-                    settlement = Settlement.objects.select_for_update().get(
-                        order=order
-                    )
+                    settlement = Settlement.objects.select_for_update().get(order=order)
                     if settlement.status != Settlement.Status.BLOCKED:
                         raise ValidationError(
                             "Only a blocked disputed settlement can be released."
@@ -397,20 +387,14 @@ class CommerceMutation:
                     )
                     dispute.status = Dispute.Status.RESOLVED_SELLER
                 else:
-                    raise ValidationError(
-                        {"resolution": "Use 'buyer' or 'seller'."}
-                    )
+                    raise ValidationError({"resolution": "Use 'buyer' or 'seller'."})
 
                 dispute.resolved_at = timezone.now()
-                dispute.save(
-                    update_fields=("status", "resolved_at", "updated_at")
-                )
+                dispute.save(update_fields=("status", "resolved_at", "updated_at"))
         except (Dispute.DoesNotExist, ValueError) as exc:
             raise not_found_error("Dispute", code="DISPUTE_NOT_FOUND") from exc
         except ValidationError as exc:
-            raise validation_error(
-                exc, code="DISPUTE_RESOLUTION_INVALID"
-            ) from exc
+            raise validation_error(exc, code="DISPUTE_RESOLUTION_INVALID") from exc
         except CommerceProviderError as exc:
             raise _provider_error(exc) from exc
         return dispute_to_type(dispute)

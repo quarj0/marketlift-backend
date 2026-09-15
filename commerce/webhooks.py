@@ -99,9 +99,7 @@ def _sync_payment_provider_references(
     lowered = event_type.lower()
     data_id = str(data.get("id") or "").strip()
     nested_order = data.get("order") or {}
-    nested_order_id = str(
-        nested_order.get("id") or data.get("order_id") or ""
-    ).strip()
+    nested_order_id = str(nested_order.get("id") or data.get("order_id") or "").strip()
     charges = data.get("charges") or []
     charge = charges[0] if charges else {}
     last_tx = data.get("last_transaction") or charge.get("last_transaction") or {}
@@ -156,8 +154,10 @@ def _recipient_status(status: str) -> tuple[str, bool]:
 
 
 def _record_chargeback_recovery(payment: CommercePayment, event_type: str) -> None:
-    order = Order.objects.select_for_update().select_related("buyer").get(
-        pk=payment.order_id
+    order = (
+        Order.objects.select_for_update()
+        .select_related("buyer")
+        .get(pk=payment.order_id)
     )
     order.status = Order.Status.DISPUTED
     order.save(update_fields=("status", "updated_at"))
@@ -234,8 +234,7 @@ def process_pagarme_event(payload: dict, raw: bytes) -> bool:
             payment.save(update_fields=("status", "provider_status", "updated_at"))
             _record_chargeback_recovery(payment, event_type)
         elif any(
-            marker in lowered
-            for marker in ("paid", "payment_succeeded", "approved")
+            marker in lowered for marker in ("paid", "payment_succeeded", "approved")
         ):
             payment.provider_status = str(data.get("status") or "paid")
             payment.save(update_fields=("provider_status", "updated_at"))
