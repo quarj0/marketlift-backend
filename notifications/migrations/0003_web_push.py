@@ -1,6 +1,8 @@
+import uuid
+
+import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -16,13 +18,13 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=__import__("uuid").uuid4,
+                        default=uuid.uuid4,
                         editable=False,
                         primary_key=True,
                         serialize=False,
                     ),
                 ),
-                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("endpoint_hash", models.CharField(max_length=64, unique=True)),
                 ("endpoint", models.TextField()),
@@ -53,13 +55,13 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=__import__("uuid").uuid4,
+                        default=uuid.uuid4,
                         editable=False,
                         primary_key=True,
                         serialize=False,
                     ),
                 ),
-                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("attempts", models.PositiveSmallIntegerField(default=0)),
                 (
