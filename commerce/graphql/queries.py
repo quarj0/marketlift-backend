@@ -9,8 +9,15 @@ from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
 from marketlift.graphql.errors import not_found_error, validation_error
 
-from commerce.models import Dispute, Order, SellerPaymentAccount, Settlement
+from commerce.models import (
+    DeliveryRider,
+    Dispute,
+    Order,
+    SellerPaymentAccount,
+    Settlement,
+)
 from commerce.policy_models import CategoryCommercePolicy, ListingCommerceSettings
+from commerce.delivery_services import rider_for_user
 from commerce.services import (
     listing_commerce_state,
     money_to_cents,
@@ -24,6 +31,8 @@ from .mappers import (
     listing_commerce_to_type,
     order_to_type,
     payment_account_to_type,
+    rider_admin_to_type,
+    rider_summary_to_type,
     wallet_to_type,
 )
 from .types import (
@@ -31,6 +40,8 @@ from .types import (
     CategoryCommercePolicyType,
     CheckoutQuoteType,
     CommerceCurrencySummaryType,
+    DeliveryRiderAdminType,
+    DeliveryRiderSummaryType,
     DisputeType,
     ListingCommerceType,
     OrderType,
@@ -60,7 +71,15 @@ PAID_ORDER_STATES = {
     Order.Status.DISPUTED,
 }
 
+RIDER_ACTIVE_ORDER_STATES = {
+    Order.Status.AWAITING_SELLER,
+    Order.Status.PROCESSING,
+    Order.Status.SHIPPED,
+    Order.Status.OUT_FOR_DELIVERY,
+}
+
 COMMERCE_ADMIN_ROLES = {User.AdminRole.ADMIN, User.AdminRole.FINANCE}
+DELIVERY_ADMIN_ROLES = {User.AdminRole.ADMIN}
 
 
 def _listing(value: str) -> Listing:
@@ -75,7 +94,14 @@ def _listing(value: str) -> Listing:
 
 def _order_queryset():
     return Order.objects.select_related(
-        "buyer", "seller", "seller__user", "listing"
+        "buyer",
+        "seller",
+        "seller__user",
+        "listing",
+        "shipment",
+        "shipment__delivery_assignment",
+        "shipment__delivery_assignment__rider",
+        "shipment__delivery_assignment__rider__user",
     ).prefetch_related("payments", "disputes")
 
 
@@ -249,6 +275,54 @@ class CommerceQuery:
         except SellerPaymentAccount.DoesNotExist:
             return None
         return payment_account_to_type(account)
+
+    @strawberry.field
+    def my_delivery_rider(
+        self, info: strawberry.Info
+    ) -> DeliveryRiderSummaryType | None:
+        user = require_user(info)
+        rider = rider_for_user(user)
+        return rider_summary_to_type(rider) if rider else None
+
+    @strawberry.field
+    def my_delivery_orders(
+        self,
+        info: strawberry.Info,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[OrderType]:
+        user = require_user(info)
+        rider = rider_for_user(user)
+        if rider is None:
+            return []
+        orders = _slice(
+            _order_queryset().filter(
+                fulfillment_method=Order.FulfillmentMethod.LOCAL_DELIVERY,
+                status__in=RIDER_ACTIVE_ORDER_STATES,
+                shipment__delivery_assignment__rider=rider,
+            ),
+            offset=offset,
+            limit=limit,
+            max_limit=100,
+        )
+        return [
+            order_to_type(
+                order,
+                buyer_view=False,
+                include_shipping_address=True,
+            )
+            for order in orders
+        ]
+
+    @strawberry.field
+    def admin_delivery_riders(
+        self, info: strawberry.Info
+    ) -> list[DeliveryRiderAdminType]:
+        require_staff(info, roles=DELIVERY_ADMIN_ROLES)
+        riders = DeliveryRider.objects.select_related("user").order_by(
+            "user__full_name", "user__email"
+        )
+        return [rider_admin_to_type(rider) for rider in riders]
 
     @strawberry.field
     def admin_commerce_summary(self, info: strawberry.Info) -> AdminCommerceSummaryType:
