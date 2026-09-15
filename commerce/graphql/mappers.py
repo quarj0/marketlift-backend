@@ -1,6 +1,10 @@
+from commerce.delivery_services import buyer_delivery_pin
+
 from .types import (
     CategoryCommercePolicyType,
     CommercePaymentType,
+    DeliveryRiderAdminType,
+    DeliveryRiderSummaryType,
     DisputeType,
     ListingCommerceType,
     OrderType,
@@ -69,12 +73,46 @@ def payment_to_type(payment) -> CommercePaymentType:
     )
 
 
-def shipment_to_type(shipment) -> ShipmentType:
+def rider_summary_to_type(rider) -> DeliveryRiderSummaryType:
+    return DeliveryRiderSummaryType(
+        id=str(rider.id),
+        user_id=str(rider.user_id),
+        name=rider.user.full_name or rider.user.email,
+        active=rider.active,
+    )
+
+
+def rider_admin_to_type(rider) -> DeliveryRiderAdminType:
+    return DeliveryRiderAdminType(
+        id=str(rider.id),
+        user_id=str(rider.user_id),
+        name=rider.user.full_name or rider.user.email,
+        email=rider.user.email,
+        active=rider.active,
+    )
+
+
+def shipment_to_type(shipment, *, buyer_view: bool = False) -> ShipmentType:
+    try:
+        assignment = shipment.delivery_assignment
+    except Exception:
+        assignment = None
+    rider = assignment.rider if assignment and assignment.rider_id else None
+    pin_visible = (
+        buyer_view
+        and shipment.status == "out_for_delivery"
+        and shipment.order.status == "out_for_delivery"
+        and shipment.delivered_at is None
+    )
     return ShipmentType(
         status=shipment.status,
         carrier=shipment.carrier or None,
         tracking_code=shipment.tracking_code or None,
         delivered_at=shipment.delivered_at,
+        assigned_at=assignment.assigned_at if assignment else None,
+        confirmation_source=(assignment.confirmation_source or None) if assignment else None,
+        delivery_pin=buyer_delivery_pin(shipment) if pin_visible else None,
+        rider=rider_summary_to_type(rider) if rider else None,
     )
 
 
@@ -104,11 +142,11 @@ def order_to_type(
     except Exception:
         settlement = None
     snapshot = dict(order.listing_snapshot or {})
-    # Delivery PIN is buyer-only. Sellers receive the delivery address needed to
-    # fulfil an order, but never the buyer's PIN. Admin order views do not expose
-    # the address unless a resolver explicitly opts in for an operational action.
-    if not buyer_view:
-        snapshot.pop("delivery_pin", None)
+    # Delivery credentials never belong in listing snapshots. This also protects
+    # legacy rows that may still contain the old key until the migration scrubs
+    # them. The live PIN is exposed only through the buyer shipment view while
+    # an assigned local delivery is actually out for delivery.
+    snapshot.pop("delivery_pin", None)
     if include_shipping_address is None:
         include_shipping_address = buyer_view
     return OrderType(
@@ -130,7 +168,7 @@ def order_to_type(
         shipping_address=order.shipping_address if include_shipping_address else {},
         listing_snapshot=snapshot,
         payment=payment_to_type(payment) if payment else None,
-        shipment=shipment_to_type(shipment) if shipment else None,
+        shipment=shipment_to_type(shipment, buyer_view=buyer_view) if shipment else None,
         settlement=settlement_to_type(settlement) if settlement else None,
         created_at=order.created_at,
         paid_at=order.paid_at,

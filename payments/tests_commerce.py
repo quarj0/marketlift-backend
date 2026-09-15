@@ -174,7 +174,7 @@ class CommerceServiceTests(TestCase):
         self.assertIsNotNone(settlement.release_after)
         self.assertGreaterEqual(settlement.release_after, before + timedelta(hours=47))
 
-    def test_seller_gets_shipping_address_but_never_delivery_pin(self):
+    def test_shipping_address_visibility_never_exposes_legacy_delivery_pin(self):
         order = self.make_order(paid=True)
         buyer_view = order_to_type(order, buyer_view=True)
         seller_view = order_to_type(
@@ -184,7 +184,7 @@ class CommerceServiceTests(TestCase):
         )
         admin_view = order_to_type(order, buyer_view=False)
 
-        self.assertEqual(buyer_view.listing_snapshot["delivery_pin"], "654321")
+        self.assertNotIn("delivery_pin", buyer_view.listing_snapshot)
         self.assertEqual(seller_view.shipping_address["city"], "Sao Paulo")
         self.assertNotIn("delivery_pin", seller_view.listing_snapshot)
         self.assertEqual(admin_view.shipping_address, {})

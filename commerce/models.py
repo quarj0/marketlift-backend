@@ -8,9 +8,17 @@ from payments.commerce_models import (
     Settlement,
     Shipment,
 )
+from payments.delivery_models import (
+    DeliveryAssignment,
+    DeliveryConfirmationAttempt,
+    DeliveryRider,
+)
 
 __all__ = [
     "CommercePayment",
+    "DeliveryAssignment",
+    "DeliveryConfirmationAttempt",
+    "DeliveryRider",
     "Dispute",
     "LedgerEntry",
     "Order",
