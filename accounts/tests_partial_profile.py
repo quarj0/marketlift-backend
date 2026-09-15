@@ -42,3 +42,14 @@ class PartialProfileUpdateTests(TestCase):
         self.assertEqual(updated.full_name, "Changed Name")
         self.assertEqual(updated.state, "")
         self.assertEqual(updated.city, "")
+
+    def test_blank_phone_explicitly_clears_phone_without_touching_other_fields(self):
+        original_email = self.user.email
+        original_name = self.user.full_name
+
+        updated = update_profile(user=self.user, data={"phone": ""})
+        updated.refresh_from_db()
+
+        self.assertIsNone(updated.phone)
+        self.assertEqual(updated.email, original_email)
+        self.assertEqual(updated.full_name, original_name)
