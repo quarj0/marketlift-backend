@@ -100,6 +100,6 @@ class DeliveryConfirmationAttempt(UUIDTimeStampedModel):
         indexes = [
             models.Index(
                 fields=("assignment", "-created_at"),
-                name="delivery_attempt_assignment_idx",
+                name="delivery_attempt_assign_idx",
             ),
         ]
