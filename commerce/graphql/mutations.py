@@ -7,15 +7,20 @@ from strawberry.scalars import JSON
 from accounts.models import User
 from categories.models import Category
 from listings.models import Listing
-from marketlift.graphql.auth import require_seller, require_staff, require_user
+from marketlift.graphql.auth import (
+    request_from_info,
+    require_seller,
+    require_staff,
+    require_user,
+)
 from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 
+from commerce.delivery_services import buyer_confirm_non_local_delivery
 from commerce.models import CommercePayment, Dispute, Order, Settlement
 from commerce.providers.base import CommerceProviderError
 from commerce.services import (
     activate_seller_payments,
     configure_listing_commerce,
-    confirm_order_delivered,
     create_checkout_order,
     mark_order_processing,
     mark_order_shipped,
@@ -220,42 +225,16 @@ class CommerceMutation:
     ) -> OrderType:
         user = require_user(info)
         try:
-            order = confirm_order_delivered(
-                order=_order_for_buyer(user, order_id), buyer=user
+            order = buyer_confirm_non_local_delivery(
+                order=_order_for_buyer(user, order_id),
+                buyer=user,
+                request=request_from_info(info),
             )
         except ValidationError as exc:
             raise validation_error(
                 exc, code="ORDER_DELIVERY_INVALID", status=409
             ) from exc
         return order_to_type(order, buyer_view=True)
-
-    @strawberry.mutation
-    def confirm_commerce_delivery_pin(
-        self,
-        info: strawberry.Info,
-        order_id: strawberry.ID,
-        delivery_pin: str,
-        proof: JSON | None = None,
-    ) -> OrderType:
-        require_staff(
-            info,
-            roles={User.AdminRole.ADMIN, User.AdminRole.FINANCE},
-        )
-        try:
-            order = Order.objects.get(pk=str(order_id))
-        except (Order.DoesNotExist, ValueError) as exc:
-            raise not_found_error("Order", code="ORDER_NOT_FOUND") from exc
-        try:
-            order = confirm_order_delivered(
-                order=order,
-                delivery_pin=delivery_pin,
-                proof=dict(proof or {}),
-            )
-        except ValidationError as exc:
-            raise validation_error(
-                exc, code="DELIVERY_PIN_INVALID", status=409
-            ) from exc
-        return order_to_type(order, buyer_view=False)
 
     @strawberry.mutation
     def open_commerce_dispute(
