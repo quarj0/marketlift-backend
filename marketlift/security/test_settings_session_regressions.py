@@ -76,8 +76,6 @@ class SessionInvalidationRegressionTests(TestCase):
         stale.save()
         stale_key = stale.session_key
 
-        # Reproduce the previous invalidate-all implementation: the DB row was
-        # removed directly while cached_db kept the Redis/cache copy alive.
         Session.objects.filter(session_key=stale_key).delete()
         self.assertTrue(SessionStore(session_key=stale_key).get("stale"))
 
@@ -153,3 +151,9 @@ class MaintenanceModeSurfaceTests(TestCase):
         request = self.factory.post("/api/v1/auth/admin-login/")
         response = self.middleware(request)
         self.assertEqual(response.status_code, 200)
+
+    def test_public_maintenance_status_remains_available_during_maintenance(self):
+        response = self.client.get("/api/v1/health/maintenance/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"maintenance": True})
+        self.assertIn("no-store", response.headers.get("Cache-Control", ""))
