@@ -16,7 +16,7 @@ from marketlift.markets.service import (
     enabled_market_profiles,
     identity_provider_for_country_code,
 )
-from platform_settings.models import Market
+from platform_settings.models import Market, PlatformConfiguration
 from platform_settings.readiness import (
     identity_provider_readiness,
     payment_provider_readiness,
@@ -99,6 +99,37 @@ def market_profile(request):
 @permission_classes([AllowAny])
 def health(request):
     return Response({"status": "ok", "service": "marketlift"})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def maintenance_status(request):
+    """Minimal public status used by the marketplace maintenance guard.
+
+    This endpoint intentionally exposes only the maintenance boolean. It does
+    not reveal administrator identity, reasons, internal notes, or deployment
+    metadata.
+    """
+
+    maintenance = None
+    try:
+        maintenance = cache.get("ml:platform:maintenance")
+    except Exception:
+        pass
+    if maintenance is None:
+        try:
+            maintenance = PlatformConfiguration.load().maintenance_mode
+            try:
+                cache.set("ml:platform:maintenance", bool(maintenance), timeout=30)
+            except Exception:
+                pass
+        except Exception:
+            # If configuration storage is unavailable, readiness will separately
+            # report the outage. Do not accidentally lock users out indefinitely.
+            maintenance = False
+    response = Response({"maintenance": bool(maintenance)})
+    response["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @api_view(["GET"])

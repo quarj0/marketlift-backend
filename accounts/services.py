@@ -89,6 +89,20 @@ def get_account_settings(user):
     )[0]
 
 
+def _absolute_profile_asset_url(path: str, *, request=None) -> str:
+    value = str(path or "").strip()
+    if value.startswith(("https://", "http://")):
+        return value
+    if request is None:
+        raise ValidationError(
+            {"avatar": "A request context is required to attach this profile image."}
+        )
+    # Upload assets deliberately expose provider-neutral API paths. User.avatar_url
+    # is a URLField, so persist the absolute API URL instead of the relative path.
+    # Host validation and the trusted proxy scheme are handled by Django settings.
+    return request.build_absolute_uri(value)
+
+
 @transaction.atomic
 def update_profile(*, user, data, avatar_upload=None, request=None):
     allowed = (
@@ -166,7 +180,9 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
         asset = claim_upload(
             asset=avatar_upload, user=user, purpose=UploadAsset.Purpose.AVATAR
         )
-        user.avatar_url = asset.preferred_image_url("thumbnail")
+        user.avatar_url = _absolute_profile_asset_url(
+            asset.preferred_image_url("thumbnail"), request=request
+        )
 
     user.full_clean(exclude=("password",))
     user.save()
