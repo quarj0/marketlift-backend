@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+from hashlib import sha256
+
 from accounts.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Notification
+from .models import Notification, WebPushSubscription
+from .web_push import validate_subscription_endpoint, validate_subscription_keys
 
 
 def create_notification(
@@ -21,8 +26,10 @@ def create_notification(
 
     def _publish():
         from marketlift.realtime.events import publish_notification_created
+        from notifications.tasks import fanout_web_push
 
         publish_notification_created(notification_id)
+        fanout_web_push.delay(str(notification_id))
 
     transaction.on_commit(_publish, robust=True)
     return item
@@ -61,6 +68,51 @@ def mark_all_notifications_read(*, user) -> int:
 
     transaction.on_commit(_publish, robust=True)
     return count
+
+
+def register_web_push_subscription(
+    *,
+    user,
+    endpoint: str,
+    p256dh: str,
+    auth: str,
+    user_agent: str = "",
+) -> WebPushSubscription:
+    try:
+        endpoint = validate_subscription_endpoint(endpoint)
+        p256dh, auth = validate_subscription_keys(p256dh=p256dh, auth=auth)
+    except ValueError as exc:
+        raise ValidationError({"subscription": str(exc)}) from exc
+
+    digest = sha256(endpoint.encode("utf-8")).hexdigest()
+    subscription, _ = WebPushSubscription.objects.update_or_create(
+        endpoint_hash=digest,
+        defaults={
+            "user": user,
+            "endpoint": endpoint,
+            "p256dh": p256dh,
+            "auth": auth,
+            "user_agent": (user_agent or "")[:500],
+            "disabled_at": None,
+            "failure_count": 0,
+            "last_error": "",
+        },
+    )
+    return subscription
+
+
+def unregister_web_push_subscription(*, user, endpoint: str) -> bool:
+    endpoint = (endpoint or "").strip()
+    if not endpoint:
+        return False
+    digest = sha256(endpoint.encode("utf-8")).hexdigest()
+    now = timezone.now()
+    updated = WebPushSubscription.objects.filter(
+        endpoint_hash=digest,
+        user=user,
+        disabled_at__isnull=True,
+    ).update(disabled_at=now, updated_at=now)
+    return bool(updated)
 
 
 def create_admin_notifications(
@@ -113,9 +165,11 @@ def create_admin_notifications(
 
         def _publish():
             from marketlift.realtime.events import publish_notification_created
+            from notifications.tasks import fanout_web_push
 
             for notification_id in notification_ids:
                 publish_notification_created(notification_id)
+                fanout_web_push.delay(str(notification_id))
 
         transaction.on_commit(_publish, robust=True)
     return len(rows)
