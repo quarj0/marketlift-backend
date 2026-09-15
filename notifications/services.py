@@ -24,14 +24,20 @@ def create_notification(
     )
     notification_id = item.pk
 
-    def _publish():
+    def _publish_realtime():
         from marketlift.realtime.events import publish_notification_created
-        from notifications.tasks import fanout_web_push
 
         publish_notification_created(notification_id)
+
+    def _enqueue_web_push():
+        from notifications.tasks import fanout_web_push
+
         fanout_web_push.delay(str(notification_id))
 
-    transaction.on_commit(_publish, robust=True)
+    # Keep realtime and Web Push independent. A temporary Redis/channel-layer
+    # failure must not prevent the durable push task from being queued.
+    transaction.on_commit(_publish_realtime, robust=True)
+    transaction.on_commit(_enqueue_web_push, robust=True)
     return item
 
 
@@ -163,13 +169,18 @@ def create_admin_notifications(
         Notification.objects.bulk_create(rows)
         notification_ids = [row.pk for row in rows if row.pk]
 
-        def _publish():
+        def _publish_realtime():
             from marketlift.realtime.events import publish_notification_created
-            from notifications.tasks import fanout_web_push
 
             for notification_id in notification_ids:
                 publish_notification_created(notification_id)
+
+        def _enqueue_web_push():
+            from notifications.tasks import fanout_web_push
+
+            for notification_id in notification_ids:
                 fanout_web_push.delay(str(notification_id))
 
-        transaction.on_commit(_publish, robust=True)
+        transaction.on_commit(_publish_realtime, robust=True)
+        transaction.on_commit(_enqueue_web_push, robust=True)
     return len(rows)
