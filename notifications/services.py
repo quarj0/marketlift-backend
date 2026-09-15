@@ -3,12 +3,17 @@ from __future__ import annotations
 from hashlib import sha256
 
 from accounts.models import User
+from accounts.services import get_account_settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Notification, WebPushSubscription
-from .web_push import validate_subscription_endpoint, validate_subscription_keys
+from .models import Notification, WebPushDelivery, WebPushSubscription
+from .web_push import (
+    validate_subscription_endpoint,
+    validate_subscription_keys,
+    web_push_configured,
+)
 
 
 def _safe_href(value: str, *, fallback: str = "/notifications") -> str:
@@ -23,6 +28,39 @@ def _safe_href(value: str, *, fallback: str = "/notifications") -> str:
     return value[:500]
 
 
+def push_enabled_for_notification(item: Notification) -> bool:
+    # Admin operational alerts belong to the administrator console, which does
+    # not register marketplace PWA subscriptions.
+    if (item.data or {}).get("adminOperational"):
+        return False
+    account_settings = get_account_settings(item.user)
+    if item.notification_type == "message":
+        return account_settings.push_messages
+    if item.notification_type in {"listing", "moderation", "seller"}:
+        return account_settings.push_listing_updates
+    return False
+
+
+def prepare_web_push_deliveries(item: Notification) -> list[str]:
+    """Persist recoverable delivery rows before any broker publication."""
+    if not web_push_configured() or not push_enabled_for_notification(item):
+        return []
+
+    delivery_ids: list[str] = []
+    subscriptions = WebPushSubscription.objects.filter(
+        user=item.user,
+        disabled_at__isnull=True,
+    )
+    for subscription in subscriptions.iterator():
+        delivery, _ = WebPushDelivery.objects.get_or_create(
+            notification=item,
+            subscription=subscription,
+        )
+        if delivery.sent_at is None:
+            delivery_ids.append(str(delivery.id))
+    return delivery_ids
+
+
 def create_notification(
     *, user, notification_type: str, title: str, body: str, href: str = "", data=None
 ):
@@ -35,6 +73,7 @@ def create_notification(
         data=data or {},
     )
     notification_id = item.pk
+    delivery_ids = prepare_web_push_deliveries(item)
 
     def _publish_realtime():
         from marketlift.realtime.events import publish_notification_created
@@ -42,9 +81,10 @@ def create_notification(
         publish_notification_created(notification_id)
 
     def _enqueue_web_push():
-        from notifications.tasks import fanout_web_push
+        from notifications.tasks import enqueue_web_push_delivery
 
-        fanout_web_push.delay(str(notification_id))
+        for delivery_id in delivery_ids:
+            enqueue_web_push_delivery(delivery_id)
 
     transaction.on_commit(_publish_realtime, robust=True)
     transaction.on_commit(_enqueue_web_push, robust=True)
@@ -86,6 +126,7 @@ def mark_all_notifications_read(*, user) -> int:
     return count
 
 
+@transaction.atomic
 def register_web_push_subscription(
     *,
     user,
@@ -101,18 +142,49 @@ def register_web_push_subscription(
         raise ValidationError({"subscription": str(exc)}) from exc
 
     digest = sha256(endpoint.encode("utf-8")).hexdigest()
-    subscription, _ = WebPushSubscription.objects.update_or_create(
-        endpoint_hash=digest,
-        defaults={
-            "user": user,
-            "endpoint": endpoint,
-            "p256dh": p256dh,
-            "auth": auth,
-            "user_agent": (user_agent or "")[:500],
-            "disabled_at": None,
-            "failure_count": 0,
-            "last_error": "",
-        },
+    subscription = (
+        WebPushSubscription.objects.select_for_update()
+        .filter(endpoint_hash=digest)
+        .first()
+    )
+    if subscription is None:
+        return WebPushSubscription.objects.create(
+            user=user,
+            endpoint_hash=digest,
+            endpoint=endpoint,
+            p256dh=p256dh,
+            auth=auth,
+            user_agent=(user_agent or "")[:500],
+        )
+
+    if subscription.user_id != user.pk:
+        # A Push API endpoint is browser-scoped and can survive account changes.
+        # Never let pending notifications from the previous account follow it.
+        WebPushDelivery.objects.filter(
+            subscription=subscription,
+            sent_at__isnull=True,
+        ).delete()
+
+    subscription.user = user
+    subscription.endpoint = endpoint
+    subscription.p256dh = p256dh
+    subscription.auth = auth
+    subscription.user_agent = (user_agent or "")[:500]
+    subscription.disabled_at = None
+    subscription.failure_count = 0
+    subscription.last_error = ""
+    subscription.save(
+        update_fields=(
+            "user",
+            "endpoint",
+            "p256dh",
+            "auth",
+            "user_agent",
+            "disabled_at",
+            "failure_count",
+            "last_error",
+            "updated_at",
+        )
     )
     return subscription
 
@@ -179,12 +251,5 @@ def create_admin_notifications(
             for notification_id in notification_ids:
                 publish_notification_created(notification_id)
 
-        def _enqueue_web_push():
-            from notifications.tasks import fanout_web_push
-
-            for notification_id in notification_ids:
-                fanout_web_push.delay(str(notification_id))
-
         transaction.on_commit(_publish_realtime, robust=True)
-        transaction.on_commit(_enqueue_web_push, robust=True)
     return len(rows)
