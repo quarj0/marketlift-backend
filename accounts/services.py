@@ -129,13 +129,18 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
             user.email_verified_at = None
             email_changed = True
 
-    if "phone" in data and data["phone"] is not None:
-        phone = str(data["phone"]).strip() or None
+    # Phone is optional, so a supplied blank/null value means "clear this field".
+    # This is deliberately different from an omitted key, which means "leave it
+    # unchanged" and is the normal PATCH/partial-update contract.
+    if "phone" in data:
+        raw_phone = data["phone"]
+        phone = str(raw_phone).strip() if raw_phone is not None else ""
+        phone = phone or None
         if phone != user.phone:
             if phone and User.objects.filter(phone=phone).exclude(pk=user.pk).exists():
                 raise ValidationError({"phone": "Phone number is already in use."})
-            data["phone"] = phone
             user.phone_verified_at = None
+        data["phone"] = phone
 
     if "country_code" in data and data["country_code"] is not None:
         data["country_code"] = normalize_enabled_country_code(data["country_code"])
@@ -173,7 +178,11 @@ def update_profile(*, user, data, avatar_upload=None, request=None):
             raise ValidationError({"fullName": "Full name is required."})
 
     for key in allowed:
-        if key in data and data[key] is not None:
+        if key not in data:
+            continue
+        # phone=None is a valid explicit clear. Other optional text fields are
+        # represented by empty strings, while required fields reject emptiness above.
+        if data[key] is not None or key == "phone":
             setattr(user, key, data[key])
 
     if avatar_upload is not None:
