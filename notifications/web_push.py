@@ -71,9 +71,19 @@ def validate_subscription_endpoint(endpoint: str) -> str:
     endpoint = (endpoint or "").strip()
     if not endpoint or len(endpoint) > 4096:
         raise ValueError("Invalid push subscription endpoint.")
-    parsed = urlsplit(endpoint)
+    try:
+        parsed = urlsplit(endpoint)
+        # Accessing .port performs urllib's range/syntax validation and can raise
+        # ValueError for values such as ':bad' or ports outside 1..65535.
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("Invalid push subscription endpoint port.") from exc
     if parsed.scheme.lower() != "https" or not parsed.hostname:
         raise ValueError("Push subscription endpoint must use HTTPS.")
+    if parsed.username or parsed.password:
+        raise ValueError("Push subscription endpoint must not contain credentials.")
+    if port is not None and not (1 <= port <= 65535):
+        raise ValueError("Invalid push subscription endpoint port.")
     hostname = parsed.hostname.lower().rstrip(".")
     allowed = allowed_endpoint_suffixes()
     if not any(hostname == suffix or hostname.endswith(f".{suffix}") for suffix in allowed):
@@ -264,7 +274,7 @@ def send_web_push(*, subscription, notification) -> None:
             timeout=timeout,
             follow_redirects=False,
         )
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, httpx.InvalidURL) as exc:
         raise WebPushError(f"Push service request failed: {exc}") from exc
 
     if 200 <= response.status_code < 300:
