@@ -81,6 +81,7 @@ class WebPushDelivery(UUIDTimeStampedModel):
         related_name="deliveries",
     )
     attempts = models.PositiveSmallIntegerField(default=0)
+    enqueued_at = models.DateTimeField(null=True, blank=True, db_index=True)
     sent_at = models.DateTimeField(null=True, blank=True, db_index=True)
     last_error = models.TextField(blank=True)
 
