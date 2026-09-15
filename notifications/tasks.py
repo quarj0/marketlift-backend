@@ -1,9 +1,11 @@
 from celery import shared_task
 from django.conf import settings
-from django.db import transaction
 from django.core.mail import send_mail
+from django.db import transaction
 from django.utils import timezone
-from .models import Notification
+
+from .models import Notification, WebPushDelivery, WebPushSubscription
+from .web_push import WebPushError, WebPushHTTPError, send_web_push, web_push_configured
 
 
 def _email_enabled(item):
@@ -28,6 +30,22 @@ def _email_enabled(item):
     if item.notification_type == "marketing":
         return s.marketing_emails
     return True
+
+
+def _push_enabled(item):
+    # Admin operational alerts belong to the administrator console, which does
+    # not register marketplace PWA subscriptions.
+    if (item.data or {}).get("adminOperational"):
+        return False
+    try:
+        account_settings = item.user.settings
+    except Exception:
+        return False
+    if item.notification_type == "message":
+        return account_settings.push_messages
+    if item.notification_type in {"listing", "moderation", "seller"}:
+        return account_settings.push_listing_updates
+    return False
 
 
 @shared_task
@@ -78,3 +96,99 @@ def deliver_pending_notification_emails():
                 )
             )
     return sent
+
+
+@shared_task
+def fanout_web_push(notification_id: str) -> int:
+    """Create one durable delivery per active browser subscription."""
+
+    if not web_push_configured():
+        return 0
+    try:
+        item = Notification.objects.select_related("user", "user__settings").get(
+            pk=notification_id
+        )
+    except (Notification.DoesNotExist, ValueError):
+        return 0
+    if not _push_enabled(item):
+        return 0
+
+    subscriptions = WebPushSubscription.objects.filter(
+        user=item.user,
+        disabled_at__isnull=True,
+    )
+    queued = 0
+    for subscription in subscriptions.iterator():
+        delivery, _ = WebPushDelivery.objects.get_or_create(
+            notification=item,
+            subscription=subscription,
+        )
+        if delivery.sent_at is not None:
+            continue
+        deliver_web_push_delivery.delay(str(delivery.id))
+        queued += 1
+    return queued
+
+
+@shared_task(bind=True, max_retries=4)
+def deliver_web_push_delivery(self, delivery_id: str):
+    try:
+        delivery = WebPushDelivery.objects.select_related(
+            "notification__user",
+            "notification__user__settings",
+            "subscription",
+        ).get(pk=delivery_id)
+    except (WebPushDelivery.DoesNotExist, ValueError):
+        return "missing"
+
+    if delivery.sent_at is not None:
+        return "sent"
+    if delivery.subscription.disabled_at is not None:
+        return "disabled"
+    if not _push_enabled(delivery.notification):
+        return "preference-disabled"
+
+    delivery.attempts = min(65535, delivery.attempts + 1)
+    delivery.save(update_fields=("attempts", "updated_at"))
+
+    try:
+        send_web_push(
+            subscription=delivery.subscription,
+            notification=delivery.notification,
+        )
+    except WebPushHTTPError as exc:
+        delivery.last_error = str(exc)[:1000]
+        delivery.save(update_fields=("last_error", "updated_at"))
+        if exc.permanent_subscription_failure:
+            now = timezone.now()
+            WebPushSubscription.objects.filter(
+                pk=delivery.subscription_id,
+                disabled_at__isnull=True,
+            ).update(
+                disabled_at=now,
+                failure_count=delivery.subscription.failure_count + 1,
+                last_error=str(exc)[:1000],
+                updated_at=now,
+            )
+            return "subscription-gone"
+        if exc.retryable:
+            countdown = min(300, 10 * (2 ** self.request.retries))
+            raise self.retry(exc=exc, countdown=countdown)
+        return "rejected"
+    except WebPushError as exc:
+        delivery.last_error = str(exc)[:1000]
+        delivery.save(update_fields=("last_error", "updated_at"))
+        countdown = min(300, 10 * (2 ** self.request.retries))
+        raise self.retry(exc=exc, countdown=countdown)
+
+    now = timezone.now()
+    delivery.sent_at = now
+    delivery.last_error = ""
+    delivery.save(update_fields=("sent_at", "last_error", "updated_at"))
+    WebPushSubscription.objects.filter(pk=delivery.subscription_id).update(
+        last_success_at=now,
+        failure_count=0,
+        last_error="",
+        updated_at=now,
+    )
+    return "sent"
