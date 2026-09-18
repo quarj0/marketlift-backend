@@ -198,6 +198,7 @@ class StripeCommerceProvider(CommerceProvider):
             "mode": "payment",
             "success_url": payload.get("success_url"),
             "cancel_url": payload.get("cancel_url"),
+            "expires_at": payload.get("expires_at"),
             "client_reference_id": payload.get("code") or payload.get("reference"),
             "customer_email": payload.get("buyer_email"),
             "payment_method_types": [method],
