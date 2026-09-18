@@ -131,6 +131,9 @@ class StripeCommerceProvider(CommerceProvider):
             result["status"] = "pending"
         return result
 
+    def get_recipient(self, recipient_id: str) -> dict:
+        return self._request("GET", f"/v1/accounts/{recipient_id}")
+
     def create_kyc_link(self, recipient_id: str) -> dict:
         frontend_url = getattr(
             settings, "MARKETLIFT_FRONTEND_URL", "http://localhost:3001"
