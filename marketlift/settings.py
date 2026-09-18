@@ -465,6 +465,9 @@ MARKETLIFT_IDENTITY_PROVIDER_READY = env_bool(
     "MARKETLIFT_IDENTITY_PROVIDER_READY", False
 )
 
+# Marketplace buyer/seller commerce. Stripe Connect is the production provider.
+MARKETLIFT_COMMERCE_PROVIDER = os.getenv("MARKETLIFT_COMMERCE_PROVIDER", "stripe").strip().lower()
+
 # Marketlift service-payment integration. Buyer -> seller transactions remain outside
 # the platform. `mock` stays the safe default until a deployment explicitly enables
 # its country provider.
