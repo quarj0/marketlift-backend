@@ -358,11 +358,45 @@ def withdraw_available_balance(*, seller) -> dict:
         amount = sum(row.amount_cents for row in settlements)
         recipient_id = account.provider_recipient_id
 
-    transfer = provider.create_transfer(
-        recipient_id=recipient_id,
-        amount_cents=amount,
-        idempotency_key=batch_key,
-    )
+    try:
+        transfer = provider.create_transfer(
+            recipient_id=recipient_id,
+            amount_cents=amount,
+            idempotency_key=batch_key,
+        )
+    except CommerceProviderError as exc:
+        if not exc.retryable:
+            with transaction.atomic():
+                rows = Settlement.objects.select_for_update().filter(
+                    seller=seller,
+                    status=Settlement.Status.PAYOUT_REQUESTED,
+                    payout_idempotency_key=batch_key,
+                    provider_transfer_id="",
+                )
+                for settlement in rows:
+                    financially_blocked = (
+                        settlement.order.status == Order.Status.REFUNDED
+                        or settlement.order.payments.filter(
+                            status=CommercePayment.Status.CHARGEBACK
+                        ).exists()
+                    )
+                    settlement.status = (
+                        Settlement.Status.BLOCKED
+                        if financially_blocked
+                        else Settlement.Status.AVAILABLE
+                    )
+                    settlement.payout_idempotency_key = ""
+                    settlement.payout_requested_at = None
+                    settlement.save(
+                        update_fields=(
+                            "status",
+                            "payout_idempotency_key",
+                            "payout_requested_at",
+                            "updated_at",
+                        )
+                    )
+        raise
+
     transfer_id = str(transfer.get("id") or "").strip()
     if not transfer_id:
         raise CommerceProviderError("Stripe did not return a transfer id.")
