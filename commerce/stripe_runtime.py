@@ -149,6 +149,7 @@ def _stripe_checkout_payload(*, order: Order, buyer) -> dict:
             "{CHECKOUT_SESSION_ID}"
         ),
         "cancel_url": f"{frontend}/checkout/{order.listing_id}?payment=cancelled",
+        "expires_at": int(order.created_at.timestamp()) + (30 * 60),
         "seller_account_id": connected_account,
         "metadata": {
             "marketlift_order_id": str(order.id),
