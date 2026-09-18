@@ -88,9 +88,37 @@ A zero/missing list result is normal API behavior. Missing configuration require
 
 ## Payments
 
-Marketlift payments are only for **seller subscriptions and listing promotions**. Buyer → seller transactions remain outside the platform.
+### Buyer → seller marketplace commerce: Stripe Connect
 
-### Paystack
+Buyer checkout and seller settlement use Stripe Connect. Marketlift creates the buyer charge on the platform account and releases the seller share later through a Stripe Transfer after Marketlift's delivery/buyer-protection workflow makes the settlement available. Do not describe this as a legal escrow service.
+
+Set at minimum:
+
+```dotenv
+MARKETLIFT_COMMERCE_PROVIDER=stripe
+STRIPE_SECRET_KEY=...
+STRIPE_WEBHOOK_SECRET=...
+MARKETLIFT_COMMERCE_FEE_BPS=500
+MARKETLIFT_BUYER_PROTECTION_HOURS=48
+```
+
+Configure the Stripe webhook endpoint:
+
+```text
+https://api.marketlift.com.br/api/v1/webhooks/stripe/
+```
+
+Subscribe it to the Connect account, Checkout Session, PaymentIntent, charge/refund/dispute and transfer events used by `commerce/stripe_webhooks.py`. The webhook signing secret belongs only on the backend.
+
+Buyer card details are collected by Stripe-hosted Checkout; the marketplace frontend does not need a Stripe secret or publishable key for the current hosted-checkout flow. Pix can be selected only after it is enabled for the Marketlift Stripe account.
+
+Seller payout onboarding uses Stripe Connect Express Account Links. Stripe collects CPF/CNPJ, identity requirements and bank details. Marketlift stores only the connected-account id, onboarding/status metadata and its own commerce state. A fully active Stripe Connect seller can satisfy Marketlift's verification requirement for commerce-enabled listings; sellers who never enable online payments can continue through Marketlift's separate verification workflow.
+
+### Platform service payments
+
+Seller subscriptions and listing promotions remain on the generalized Marketlift service-payment provider layer and are separate from buyer → seller Stripe commerce.
+
+#### Paystack
 
 Set at minimum:
 
@@ -102,7 +130,7 @@ PAYSTACK_CALLBACK_URL=https://marketlift.com/selling/payments
 
 Configure Paystack webhooks to the backend Paystack webhook endpoint used by `payments/api` and test a real provider test-mode payment before enabling the market.
 
-### Mercado Pago
+#### Mercado Pago
 
 Set:
 
@@ -112,11 +140,11 @@ MERCADO_PAGO_ACCESS_TOKEN=...
 MERCADO_PAGO_WEBHOOK_SECRET=...
 ```
 
-Pix/boleto are supported by the current generalized checkout. Mercado Pago **card** should remain disabled in Admin → Markets until its client-side SDK/tokenization adapter is installed; the production-readiness check reports this as a blocker if card is enabled.
+Pix/boleto are supported by the generalized service-payment checkout. Mercado Pago card should remain disabled in Admin → Markets until its client-side SDK/tokenization adapter is installed.
 
 ## Identity verification
 
-The secure identity submission/storage/manual-review workflow is implemented. External country identity verification is deliberately adapter-driven. After installing and testing an adapter:
+The secure identity submission/storage/manual-review workflow remains available for sellers who do not use Stripe Connect. External country identity verification is adapter-driven. For a market that requires that separate provider, install and test the adapter before enabling it:
 
 ```dotenv
 MARKETLIFT_IDENTITY_VERIFICATION_ENABLED=true
