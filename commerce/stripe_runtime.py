@@ -174,7 +174,32 @@ def activate_seller_payments(
         seller=seller,
         defaults={"provider": "stripe"},
     )
-    account.provider = "stripe"
+
+    # A seller may have a dormant recipient mapping from the provider Marketlift
+    # used before Stripe. Provider account IDs are not portable, so reset that
+    # onboarding state instead of ever sending the stale ID to Stripe.
+    if account.provider != "stripe":
+        account.provider = "stripe"
+        account.provider_recipient_id = None
+        account.status = SellerPaymentAccount.Status.NOT_STARTED
+        account.payouts_enabled = False
+        account.kyc_url = ""
+        account.payout_destination_masked = ""
+        account.metadata = {}
+        account.save(
+            update_fields=(
+                "provider",
+                "provider_recipient_id",
+                "status",
+                "payouts_enabled",
+                "kyc_url",
+                "payout_destination_masked",
+                "metadata",
+                "updated_at",
+            )
+        )
+    else:
+        account.provider = "stripe"
 
     if account.provider_recipient_id:
         # Always ask Stripe for the current status before deciding whether
