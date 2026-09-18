@@ -80,7 +80,7 @@ class CommerceServiceTests(TestCase):
         )
         self.payment_account = SellerPaymentAccount.objects.create(
             seller=self.seller,
-            provider="pagarme",
+            provider="stripe",
             provider_recipient_id="rp_test_seller",
             status=SellerPaymentAccount.Status.ACTIVE,
             payout_method=SellerPaymentAccount.PayoutMethod.BANK_ACCOUNT,
