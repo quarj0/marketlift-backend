@@ -52,6 +52,10 @@ jobs:
             gdal-bin \
             libgdal-dev \
             libgeos-dev
+      - name: Generate Stripe SDK lockfile preview
+        run: uv lock
+      - name: Print generated lockfile
+        run: base64 -w0 uv.lock && echo
       - run: uv sync --frozen
       - run: uv run python manage.py check
       - run: uv run python manage.py makemigrations --check --dry-run
