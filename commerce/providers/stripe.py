@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+import os
 
 import httpx
 from django.conf import settings
@@ -35,12 +35,12 @@ class StripeCommerceProvider(CommerceProvider):
     code = "stripe"
 
     def __init__(self):
-        self.secret_key = getattr(settings, "STRIPE_SECRET_KEY", "").strip()
+        self.secret_key = (getattr(settings, "STRIPE_SECRET_KEY", "") or os.getenv("STRIPE_SECRET_KEY", "")).strip()
         self.base_url = getattr(
-            settings, "STRIPE_API_BASE_URL", "https://api.stripe.com"
+            settings, "STRIPE_API_BASE_URL", os.getenv("STRIPE_API_BASE_URL", "https://api.stripe.com")
         ).rstrip("/")
-        self.timeout = float(getattr(settings, "STRIPE_TIMEOUT_SECONDS", 15))
-        self.api_version = getattr(settings, "STRIPE_API_VERSION", "").strip()
+        self.timeout = float(getattr(settings, "STRIPE_TIMEOUT_SECONDS", os.getenv("STRIPE_TIMEOUT_SECONDS", "15")) or 15)
+        self.api_version = (getattr(settings, "STRIPE_API_VERSION", "") or os.getenv("STRIPE_API_VERSION", "")).strip()
         if not self.secret_key:
             raise CommerceProviderError(
                 "STRIPE_SECRET_KEY is not configured.", retryable=False
