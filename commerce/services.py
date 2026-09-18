@@ -89,7 +89,11 @@ def listing_commerce_state(listing: Listing) -> dict:
         reasons.append("seller_checkout_disabled")
     if policy.requires_verified_seller and not listing.seller.verified:
         reasons.append("seller_not_verified")
-    if account is None or account.status != SellerPaymentAccount.Status.ACTIVE:
+    if (
+        account is None
+        or account.provider != "stripe"
+        or account.status != SellerPaymentAccount.Status.ACTIVE
+    ):
         reasons.append("seller_payments_not_active")
     elif not account.payouts_enabled or not account.provider_recipient_id:
         reasons.append("seller_payouts_not_enabled")
