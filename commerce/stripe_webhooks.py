@@ -82,8 +82,16 @@ def _find_payment(data: dict, object_type: str) -> CommercePayment | None:
         payment = qs.filter(provider="stripe", provider_transaction_id=data_id).first()
         if payment:
             return payment
-    if object_type in {"charge", "refund", "dispute"} and data_id:
+    if object_type in {"charge", "refund"} and data_id:
         payment = qs.filter(provider="stripe", provider_charge_id=data_id).first()
+        if payment:
+            return payment
+    charge = data.get("charge")
+    if isinstance(charge, dict):
+        charge = charge.get("id")
+    charge = str(charge or "").strip()
+    if charge:
+        payment = qs.filter(provider="stripe", provider_charge_id=charge).first()
         if payment:
             return payment
     if payment_intent:
@@ -268,10 +276,23 @@ def process_stripe_event(payload: dict, raw: bytes) -> bool:
             payment.save(update_fields=("provider_status", "updated_at"))
             approve_commerce_payment(payment)
 
+        elif event_type == "payment_intent.payment_failed":
+            # A card decline inside hosted Checkout is not terminal: Stripe can
+            # keep the Session open so the buyer can try another card.
+            error = data.get("last_payment_error") or {}
+            payment.provider_status = "payment_failed_retryable"
+            payment.failure_message = str(error.get("message") or "")[:1000]
+            payment.save(
+                update_fields=(
+                    "provider_status",
+                    "failure_message",
+                    "updated_at",
+                )
+            )
+
         elif event_type in {
             "checkout.session.expired",
             "checkout.session.async_payment_failed",
-            "payment_intent.payment_failed",
             "payment_intent.canceled",
         }:
             error = data.get("last_payment_error") or {}
