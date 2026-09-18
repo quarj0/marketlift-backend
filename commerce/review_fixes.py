@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, Sum
@@ -19,13 +18,10 @@ from .services import (
     _normalize_shipping_address,
     _scoped_checkout_idempotency_key,
     _validate_checkout_replay,
-    activate_seller_payments as _activate_seller_payments,
-    create_checkout_order as _create_checkout_order,
     finalize_order_refund as _finalize_order_refund,
     open_order_dispute as _open_order_dispute,
     refund_order as _refund_order,
     release_due_settlements,
-    withdraw_available_balance as _withdraw_available_balance,
 )
 
 PAID_FULFILLMENT_STATES = {
@@ -71,9 +67,6 @@ RESTRICTED_RECIPIENT_STATUSES = {
     "disabled",
     "inactive",
 }
-CARD_REFERENCE_SALT = "marketlift.commerce.card-reference.v1"
-CARD_REFERENCE_MAX_AGE_SECONDS = 60 * 60
-
 
 def _normalize_recipient_account(account: SellerPaymentAccount) -> SellerPaymentAccount:
     provider_status = str((account.metadata or {}).get("provider_status") or "").lower()
@@ -97,120 +90,19 @@ def _normalize_recipient_account(account: SellerPaymentAccount) -> SellerPayment
 
 
 def activate_seller_payments(*, seller, recipient_payload: dict, payout_method: str):
-    if getattr(seller, "seller_type", "individual") != "individual":
-        raise ValidationError(
-            "Business seller payout onboarding is not available until the CNPJ recipient flow is enabled."
-        )
-    account = _activate_seller_payments(
+    from .stripe_runtime import activate_seller_payments as stripe_activate_seller_payments
+
+    return stripe_activate_seller_payments(
         seller=seller,
         recipient_payload=recipient_payload,
         payout_method=payout_method,
     )
-    return _normalize_recipient_account(account)
-
-
-def _unwrap_buyer_card_reference(*, buyer, reference: str | None) -> str | None:
-    if not reference:
-        return None
-    try:
-        payload = signing.loads(
-            reference,
-            salt=CARD_REFERENCE_SALT,
-            max_age=CARD_REFERENCE_MAX_AGE_SECONDS,
-        )
-    except signing.BadSignature as exc:
-        raise ValidationError(
-            {"cardId": "This vaulted card reference is invalid or expired."}
-        ) from exc
-    if not isinstance(payload, dict) or str(payload.get("buyer_id") or "") != str(
-        buyer.id
-    ):
-        raise ValidationError(
-            {"cardId": "This vaulted card does not belong to this buyer."}
-        )
-    card_id = str(payload.get("card_id") or "").strip()
-    if not card_id:
-        raise ValidationError({"cardId": "This vaulted card reference is invalid."})
-    return card_id
-
 
 @transaction.atomic
-def create_checkout_order(
-    *,
-    buyer,
-    listing_id,
-    quantity: int,
-    fulfillment_method: str,
-    shipping_address: dict | None,
-    payment_method: str,
-    customer_document: str,
-    customer_phone: str,
-    card_id: str | None,
-    idempotency_key: str,
-):
-    """Serialize buyer checkout attempts and authorize vaulted cards.
+def create_checkout_order(**kwargs):
+    from .stripe_runtime import create_checkout_order as stripe_create_checkout_order
 
-    The buyer row is the serialization point. It guarantees that two concurrent
-    requests from the same buyer cannot both observe the same idempotency key as
-    unused, even when the requests target different listings. Once the lock is
-    acquired we re-check the buyer-scoped key before mutable stock validation.
-    """
-    normalized_address = _normalize_shipping_address(
-        fulfillment_method, shipping_address
-    )
-    scoped_key = _scoped_checkout_idempotency_key(
-        buyer_id=buyer.id, raw_key=idempotency_key
-    )
-
-    def replay_if_present():
-        previous = (
-            CommercePayment.objects.select_related("order")
-            .filter(idempotency_key=scoped_key)
-            .first()
-        )
-        if not previous:
-            return None
-        _validate_checkout_replay(
-            previous=previous,
-            buyer=buyer,
-            listing_id=listing_id,
-            quantity=quantity,
-            fulfillment_method=fulfillment_method,
-            payment_method=payment_method,
-            shipping_address=normalized_address,
-        )
-        return previous.order, previous
-
-    replay = replay_if_present()
-    if replay:
-        return replay
-
-    # Serialize all checkout attempts for this buyer. This is intentionally
-    # broader than a listing lock because an idempotency key can otherwise race
-    # across two different listings and hit the unique payment constraint.
-    buyer.__class__.objects.select_for_update().only("pk").get(pk=buyer.pk)
-
-    replay = replay_if_present()
-    if replay:
-        return replay
-
-    provider_card_id = card_id
-    if payment_method == CommercePayment.Method.CARD:
-        provider_card_id = _unwrap_buyer_card_reference(buyer=buyer, reference=card_id)
-
-    return _create_checkout_order(
-        buyer=buyer,
-        listing_id=listing_id,
-        quantity=quantity,
-        fulfillment_method=fulfillment_method,
-        shipping_address=normalized_address,
-        payment_method=payment_method,
-        customer_document=customer_document,
-        customer_phone=customer_phone,
-        card_id=provider_card_id,
-        idempotency_key=idempotency_key,
-    )
-
+    return stripe_create_checkout_order(**kwargs)
 
 def open_order_dispute(*, order: Order, user, reason: str, description: str):
     current = Order.objects.select_related("seller", "seller__user").get(pk=order.pk)
@@ -394,32 +286,9 @@ def _requeue_unsubmitted_payout_batch(*, seller) -> int:
 
 
 def withdraw_available_balance(*, seller) -> dict:
-    try:
-        payload = _withdraw_available_balance(seller=seller)
-    except CommerceProviderError as exc:
-        if not exc.retryable:
-            _requeue_unsubmitted_payout_batch(seller=seller)
-        raise
+    from .stripe_runtime import withdraw_available_balance as stripe_withdraw_available_balance
 
-    transfer_id = str(payload.get("transfer_id") or "").strip()
-    status = str(payload.get("status") or "").strip().lower()
-    if transfer_id and status in SUCCESSFUL_TRANSFER_STATUSES:
-        with transaction.atomic():
-            now = timezone.now()
-            rows = Settlement.objects.select_for_update().filter(
-                seller=seller,
-                provider_transfer_id=transfer_id,
-                status=Settlement.Status.PAYOUT_REQUESTED,
-            )
-            rows.update(
-                status=Settlement.Status.PAID,
-                paid_at=now,
-                updated_at=now,
-            )
-    elif transfer_id and status in FAILED_TRANSFER_STATUSES:
-        requeue_failed_transfer(transfer_id=transfer_id)
-    return payload
-
+    return stripe_withdraw_available_balance(seller=seller)
 
 def requeue_failed_transfer(*, transfer_id: str) -> int:
     if not transfer_id:
