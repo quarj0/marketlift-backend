@@ -9,6 +9,7 @@ from django.utils import timezone
 from categories.models import Category
 from commerce.models import CommercePayment, Order, SellerPaymentAccount, Settlement
 from commerce.policy_models import CategoryCommercePolicy, ListingCommerceSettings
+from commerce.providers.base import CommerceProviderError
 from commerce.stripe_runtime import (
     activate_seller_payments,
     create_checkout_order,
@@ -231,6 +232,52 @@ class StripeCommerceTests(TestCase):
         self.assertEqual(payment.status, CommercePayment.Status.PENDING)
         self.assertEqual(payment.provider_status, "payment_failed_retryable")
         self.assertEqual(self.listing.commerce_settings.stock_quantity, 1)
+
+    def test_definitive_stripe_transfer_failure_requeues_available_balance(self):
+        self._activate_with_stripe_webhook()
+        order = Order.objects.create(
+            reference="ML-STRIPE-REJECTED-PAYOUT",
+            buyer=self.buyer,
+            seller=self.seller,
+            listing=self.listing,
+            status=Order.Status.COMPLETED,
+            fulfillment_method=Order.FulfillmentMethod.PICKUP,
+            quantity=1,
+            unit_price_cents=10000,
+            subtotal_cents=10000,
+            total_cents=10000,
+            marketplace_fee_cents=500,
+            seller_proceeds_cents=9500,
+            currency="BRL",
+            shipping_address={},
+            listing_snapshot={"title": self.listing.title},
+            paid_at=timezone.now(),
+            delivered_at=timezone.now(),
+            completed_at=timezone.now(),
+        )
+        settlement = Settlement.objects.create(
+            order=order,
+            seller=self.seller,
+            status=Settlement.Status.AVAILABLE,
+            amount_cents=9500,
+            release_after=timezone.now(),
+        )
+        provider = Mock()
+        provider.code = "stripe"
+        provider.create_transfer.side_effect = CommerceProviderError(
+            "destination is not ready",
+            retryable=False,
+            status_code=400,
+        )
+
+        with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
+            with self.assertRaises(CommerceProviderError):
+                withdraw_available_balance(seller=self.seller)
+
+        settlement.refresh_from_db()
+        self.assertEqual(settlement.status, Settlement.Status.AVAILABLE)
+        self.assertEqual(settlement.payout_idempotency_key, "")
+        self.assertIsNone(settlement.payout_requested_at)
 
     def test_release_transfers_only_available_settlements_to_connected_account(self):
         self._activate_with_stripe_webhook()
