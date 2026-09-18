@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from categories.models import Category
@@ -13,9 +13,10 @@ from commerce.providers.base import CommerceProviderError
 from commerce.stripe_runtime import (
     activate_seller_payments,
     create_checkout_order,
+    sync_seller_payment_account_from_stripe,
     withdraw_available_balance,
 )
-from commerce.stripe_webhooks import process_stripe_event
+from commerce.stripe_webhooks import process_stripe_connect_event, process_stripe_event
 from listings.models import Listing
 from sellers.models import SellerProfile
 
@@ -73,10 +74,20 @@ class StripeCommerceTests(TestCase):
         provider.code = "stripe"
         provider.create_recipient.return_value = {
             "id": "acct_test_seller",
-            "details_submitted": False,
-            "charges_enabled": False,
-            "payouts_enabled": False,
-            "requirements": {},
+            "configuration": {
+                "recipient": {
+                    "capabilities": {
+                        "stripe_balance": {
+                            "stripe_transfers": {"status": "pending"}
+                        }
+                    }
+                }
+            },
+            "requirements": {
+                "summary": {
+                    "minimum_deadline": {"status": "currently_due"}
+                }
+            },
         }
         provider.create_kyc_link.return_value = {
             "url": "https://connect.stripe.test/onboarding"
@@ -94,22 +105,32 @@ class StripeCommerceTests(TestCase):
         self.assertFalse(account.payouts_enabled)
         self.assertIn("connect.stripe.test", account.kyc_url)
 
-        payload = {
-            "id": "evt_account_updated",
-            "type": "account.updated",
-            "data": {
-                "object": {
-                    "object": "account",
-                    "id": "acct_test_seller",
-                    "details_submitted": True,
-                    "charges_enabled": True,
-                    "payouts_enabled": True,
-                    "requirements": {},
+        account_data = {
+            "id": "acct_test_seller",
+            "configuration": {
+                "recipient": {
+                    "capabilities": {
+                        "stripe_balance": {
+                            "stripe_transfers": {"status": "active"}
+                        }
+                    }
+                }
+            },
+            "requirements": {
+                "summary": {
+                    "minimum_deadline": {"status": "eventually_due"}
                 }
             },
         }
-        raw = json.dumps(payload, sort_keys=True).encode("utf-8")
-        self.assertTrue(process_stripe_event(payload, raw))
+        raw = json.dumps(account_data, sort_keys=True).encode("utf-8")
+        self.assertTrue(
+            process_stripe_connect_event(
+                event_id="evt_account_requirements_updated",
+                event_type="v2.core.account[requirements].updated",
+                account_data=account_data,
+                raw=raw,
+            )
+        )
 
         account.refresh_from_db()
         self.seller.refresh_from_db()
@@ -120,6 +141,39 @@ class StripeCommerceTests(TestCase):
 
     def test_connect_onboarding_can_satisfy_commerce_seller_verification(self):
         self._activate_with_stripe_webhook()
+
+
+    def test_live_connect_status_is_refreshed_from_stripe(self):
+        account = self._activate_with_stripe_webhook()
+        provider = Mock()
+        provider.code = "stripe"
+        provider.get_recipient.return_value = {
+            "id": account.provider_recipient_id,
+            "configuration": {
+                "recipient": {
+                    "capabilities": {
+                        "stripe_balance": {
+                            "stripe_transfers": {"status": "restricted"}
+                        }
+                    }
+                }
+            },
+            "requirements": {
+                "summary": {
+                    "minimum_deadline": {"status": "past_due"}
+                }
+            },
+        }
+
+        with patch(
+            "commerce.stripe_runtime.get_commerce_provider",
+            return_value=provider,
+        ):
+            synced = sync_seller_payment_account_from_stripe(seller=self.seller)
+
+        self.assertEqual(synced.status, SellerPaymentAccount.Status.RESTRICTED)
+        self.assertFalse(synced.payouts_enabled)
+        provider.get_recipient.assert_called_once_with("acct_test_seller")
 
     def test_hosted_checkout_and_payment_intent_webhook_approve_order(self):
         self._activate_with_stripe_webhook()
@@ -325,3 +379,96 @@ class StripeCommerceTests(TestCase):
         self.assertIsNotNone(settlement.paid_at)
         provider.get_recipient_balance.assert_not_called()
         provider.create_transfer.assert_called_once()
+
+
+@override_settings(
+    STRIPE_SECRET_KEY="sk_test_placeholder",
+    MARKETLIFT_FRONTEND_URL="https://marketlift.example",
+)
+class StripeProviderSdkTests(TestCase):
+    @patch("commerce.providers.stripe.StripeClient")
+    def test_accounts_v2_creation_uses_recipient_configuration_without_legacy_type(
+        self,
+        stripe_client_cls,
+    ):
+        stripe_client = stripe_client_cls.return_value
+        stripe_client.v2.core.accounts.create.return_value = {
+            "id": "acct_v2_marketlift"
+        }
+
+        from commerce.providers.stripe import StripeCommerceProvider
+
+        provider = StripeCommerceProvider()
+        result = provider.create_recipient(
+            payload={
+                "display_name": "Marketlift Seller",
+                "email": "seller@example.com",
+                "country": "BR",
+            },
+            idempotency_key="seller-account:test",
+        )
+
+        self.assertEqual(result["id"], "acct_v2_marketlift")
+        params = stripe_client.v2.core.accounts.create.call_args.args[0]
+        options = stripe_client.v2.core.accounts.create.call_args.args[1]
+        self.assertNotIn("type", params)
+        self.assertEqual(params["dashboard"], "express")
+        self.assertEqual(params["identity"], {"country": "br"})
+        self.assertEqual(
+            params["defaults"]["responsibilities"],
+            {
+                "fees_collector": "application",
+                "losses_collector": "application",
+            },
+        )
+        self.assertTrue(
+            params["configuration"]["recipient"]["capabilities"][
+                "stripe_balance"
+            ]["stripe_transfers"]["requested"]
+        )
+        self.assertEqual(options["idempotency_key"], "seller-account:test")
+
+    @patch("commerce.providers.stripe.StripeClient")
+    def test_checkout_keeps_seller_transfer_out_of_initial_charge(
+        self,
+        stripe_client_cls,
+    ):
+        stripe_client = stripe_client_cls.return_value
+        stripe_client.v1.checkout.sessions.create.return_value = {
+            "id": "cs_marketlift",
+            "url": "https://checkout.stripe.test/cs_marketlift",
+        }
+
+        from commerce.providers.stripe import StripeCommerceProvider
+
+        provider = StripeCommerceProvider()
+        provider.create_order(
+            payload={
+                "currency": "BRL",
+                "payment_method": "card",
+                "buyer_email": "buyer@example.com",
+                "items": [
+                    {
+                        "amount": 10000,
+                        "description": "Phone",
+                        "quantity": 1,
+                    }
+                ],
+                "success_url": "https://marketlift.example/success",
+                "cancel_url": "https://marketlift.example/cancel",
+                "code": "ML-123",
+                "metadata": {
+                    "marketlift_order_id": "order-123",
+                    "marketlift_seller_account_id": "acct_seller",
+                },
+            },
+            idempotency_key="checkout:test",
+        )
+
+        params = stripe_client.v1.checkout.sessions.create.call_args.args[0]
+        self.assertNotIn("transfer_data", params["payment_intent_data"])
+        self.assertNotIn("application_fee_amount", params["payment_intent_data"])
+        self.assertEqual(
+            params["payment_intent_data"]["transfer_group"],
+            "ML-123",
+        )
