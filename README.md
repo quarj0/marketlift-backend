@@ -45,8 +45,9 @@ Marketlift has one customer account type. Selling is an optional capability repr
 - categories with versioned dynamic fields
 - listings, search/filtering/pagination, media, saved and recently viewed listings
 - saved searches and alerts
-- dormant listing promotions and Marketlift service payments (**Upcoming**)
-- dormant CPF/provider-backed seller identity verification (**Upcoming**)
+- seller plans, listing promotions and Marketlift service payments
+- seller identity verification with manual/external-provider support; Stripe Connect KYC can satisfy commerce-seller verification
+- hybrid marketplace commerce with category checkout policies, Stripe Connect seller onboarding, hosted card/Pix checkout, protected fulfillment, disputes/refunds and delayed seller transfers
 - moderation, reports and immutable audit events
 - notifications
 - provider-neutral uploads with image validation/variants
