@@ -64,9 +64,48 @@ def activate_seller_payments(
     if account.provider_recipient_id:
         if account.status == SellerPaymentAccount.Status.ACTIVE and account.payouts_enabled:
             return account
+
+        current = provider.get_recipient(account.provider_recipient_id)
+        status, payouts_enabled = _stripe_account_status(current)
+        account.status = status
+        account.payouts_enabled = payouts_enabled
+        account.metadata = {
+            **(account.metadata or {}),
+            "provider_status": status,
+            "details_submitted": bool(current.get("details_submitted")),
+            "charges_enabled": bool(current.get("charges_enabled")),
+            "payouts_enabled": bool(current.get("payouts_enabled")),
+            "requirements": current.get("requirements") or {},
+        }
+        _mark_seller_verified_from_stripe(
+            seller, active=status == SellerPaymentAccount.Status.ACTIVE
+        )
+        if status == SellerPaymentAccount.Status.ACTIVE:
+            account.kyc_url = ""
+            account.save(
+                update_fields=(
+                    "provider",
+                    "status",
+                    "payouts_enabled",
+                    "kyc_url",
+                    "metadata",
+                    "updated_at",
+                )
+            )
+            return account
+
         link = provider.create_kyc_link(account.provider_recipient_id)
         account.kyc_url = str(link.get("url") or "")
-        account.save(update_fields=("provider", "kyc_url", "updated_at"))
+        account.save(
+            update_fields=(
+                "provider",
+                "status",
+                "payouts_enabled",
+                "kyc_url",
+                "metadata",
+                "updated_at",
+            )
+        )
         return account
 
     seller_type = str(getattr(seller, "seller_type", "individual") or "individual")
