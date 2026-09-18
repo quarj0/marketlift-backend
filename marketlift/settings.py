@@ -477,9 +477,9 @@ STRIPE_WEBHOOK_TOLERANCE_SECONDS = int(
 )
 
 
-# Marketlift service-payment integration. Buyer -> seller transactions remain outside
-# the platform. `mock` stays the safe default until a deployment explicitly enables
-# its country provider.
+# Marketlift service-payment integration for seller plans/promotions. Buyer -> seller
+# marketplace commerce is handled separately by Stripe Connect above. `mock` stays
+# the safe default until a deployment explicitly enables its country provider.
 MARKETLIFT_PAYMENT_PROVIDER = (
     os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "auto").strip().lower()
 )
