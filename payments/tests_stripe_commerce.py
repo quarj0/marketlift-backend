@@ -181,6 +181,57 @@ class StripeCommerceTests(TestCase):
         self.assertEqual(payment.provider_transaction_id, "pi_marketlift")
         self.assertEqual(payment.provider_charge_id, "ch_marketlift")
 
+
+    def test_card_decline_webhook_keeps_hosted_checkout_retryable(self):
+        self._activate_with_stripe_webhook()
+        provider = Mock()
+        provider.code = "stripe"
+        provider.create_order.return_value = {
+            "id": "cs_retryable",
+            "object": "checkout.session",
+            "status": "open",
+            "payment_status": "unpaid",
+            "url": "https://checkout.stripe.com/c/pay/cs_retryable",
+            "payment_intent": "pi_retryable",
+        }
+        with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
+            order, payment = create_checkout_order(
+                buyer=self.buyer,
+                listing_id=self.listing.id,
+                quantity=1,
+                fulfillment_method=Order.FulfillmentMethod.PICKUP,
+                shipping_address={},
+                payment_method=CommercePayment.Method.CARD,
+                customer_document="",
+                customer_phone="",
+                card_id=None,
+                idempotency_key="stripe-retryable-card",
+            )
+
+        payload = {
+            "id": "evt_retryable_decline",
+            "type": "payment_intent.payment_failed",
+            "data": {
+                "object": {
+                    "object": "payment_intent",
+                    "id": "pi_retryable",
+                    "status": "requires_payment_method",
+                    "metadata": {"marketlift_order_id": str(order.id)},
+                    "last_payment_error": {"message": "Your card was declined."},
+                }
+            },
+        }
+        raw = json.dumps(payload, sort_keys=True).encode("utf-8")
+        self.assertTrue(process_stripe_event(payload, raw))
+
+        order.refresh_from_db()
+        payment.refresh_from_db()
+        self.listing.commerce_settings.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING_PAYMENT)
+        self.assertEqual(payment.status, CommercePayment.Status.PENDING)
+        self.assertEqual(payment.provider_status, "payment_failed_retryable")
+        self.assertEqual(self.listing.commerce_settings.stock_quantity, 1)
+
     def test_release_transfers_only_available_settlements_to_connected_account(self):
         self._activate_with_stripe_webhook()
         order = Order.objects.create(
