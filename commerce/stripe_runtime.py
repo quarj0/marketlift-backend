@@ -27,29 +27,144 @@ from .services import (
 
 
 def _stripe_account_status(result: dict) -> tuple[str, bool]:
+    """Translate the live Accounts v2 state into Marketlift's commerce status.
+
+    The recipient configuration is the capability Marketlift actually depends on:
+    the seller must be able to receive a Stripe transfer after delivery. We also
+    require that Stripe has no currently-due or past-due onboarding requirement.
+    """
+    configuration = result.get("configuration") or {}
+    recipient = configuration.get("recipient") or {}
+    capabilities = recipient.get("capabilities") or {}
+    stripe_balance = capabilities.get("stripe_balance") or {}
+    stripe_transfers = stripe_balance.get("stripe_transfers") or {}
+    transfer_status = str(stripe_transfers.get("status") or "").strip().lower()
+
     requirements = result.get("requirements") or {}
-    disabled_reason = str(requirements.get("disabled_reason") or "").strip()
-    payouts_enabled = bool(result.get("payouts_enabled"))
-    details_submitted = bool(result.get("details_submitted"))
-    if payouts_enabled and details_submitted:
+    summary = requirements.get("summary") or {}
+    minimum_deadline = summary.get("minimum_deadline") or {}
+    requirements_status = str(
+        minimum_deadline.get("status") or ""
+    ).strip().lower()
+
+    onboarding_complete = requirements_status not in {
+        "currently_due",
+        "past_due",
+    }
+    if transfer_status == "active" and onboarding_complete:
         return SellerPaymentAccount.Status.ACTIVE, True
-    if disabled_reason:
+    if transfer_status in {"restricted", "unsupported"} or requirements_status == "past_due":
         return SellerPaymentAccount.Status.RESTRICTED, False
     return SellerPaymentAccount.Status.PENDING, False
 
 
+def _stripe_account_metadata(result: dict, *, status: str) -> dict:
+    configuration = result.get("configuration") or {}
+    recipient = configuration.get("recipient") or {}
+    capabilities = recipient.get("capabilities") or {}
+    stripe_balance = capabilities.get("stripe_balance") or {}
+    stripe_transfers = stripe_balance.get("stripe_transfers") or {}
+    requirements = result.get("requirements") or {}
+    summary = requirements.get("summary") or {}
+    minimum_deadline = summary.get("minimum_deadline") or {}
+    return {
+        "provider_status": status,
+        "stripe_transfers_status": str(
+            stripe_transfers.get("status") or ""
+        ).strip().lower(),
+        "requirements_status": str(
+            minimum_deadline.get("status") or ""
+        ).strip().lower(),
+        "requirements": requirements,
+    }
+
+
 def _mark_seller_verified_from_stripe(seller, *, active: bool) -> None:
+    """Let successful Stripe KYC satisfy commerce-seller verification.
+
+    Classified-only sellers can still use Marketlift's independent verification
+    workflow. We never unset an existing verification if Stripe later requests an
+    update; instead the payment capability is restricted until Stripe is current.
+    """
     if active and not seller.verified:
         seller.verified_at = timezone.now()
         seller.save(update_fields=("verified_at", "updated_at"))
 
 
+def _apply_stripe_account_snapshot(
+    account: SellerPaymentAccount,
+    result: dict,
+) -> SellerPaymentAccount:
+    status, payouts_enabled = _stripe_account_status(result)
+    account.provider = "stripe"
+    account.status = status
+    # This existing field means "Marketlift can release seller proceeds to the
+    # connected account". The source of truth is the live V2 transfer capability.
+    account.payouts_enabled = payouts_enabled
+    if payouts_enabled:
+        account.kyc_url = ""
+    account.metadata = _stripe_account_metadata(result, status=status)
+    account.save(
+        update_fields=(
+            "provider",
+            "status",
+            "payouts_enabled",
+            "kyc_url",
+            "metadata",
+            "updated_at",
+        )
+    )
+    _mark_seller_verified_from_stripe(
+        account.seller,
+        active=status == SellerPaymentAccount.Status.ACTIVE,
+    )
+    return account
+
+
+def sync_seller_payment_account_from_stripe(*, seller) -> SellerPaymentAccount | None:
+    """Refresh seller onboarding status directly from Stripe Accounts v2.
+
+    We keep the Stripe account ID and the last observed state in Marketlift for
+    mapping/audit purposes, but callers never treat the cached status as the
+    authoritative answer. This function is used by the seller payments query so
+    every status view is backed by Stripe's current requirements/capabilities.
+    """
+    try:
+        existing = SellerPaymentAccount.objects.select_related("seller").get(
+            seller=seller
+        )
+    except SellerPaymentAccount.DoesNotExist:
+        return None
+
+    if existing.provider != "stripe" or not existing.provider_recipient_id:
+        return existing
+
+    provider = get_commerce_provider()
+    if provider.code != "stripe":
+        raise ValidationError("Stripe is not the active commerce provider.")
+
+    current = provider.get_recipient(existing.provider_recipient_id)
+    with transaction.atomic():
+        account = (
+            SellerPaymentAccount.objects.select_for_update()
+            .select_related("seller")
+            .get(pk=existing.pk)
+        )
+        return _apply_stripe_account_snapshot(account, current)
+
+
 @transaction.atomic
 def activate_seller_payments(
-    *, seller, recipient_payload: dict | None = None, payout_method: str = "bank_account"
+    *,
+    seller,
+    recipient_payload: dict | None = None,
+    payout_method: str = "bank_account",
 ) -> SellerPaymentAccount:
+    """Create or resume the seller's Stripe-hosted Connect onboarding."""
     if seller.country_code != "BR":
-        raise ValidationError("Stripe Connect seller payouts are currently enabled for Brazil only.")
+        raise ValidationError(
+            "Stripe Connect seller payouts are currently enabled for Brazil only."
+        )
 
     provider = get_commerce_provider()
     if provider.code != "stripe":
@@ -62,91 +177,56 @@ def activate_seller_payments(
     account.provider = "stripe"
 
     if account.provider_recipient_id:
-        if account.status == SellerPaymentAccount.Status.ACTIVE and account.payouts_enabled:
-            return account
-
+        # Always ask Stripe for the current status before deciding whether
+        # onboarding is complete. Regulatory requirements can change later.
         current = provider.get_recipient(account.provider_recipient_id)
-        status, payouts_enabled = _stripe_account_status(current)
-        account.status = status
-        account.payouts_enabled = payouts_enabled
-        account.metadata = {
-            **(account.metadata or {}),
-            "provider_status": status,
-            "details_submitted": bool(current.get("details_submitted")),
-            "charges_enabled": bool(current.get("charges_enabled")),
-            "payouts_enabled": bool(current.get("payouts_enabled")),
-            "requirements": current.get("requirements") or {},
-        }
-        _mark_seller_verified_from_stripe(
-            seller, active=status == SellerPaymentAccount.Status.ACTIVE
-        )
-        if status == SellerPaymentAccount.Status.ACTIVE:
-            account.kyc_url = ""
-            account.save(
-                update_fields=(
-                    "provider",
-                    "status",
-                    "payouts_enabled",
-                    "kyc_url",
-                    "metadata",
-                    "updated_at",
-                )
-            )
+        account = _apply_stripe_account_snapshot(account, current)
+        if account.status == SellerPaymentAccount.Status.ACTIVE:
             return account
 
         link = provider.create_kyc_link(account.provider_recipient_id)
         account.kyc_url = str(link.get("url") or "")
-        account.save(
-            update_fields=(
-                "provider",
-                "status",
-                "payouts_enabled",
-                "kyc_url",
-                "metadata",
-                "updated_at",
-            )
-        )
+        account.save(update_fields=("kyc_url", "updated_at"))
         return account
 
-    seller_type = str(getattr(seller, "seller_type", "individual") or "individual")
     user = seller.user
     result = provider.create_recipient(
         payload={
-            "country": "BR",
+            "country": seller.country_code,
             "email": user.email,
-            "business_type": "company" if seller_type == "business" else "individual",
-            "business_profile": {
-                "url": f"{settings.MARKETLIFT_FRONTEND_URL.rstrip('/')}/seller/{seller.id}",
-                "product_description": "Independent seller on the Marketlift marketplace",
-            },
-            "metadata": {
-                "marketlift_seller_id": str(seller.id),
-                "marketlift_user_id": str(user.id),
-            },
+            "display_name": (
+                seller.display_name
+                or user.full_name
+                or user.email
+            ),
         },
         idempotency_key=f"stripe-connect-account:{seller.id}",
     )
     recipient_id = str(result.get("id") or "").strip()
     if not recipient_id:
-        raise CommerceProviderError("Stripe did not return a connected account id.")
+        raise CommerceProviderError(
+            "Stripe did not return a connected account id.",
+            retryable=False,
+        )
 
-    status, payouts_enabled = _stripe_account_status(result)
-    link = provider.create_kyc_link(recipient_id)
     account.provider_recipient_id = recipient_id
-    account.status = status
     account.payout_method = SellerPaymentAccount.PayoutMethod.BANK_ACCOUNT
     account.payout_destination_masked = "Stripe Connect"
-    account.payouts_enabled = payouts_enabled
-    account.kyc_url = str(link.get("url") or "")
-    account.metadata = {
-        "provider_status": status,
-        "details_submitted": bool(result.get("details_submitted")),
-        "charges_enabled": bool(result.get("charges_enabled")),
-        "payouts_enabled": bool(result.get("payouts_enabled")),
-        "requirements": result.get("requirements") or {},
-    }
-    account.save()
-    _mark_seller_verified_from_stripe(seller, active=status == SellerPaymentAccount.Status.ACTIVE)
+    account.save(
+        update_fields=(
+            "provider",
+            "provider_recipient_id",
+            "payout_method",
+            "payout_destination_masked",
+            "updated_at",
+        )
+    )
+    account = _apply_stripe_account_snapshot(account, result)
+
+    if account.status != SellerPaymentAccount.Status.ACTIVE:
+        link = provider.create_kyc_link(recipient_id)
+        account.kyc_url = str(link.get("url") or "")
+        account.save(update_fields=("kyc_url", "updated_at"))
     return account
 
 
