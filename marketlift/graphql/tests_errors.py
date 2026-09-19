@@ -1,9 +1,11 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import SimpleTestCase
+from graphql import GraphQLError
 
 from marketlift.graphql.errors import (
     DomainGraphQLError,
     finality_validation_error,
+    normalize_expected_error,
     not_found_error,
     validation_error,
 )
@@ -54,3 +56,32 @@ class GraphQLErrorContractTests(SimpleTestCase):
 
         self.assertEqual(error.extensions["code"], "MODERATION_VALIDATION_ERROR")
         self.assertEqual(error.extensions["status"], 422)
+
+    def test_permission_denied_is_normalized_to_forbidden_error(self):
+        wrapped = GraphQLError(
+            "You are not part of this conversation.",
+            original_error=PermissionDenied("You are not part of this conversation."),
+        )
+
+        error = normalize_expected_error(wrapped)
+
+        self.assertIsNotNone(error)
+        self.assertEqual(error.message, "You are not part of this conversation.")
+        self.assertEqual(error.extensions["code"], "PERMISSION_DENIED")
+        self.assertEqual(error.extensions["status"], 403)
+
+    def test_direct_validation_error_is_normalized_to_422(self):
+        wrapped = GraphQLError(
+            "Invalid input",
+            original_error=ValidationError({"field": "Invalid value."}),
+        )
+
+        error = normalize_expected_error(wrapped)
+
+        self.assertIsNotNone(error)
+        self.assertEqual(error.extensions["code"], "VALIDATION_ERROR")
+        self.assertEqual(error.extensions["status"], 422)
+        self.assertEqual(
+            error.extensions["details"]["fields"],
+            {"field": ["Invalid value."]},
+        )
