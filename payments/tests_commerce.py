@@ -190,7 +190,7 @@ class CommerceServiceTests(TestCase):
         self.assertEqual(admin_view.shipping_address, {})
         self.assertNotIn("delivery_pin", admin_view.listing_snapshot)
 
-    def test_withdrawal_fails_closed_when_provider_balance_is_unknown(self):
+    def test_withdrawal_uses_released_settlements_not_recipient_balance(self):
         order = self.make_order(paid=True)
         settlement = order.settlement
         settlement.status = Settlement.Status.AVAILABLE
@@ -200,12 +200,19 @@ class CommerceServiceTests(TestCase):
         provider = Mock()
         provider.code = "stripe"
         provider.get_recipient_balance.return_value = {}
+        provider.create_transfer.return_value = {
+            "id": "tr_local_settlement",
+            "status": "succeeded",
+        }
         with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
-            with self.assertRaisesMessage(
-                ValidationError, "balance could not be verified"
-            ):
-                withdraw_available_balance(seller=self.seller)
-        provider.create_transfer.assert_not_called()
+            payload = withdraw_available_balance(seller=self.seller)
+
+        settlement.refresh_from_db()
+        provider.get_recipient_balance.assert_not_called()
+        provider.create_transfer.assert_called_once()
+        self.assertEqual(payload["transfer_id"], "tr_local_settlement")
+        self.assertEqual(settlement.status, Settlement.Status.PAID)
+        self.assertEqual(settlement.provider_transfer_id, "tr_local_settlement")
 
     def test_definitive_transfer_failure_requeues_available_settlement(self):
         order = self.make_order(paid=True)
