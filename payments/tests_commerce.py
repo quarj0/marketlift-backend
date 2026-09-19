@@ -198,6 +198,7 @@ class CommerceServiceTests(TestCase):
         settlement.save(update_fields=("status", "release_after", "updated_at"))
 
         provider = Mock()
+        provider.code = "stripe"
         provider.get_recipient_balance.return_value = {}
         with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
             with self.assertRaisesMessage(
@@ -214,6 +215,7 @@ class CommerceServiceTests(TestCase):
         settlement.save(update_fields=("status", "release_after", "updated_at"))
 
         provider = Mock()
+        provider.code = "stripe"
         provider.get_recipient_balance.return_value = {"available_amount": 500000}
         provider.create_transfer.side_effect = CommerceProviderError(
             "invalid transfer",
@@ -238,6 +240,7 @@ class CommerceServiceTests(TestCase):
         settlement.save(update_fields=("status", "release_after", "updated_at"))
 
         provider = Mock()
+        provider.code = "stripe"
         provider.get_recipient_balance.return_value = {"available_amount": 500000}
         provider.create_transfer.side_effect = CommerceProviderError(
             "provider timeout",
