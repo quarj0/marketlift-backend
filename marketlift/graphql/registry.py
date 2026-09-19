@@ -9,7 +9,6 @@ from accounts.graphql.queries import AccountQuery
 from audit.graphql.queries import AuditQuery
 from categories.graphql.mutations import CategoryMutation
 from categories.graphql.queries import CategoryQuery
-from commerce.graphql.card_mutations import CommerceCardMutation
 from commerce.graphql.delivery_mutations import DeliveryMutation
 from commerce.graphql.mutations import CommerceMutation
 from commerce.graphql.queries import CommerceQuery
@@ -79,7 +78,6 @@ MUTATION_TYPES = (
     PromotionMutation,
     PaymentMutation,
     CommerceMutation,
-    CommerceCardMutation,
     DeliveryMutation,
     VerificationMutation,
     ModerationMutation,

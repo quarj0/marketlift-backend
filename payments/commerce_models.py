@@ -57,7 +57,7 @@ class SellerPaymentAccount(UUIDTimeStampedModel):
         on_delete=models.CASCADE,
         related_name="payment_account",
     )
-    provider = models.CharField(max_length=32, default="pagarme")
+    provider = models.CharField(max_length=32, default="stripe")
     provider_recipient_id = models.CharField(
         max_length=120, null=True, blank=True, unique=True, db_index=True
     )
@@ -169,7 +169,7 @@ class CommercePayment(UUIDTimeStampedModel):
         CHARGEBACK = "chargeback", "Chargeback"
 
     order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="payments")
-    provider = models.CharField(max_length=32, default="pagarme")
+    provider = models.CharField(max_length=32, default="stripe")
     method = models.CharField(max_length=12, choices=Method.choices)
     status = models.CharField(
         max_length=24,
@@ -315,7 +315,7 @@ class Dispute(UUIDTimeStampedModel):
 
 
 class ProviderWebhookEvent(UUIDTimeStampedModel):
-    provider = models.CharField(max_length=32, default="pagarme")
+    provider = models.CharField(max_length=32, default="stripe")
     provider_event_id = models.CharField(max_length=160)
     event_type = models.CharField(max_length=100, blank=True)
     payload_hash = models.CharField(max_length=64)

@@ -89,7 +89,11 @@ def listing_commerce_state(listing: Listing) -> dict:
         reasons.append("seller_checkout_disabled")
     if policy.requires_verified_seller and not listing.seller.verified:
         reasons.append("seller_not_verified")
-    if account is None or account.status != SellerPaymentAccount.Status.ACTIVE:
+    if (
+        account is None
+        or account.provider != "stripe"
+        or account.status != SellerPaymentAccount.Status.ACTIVE
+    ):
         reasons.append("seller_payments_not_active")
     elif not account.payouts_enabled or not account.provider_recipient_id:
         reasons.append("seller_payouts_not_enabled")
@@ -235,73 +239,16 @@ def configure_listing_commerce(
     return config
 
 
-def _masked_payout_destination(payload: dict, payout_method: str) -> str:
-    if payout_method == SellerPaymentAccount.PayoutMethod.PIX:
-        raw = str(payload.get("pix_key") or payload.get("pixKey") or "").strip()
-        if not raw:
-            return "Pix"
-        return f"Pix •••• {raw[-4:]}"
-    bank = payload.get("default_bank_account") or {}
-    account = str(bank.get("account_number") or "")
-    bank_name = str(bank.get("bank") or bank.get("bank_name") or "Bank").strip()
-    return f"{bank_name} •••• {account[-4:]}" if account else bank_name
-
-
-@transaction.atomic
 def activate_seller_payments(
     *, seller, recipient_payload: dict, payout_method: str
 ) -> SellerPaymentAccount:
-    if seller.country_code != "BR":
-        raise ValidationError(
-            "Pagar.me seller payouts are currently enabled for Brazil only."
-        )
-    if payout_method not in SellerPaymentAccount.PayoutMethod.values:
-        raise ValidationError({"payoutMethod": "Unsupported payout method."})
-    if not isinstance(recipient_payload, dict):
-        raise ValidationError({"recipient": "Recipient details are required."})
+    from .stripe_runtime import activate_seller_payments as stripe_activate_seller_payments
 
-    payload = dict(recipient_payload)
-    payload["code"] = payload.get("code") or f"marketlift-{seller.id}"
-    transfer_settings = dict(payload.get("transfer_settings") or {})
-    transfer_settings["transfer_enabled"] = False
-    payload["transfer_settings"] = transfer_settings
-
-    account, _ = SellerPaymentAccount.objects.select_for_update().get_or_create(
-        seller=seller
+    return stripe_activate_seller_payments(
+        seller=seller,
+        recipient_payload=recipient_payload,
+        payout_method=payout_method,
     )
-    if account.provider_recipient_id:
-        return account
-
-    provider = get_commerce_provider()
-    key = f"seller-recipient:{seller.id}"
-    result = provider.create_recipient(payload=payload, idempotency_key=key)
-    recipient_id = str(result.get("id") or "").strip()
-    if not recipient_id:
-        raise CommerceProviderError("Pagar.me did not return a recipient id.")
-
-    kyc = provider.create_kyc_link(recipient_id)
-    kyc_url = str(kyc.get("url") or kyc.get("kyc_url") or "")
-    provider_status = str(result.get("status") or "").lower()
-    active = provider_status in {"active", "enabled", "registered"}
-    account.provider_recipient_id = recipient_id
-    account.status = (
-        SellerPaymentAccount.Status.ACTIVE
-        if active
-        else SellerPaymentAccount.Status.PENDING
-    )
-    account.payout_method = payout_method
-    account.payout_destination_masked = _masked_payout_destination(
-        payload, payout_method
-    )
-    account.payouts_enabled = active
-    account.kyc_url = kyc_url
-    account.metadata = {
-        "provider_status": provider_status,
-        "recipient_code": result.get("code"),
-    }
-    account.save()
-    return account
-
 
 def _snapshot_listing(listing: Listing) -> dict:
     attrs = {}
@@ -321,70 +268,6 @@ def _snapshot_listing(listing: Listing) -> dict:
         "attributes": attrs,
         "seller_id": str(listing.seller_id),
         "seller_name": str(listing.seller),
-    }
-
-
-def _buyer_customer_payload(*, buyer, document: str, phone: str) -> dict:
-    digits = "".join(ch for ch in document if ch.isdigit())
-    if len(digits) not in {11, 14}:
-        raise ValidationError({"document": "Enter a valid CPF or CNPJ."})
-    phone_digits = "".join(ch for ch in phone if ch.isdigit())
-    if phone_digits.startswith("55") and len(phone_digits) > 11:
-        phone_digits = phone_digits[2:]
-    if len(phone_digits) not in {10, 11}:
-        raise ValidationError({"phone": "Enter a valid Brazilian mobile number."})
-    return {
-        "name": buyer.full_name or buyer.email,
-        "email": buyer.email,
-        "type": "company" if len(digits) == 14 else "individual",
-        "document": digits,
-        "phones": {
-            "mobile_phone": {
-                "country_code": "55",
-                "area_code": phone_digits[:2],
-                "number": phone_digits[2:],
-            }
-        },
-    }
-
-
-def _payment_payload(*, method: str, card_id: str | None, split: list[dict]) -> dict:
-    if method == CommercePayment.Method.PIX:
-        return {
-            "payment_method": "pix",
-            "pix": {
-                "expires_in": int(
-                    getattr(settings, "PAGARME_PIX_EXPIRES_SECONDS", 1800)
-                )
-            },
-            "split": split,
-        }
-    if method == CommercePayment.Method.CARD:
-        if not card_id:
-            raise ValidationError({"cardId": "A tokenized card id is required."})
-        return {
-            "payment_method": "credit_card",
-            "credit_card": {
-                "installments": 1,
-                "statement_descriptor": getattr(
-                    settings, "PAGARME_STATEMENT_DESCRIPTOR", "MARKETLIFT"
-                )[:13],
-                "card_id": card_id,
-            },
-            "split": split,
-        }
-    raise ValidationError({"method": "Only Pix and card are supported."})
-
-
-def _checkout_data(result: dict) -> dict:
-    charges = result.get("charges") or []
-    charge = charges[0] if charges else {}
-    tx = charge.get("last_transaction") or {}
-    return {
-        "qr_code": tx.get("qr_code") or "",
-        "qr_code_url": tx.get("qr_code_url") or "",
-        "expires_at": tx.get("expires_at") or "",
-        "provider_charge_id": charge.get("id") or "",
     }
 
 
@@ -486,214 +369,21 @@ def create_checkout_order(
     card_id: str | None,
     idempotency_key: str,
 ) -> tuple[Order, CommercePayment]:
-    if quantity < 1:
-        raise ValidationError({"quantity": "Quantity must be at least one."})
-    normalized_address = _normalize_shipping_address(
-        fulfillment_method, shipping_address
-    )
-    scoped_key = _scoped_checkout_idempotency_key(
-        buyer_id=buyer.id, raw_key=idempotency_key
-    )
+    from .stripe_runtime import create_checkout_order as stripe_create_checkout_order
 
-    previous = (
-        CommercePayment.objects.select_related("order")
-        .filter(idempotency_key=scoped_key)
-        .first()
-    )
-    if previous:
-        _validate_checkout_replay(
-            previous=previous,
-            buyer=buyer,
-            listing_id=listing_id,
-            quantity=quantity,
-            fulfillment_method=fulfillment_method,
-            payment_method=payment_method,
-            shipping_address=normalized_address,
-        )
-        return previous.order, previous
-
-    try:
-        listing = (
-            Listing.objects.select_for_update()
-            .select_related("seller", "seller__user", "category", "category__parent")
-            .prefetch_related("media", "attribute_values")
-            .get(pk=str(listing_id))
-        )
-    except (Listing.DoesNotExist, ValueError) as exc:
-        raise ValidationError({"listingId": "Listing was not found."}) from exc
-
-    if listing.seller.user_id == buyer.id:
-        raise ValidationError("You cannot buy your own listing.")
-    state = listing_commerce_state(listing)
-    if not state["checkout_enabled"]:
-        raise ValidationError(
-            {"checkout": "Online checkout is unavailable for this listing."}
-        )
-    if fulfillment_method not in state["fulfillment_methods"]:
-        raise ValidationError(
-            {"fulfillmentMethod": "This delivery method is unavailable."}
-        )
-
-    config = ListingCommerceSettings.objects.select_for_update().get(listing=listing)
-    if config.stock_quantity < quantity:
-        raise ValidationError({"quantity": "Not enough stock is available."})
-    account = SellerPaymentAccount.objects.select_for_update().get(
-        seller=listing.seller
-    )
-
-    unit_price_cents = money_to_cents(listing.price)
-    subtotal_cents = unit_price_cents * quantity
-    max_checkout_value_cents = state["max_checkout_value_cents"]
-    if (
-        max_checkout_value_cents is not None
-        and subtotal_cents > max_checkout_value_cents
-    ):
-        raise ValidationError(
-            {"quantity": "This quantity exceeds the category checkout-value limit."}
-        )
-
-    fee_bps = int(getattr(settings, "MARKETLIFT_COMMERCE_FEE_BPS", 500))
-    marketplace_fee_cents = subtotal_cents * fee_bps // 10000
-    if fulfillment_method == Order.FulfillmentMethod.LOCAL_DELIVERY:
-        shipping_amount_cents = int(
-            getattr(settings, "MARKETLIFT_LOCAL_DELIVERY_FEE_CENTS", 0)
-        )
-    else:
-        shipping_amount_cents = 0
-    total_cents = subtotal_cents + shipping_amount_cents
-    seller_proceeds_cents = subtotal_cents - marketplace_fee_cents
-
-    reference = f"ML-{uuid.uuid4().hex[:12].upper()}"
-    order = Order.objects.create(
-        reference=reference,
+    return stripe_create_checkout_order(
         buyer=buyer,
-        seller=listing.seller,
-        listing=listing,
-        fulfillment_method=fulfillment_method,
+        listing_id=listing_id,
         quantity=quantity,
-        unit_price_cents=unit_price_cents,
-        subtotal_cents=subtotal_cents,
-        shipping_amount_cents=shipping_amount_cents,
-        total_cents=total_cents,
-        marketplace_fee_cents=marketplace_fee_cents,
-        seller_proceeds_cents=seller_proceeds_cents,
-        currency="BRL",
-        shipping_address=normalized_address,
-        listing_snapshot=_snapshot_listing(listing),
-    )
-    shipment = Shipment.objects.create(order=order)
-    if fulfillment_method == Order.FulfillmentMethod.LOCAL_DELIVERY:
-        pin = f"{secrets.randbelow(900000) + 100000:06d}"
-        shipment.delivery_pin_hash = make_password(pin)
-        shipment.proof = {"delivery_pin_issued": True}
-        shipment.save(update_fields=("delivery_pin_hash", "proof", "updated_at"))
-        order.listing_snapshot["delivery_pin"] = pin
-        order.save(update_fields=("listing_snapshot", "updated_at"))
-
-    Settlement.objects.create(
-        order=order,
-        seller=listing.seller,
-        amount_cents=seller_proceeds_cents,
-    )
-    payment = CommercePayment.objects.create(
-        order=order,
-        method=payment_method,
-        amount_cents=total_cents,
-        idempotency_key=scoped_key,
+        fulfillment_method=fulfillment_method,
+        shipping_address=shipping_address,
+        payment_method=payment_method,
+        customer_document=customer_document,
+        customer_phone=customer_phone,
+        card_id=card_id,
+        idempotency_key=idempotency_key,
     )
 
-    marketplace_recipient = getattr(
-        settings, "PAGARME_MARKETPLACE_RECIPIENT_ID", ""
-    ).strip()
-    if not marketplace_recipient:
-        raise ValidationError("Marketplace recipient is not configured.")
-
-    split = [
-        {
-            "amount": seller_proceeds_cents,
-            "recipient_id": account.provider_recipient_id,
-            "type": "flat",
-            "options": {
-                "charge_processing_fee": False,
-                "charge_remainder_fee": False,
-                "liable": False,
-            },
-        },
-        {
-            "amount": total_cents - seller_proceeds_cents,
-            "recipient_id": marketplace_recipient,
-            "type": "flat",
-            "options": {
-                "charge_processing_fee": True,
-                "charge_remainder_fee": True,
-                "liable": True,
-            },
-        },
-    ]
-    provider_payload = {
-        "code": reference,
-        "items": [
-            {
-                "amount": unit_price_cents,
-                "description": listing.title[:255],
-                "quantity": quantity,
-                "code": str(listing.id),
-            }
-        ],
-        "customer": _buyer_customer_payload(
-            buyer=buyer, document=customer_document, phone=customer_phone
-        ),
-        "payments": [
-            _payment_payload(method=payment_method, card_id=card_id, split=split)
-        ],
-        "metadata": {
-            "marketlift_order_id": str(order.id),
-            "marketlift_reference": reference,
-        },
-    }
-    provider = get_commerce_provider()
-    result = provider.create_order(payload=provider_payload, idempotency_key=scoped_key)
-    payment.provider_order_id = str(result.get("id") or "")
-    charges = result.get("charges") or []
-    charge = charges[0] if charges else {}
-    payment.provider_charge_id = str(charge.get("id") or "")
-    last_tx = charge.get("last_transaction") or {}
-    payment.provider_transaction_id = str(last_tx.get("id") or "")
-    payment.provider_status = str(charge.get("status") or result.get("status") or "")
-    payment.checkout_data = _checkout_data(result)
-
-    provider_status = payment.provider_status.lower()
-    cancelled_statuses = {"canceled", "cancelled"}
-    failed_statuses = {
-        "failed",
-        "refused",
-        "declined",
-        "not_authorized",
-        "not_authorised",
-    }
-    if provider_status in cancelled_statuses | failed_statuses:
-        payment.status = (
-            CommercePayment.Status.CANCELLED
-            if provider_status in cancelled_statuses
-            else CommercePayment.Status.FAILED
-        )
-        payment.failure_message = str(last_tx.get("acquirer_message") or "")
-        payment.save()
-        order.status = Order.Status.CANCELLED
-        order.cancelled_at = timezone.now()
-        order.save(update_fields=("status", "cancelled_at", "updated_at"))
-        return order, payment
-
-    payment.save()
-    config.stock_quantity -= quantity
-    config.save(update_fields=("stock_quantity", "updated_at"))
-
-    if provider_status in {"paid", "approved"}:
-        approve_commerce_payment(payment)
-    return order, payment
-
-
-@transaction.atomic
 def approve_commerce_payment(payment: CommercePayment) -> CommercePayment:
     payment = (
         CommercePayment.objects.select_for_update()
@@ -915,131 +605,11 @@ def seller_wallet(seller) -> dict:
     }
 
 
-def _payout_batch_key(*, seller_id, settlements: list[Settlement]) -> str:
-    settlement_ids = ":".join(sorted(str(row.id) for row in settlements))
-    digest = hashlib.sha256(
-        f"{seller_id}:{settlement_ids}".encode("utf-8")
-    ).hexdigest()[:40]
-    return f"seller-payout:{seller_id}:{digest}"
-
-
-def _provider_available_amount(balance: dict) -> int:
-    raw_available = (
-        balance.get("available_amount")
-        if balance.get("available_amount") is not None
-        else balance.get("available")
-    )
-    if raw_available is None:
-        raw_available = balance.get("amount")
-    try:
-        return int(raw_available)
-    except (TypeError, ValueError) as exc:
-        raise ValidationError(
-            "The payment provider balance could not be verified."
-        ) from exc
-
-
 def withdraw_available_balance(*, seller) -> dict:
-    release_due_settlements(seller=seller)
-    provider = get_commerce_provider()
+    from .stripe_runtime import withdraw_available_balance as stripe_withdraw_available_balance
 
-    with transaction.atomic():
-        account = SellerPaymentAccount.objects.select_for_update().get(seller=seller)
-        if (
-            account.status != SellerPaymentAccount.Status.ACTIVE
-            or not account.payouts_enabled
-            or not account.provider_recipient_id
-        ):
-            raise ValidationError("Seller payouts are not active.")
+    return stripe_withdraw_available_balance(seller=seller)
 
-        pending_retry = list(
-            Settlement.objects.select_for_update()
-            .filter(
-                seller=seller,
-                status=Settlement.Status.PAYOUT_REQUESTED,
-                provider_transfer_id="",
-            )
-            .exclude(payout_idempotency_key="")
-            .order_by("payout_requested_at", "created_at")
-        )
-        if pending_retry:
-            batch_key = pending_retry[0].payout_idempotency_key
-            settlements = [
-                row for row in pending_retry if row.payout_idempotency_key == batch_key
-            ]
-            amount = sum(row.amount_cents for row in settlements)
-        else:
-            settlements = list(
-                Settlement.objects.select_for_update()
-                .filter(seller=seller, status=Settlement.Status.AVAILABLE)
-                .order_by("created_at")
-            )
-            amount = sum(row.amount_cents for row in settlements)
-            if amount <= 0:
-                raise ValidationError("There is no available balance to withdraw.")
-
-            balance = provider.get_recipient_balance(account.provider_recipient_id)
-            available_provider = _provider_available_amount(balance)
-            if available_provider < amount:
-                raise ValidationError(
-                    "The payment provider has not released all proceeds yet."
-                )
-
-            batch_key = _payout_batch_key(seller_id=seller.id, settlements=settlements)
-            now = timezone.now()
-            for settlement in settlements:
-                settlement.status = Settlement.Status.PAYOUT_REQUESTED
-                settlement.payout_idempotency_key = batch_key
-                settlement.payout_requested_at = now
-                settlement.save(
-                    update_fields=(
-                        "status",
-                        "payout_idempotency_key",
-                        "payout_requested_at",
-                        "updated_at",
-                    )
-                )
-        recipient_id = account.provider_recipient_id
-
-    transfer = provider.create_transfer(
-        recipient_id=recipient_id,
-        amount_cents=amount,
-        idempotency_key=batch_key,
-    )
-    transfer_id = str(transfer.get("id") or "").strip()
-    if not transfer_id:
-        raise CommerceProviderError("Pagar.me did not return a transfer id.")
-
-    with transaction.atomic():
-        rows = list(
-            Settlement.objects.select_for_update().filter(
-                seller=seller,
-                status=Settlement.Status.PAYOUT_REQUESTED,
-                payout_idempotency_key=batch_key,
-            )
-        )
-        for settlement in rows:
-            settlement.provider_transfer_id = transfer_id
-            settlement.save(update_fields=("provider_transfer_id", "updated_at"))
-            LedgerEntry.objects.get_or_create(
-                order=settlement.order,
-                seller=seller,
-                kind=LedgerEntry.Kind.SELLER_PAYOUT,
-                provider_reference=transfer_id,
-                defaults={
-                    "amount_cents": -settlement.amount_cents,
-                    "currency": settlement.order.currency,
-                    "metadata": {"payout_batch_key": batch_key},
-                },
-            )
-    return {
-        "transfer_id": transfer_id,
-        "amount_cents": amount,
-        "status": transfer.get("status") or "requested",
-    }
-
-
-@transaction.atomic
 def finalize_order_refund(
     *, payment: CommercePayment, reason: str = "", provider_status: str = "refunded"
 ) -> Order:

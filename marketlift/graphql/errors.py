@@ -117,6 +117,22 @@ def permission_error(
     return forbidden_error(str(exc), code=code)
 
 
+def normalize_expected_error(error: GraphQLError | Exception) -> DomainGraphQLError | None:
+    """Convert expected Django/domain exceptions into Marketlift's GraphQL contract."""
+    if isinstance(error, DomainGraphQLError):
+        return error
+
+    original = getattr(error, "original_error", None)
+    candidate = original if original is not None else error
+    if isinstance(candidate, DomainGraphQLError):
+        return candidate
+    if isinstance(candidate, PermissionDenied):
+        return permission_error(candidate)
+    if isinstance(candidate, ValidationError):
+        return validation_error(candidate)
+    return None
+
+
 def conflict_error(
     message: str,
     *,

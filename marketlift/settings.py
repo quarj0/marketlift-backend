@@ -465,9 +465,21 @@ MARKETLIFT_IDENTITY_PROVIDER_READY = env_bool(
     "MARKETLIFT_IDENTITY_PROVIDER_READY", False
 )
 
-# Marketlift service-payment integration. Buyer -> seller transactions remain outside
-# the platform. `mock` stays the safe default until a deployment explicitly enables
-# its country provider.
+# Marketplace buyer/seller commerce. Stripe Connect is the production provider.
+MARKETLIFT_COMMERCE_PROVIDER = os.getenv("MARKETLIFT_COMMERCE_PROVIDER", "stripe").strip().lower()
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+STRIPE_CONNECT_WEBHOOK_SECRET = os.getenv(
+    "STRIPE_CONNECT_WEBHOOK_SECRET", ""
+).strip()
+STRIPE_WEBHOOK_TOLERANCE_SECONDS = int(
+    os.getenv("STRIPE_WEBHOOK_TOLERANCE_SECONDS", "300")
+)
+
+
+# Marketlift service-payment integration for seller plans/promotions. Buyer -> seller
+# marketplace commerce is handled separately by Stripe Connect above. `mock` stays
+# the safe default until a deployment explicitly enables its country provider.
 MARKETLIFT_PAYMENT_PROVIDER = (
     os.getenv("MARKETLIFT_PAYMENT_PROVIDER", "auto").strip().lower()
 )

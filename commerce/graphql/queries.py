@@ -7,7 +7,7 @@ from accounts.models import User
 from categories.models import Category
 from listings.models import Listing
 from marketlift.graphql.auth import require_seller, require_staff, require_user
-from marketlift.graphql.errors import not_found_error, validation_error
+from marketlift.graphql.errors import domain_error, not_found_error, validation_error
 
 from commerce.models import (
     DeliveryRider,
@@ -17,6 +17,7 @@ from commerce.models import (
     Settlement,
 )
 from commerce.policy_models import CategoryCommercePolicy, ListingCommerceSettings
+from commerce.providers.base import CommerceProviderError
 from commerce.delivery_services import rider_for_user
 from commerce.services import (
     listing_commerce_state,
@@ -24,6 +25,7 @@ from commerce.services import (
     resolve_category_policy,
     seller_wallet,
 )
+from commerce.stripe_runtime import sync_seller_payment_account_from_stripe
 
 from .mappers import (
     category_policy_to_type,
@@ -270,8 +272,21 @@ class CommerceQuery:
     ) -> SellerPaymentAccountType | None:
         seller = require_seller(info)
         try:
-            account = seller.payment_account
-        except SellerPaymentAccount.DoesNotExist:
+            # Stripe's live Accounts v2 state is authoritative. The local row is
+            # only the seller-to-Stripe account mapping plus an audit/cache copy.
+            account = sync_seller_payment_account_from_stripe(seller=seller)
+        except ValidationError as exc:
+            raise validation_error(
+                exc,
+                code="SELLER_PAYMENT_ACCOUNT_VALIDATION_ERROR",
+            ) from exc
+        except CommerceProviderError as exc:
+            raise domain_error(
+                str(exc),
+                code="PAYMENT_PROVIDER_ERROR",
+                status=502,
+            ) from exc
+        if account is None:
             return None
         return payment_account_to_type(account)
 

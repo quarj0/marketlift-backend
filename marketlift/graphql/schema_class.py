@@ -3,19 +3,17 @@ from __future__ import annotations
 from graphql import GraphQLError
 from strawberry.schema import Schema
 
-from .errors import DomainGraphQLError
+from .errors import normalize_expected_error
 
 
-def _is_domain_error(error: GraphQLError) -> bool:
-    if isinstance(error, DomainGraphQLError):
-        return True
-    return isinstance(getattr(error, "original_error", None), DomainGraphQLError)
+def _is_expected_error(error: GraphQLError) -> bool:
+    return normalize_expected_error(error) is not None
 
 
 class MarketliftSchema(Schema):
-    """Schema that does not print resolver tracebacks for expected domain errors."""
+    """Schema that only logs genuinely unexpected resolver failures."""
 
     def process_errors(self, errors, execution_context=None) -> None:
-        unexpected = [error for error in errors if not _is_domain_error(error)]
+        unexpected = [error for error in errors if not _is_expected_error(error)]
         if unexpected:
             super().process_errors(unexpected, execution_context)

@@ -3,13 +3,7 @@ from __future__ import annotations
 from django.conf import settings
 from strawberry.django.views import GraphQLView
 
-from .errors import DomainGraphQLError
-
-
-def _is_domain_error(error) -> bool:
-    if isinstance(error, DomainGraphQLError):
-        return True
-    return isinstance(getattr(error, "original_error", None), DomainGraphQLError)
+from .errors import normalize_expected_error
 
 
 class MarketliftGraphQLView(GraphQLView):
@@ -24,7 +18,10 @@ class MarketliftGraphQLView(GraphQLView):
             return response
 
         for formatted, error in zip(formatted_errors, result.errors, strict=False):
-            if _is_domain_error(error):
+            expected = normalize_expected_error(error)
+            if expected is not None:
+                formatted["message"] = expected.message
+                formatted["extensions"] = dict(expected.extensions or {})
                 continue
 
             original = getattr(error, "original_error", None)

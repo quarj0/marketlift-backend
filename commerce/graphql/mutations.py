@@ -19,14 +19,16 @@ from commerce.delivery_guards import buyer_confirm_non_local_delivery
 from commerce.models import CommercePayment, Dispute, Order, Settlement
 from commerce.providers.base import CommerceProviderError
 from commerce.services import (
-    activate_seller_payments,
     configure_listing_commerce,
-    create_checkout_order,
     mark_order_processing,
     mark_order_shipped,
     open_order_dispute,
     refund_order,
     set_category_commerce_policy,
+)
+from commerce.stripe_runtime import (
+    activate_seller_payments,
+    create_checkout_order,
     withdraw_available_balance,
 )
 
