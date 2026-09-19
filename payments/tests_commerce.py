@@ -199,7 +199,7 @@ class CommerceServiceTests(TestCase):
 
         provider = Mock()
         provider.get_recipient_balance.return_value = {}
-        with patch("commerce.services.get_commerce_provider", return_value=provider):
+        with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
             with self.assertRaisesMessage(
                 ValidationError, "balance could not be verified"
             ):
@@ -220,7 +220,7 @@ class CommerceServiceTests(TestCase):
             retryable=False,
             status_code=422,
         )
-        with patch("commerce.services.get_commerce_provider", return_value=provider):
+        with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
             with self.assertRaises(CommerceProviderError):
                 withdraw_available_balance(seller=self.seller)
 
@@ -243,7 +243,7 @@ class CommerceServiceTests(TestCase):
             "provider timeout",
             retryable=True,
         )
-        with patch("commerce.services.get_commerce_provider", return_value=provider):
+        with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
             with self.assertRaises(CommerceProviderError):
                 withdraw_available_balance(seller=self.seller)
 
@@ -258,7 +258,7 @@ class CommerceServiceTests(TestCase):
             "id": "tr_retry",
             "status": "pending",
         }
-        with patch("commerce.services.get_commerce_provider", return_value=provider):
+        with patch("commerce.stripe_runtime.get_commerce_provider", return_value=provider):
             payload = withdraw_available_balance(seller=self.seller)
 
         settlement.refresh_from_db()
