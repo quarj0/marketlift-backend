@@ -364,7 +364,6 @@ def _perceptual_hash_distance(left: str, right: str) -> int:
         return 999
 
 
-
 def _listing_max_images(category: Category) -> int:
     """Return the photo cap for a listing category.
 
@@ -402,8 +401,6 @@ def _write_media(
     ]
 
     if image_upload_ids is not None:
-        from platform_settings.services import get_platform_configuration
-
         max_images = _listing_max_images(listing.category)
         ordered_ids = [str(value) for value in image_upload_ids]
         if len(ordered_ids) > max_images:
@@ -477,8 +474,6 @@ def _write_media(
 
     # Backward-compatible external URL path while the frontend is migrated to
     # prepared upload IDs. It is intentionally separate from object storage.
-    from platform_settings.services import get_platform_configuration
-
     max_images = _listing_max_images(listing.category)
     urls = [url for url in (image_urls or []) if url]
     if len(urls) > max_images:
@@ -550,7 +545,6 @@ def create_listing(
         raise ValidationError("Selling access is suspended.")
     if not category.active:
         raise ValidationError("This category is not accepting listings.")
-
     normalized = validate_listing_payload(
         category=category,
         price=price,
@@ -637,6 +631,13 @@ def update_listing(
         raise ValidationError("Selling access is suspended.")
     if not category.active:
         raise ValidationError("This category is not accepting listings.")
+    if image_urls is None and image_upload_ids is None:
+        retained_image_count = listing.media.count()
+        max_images = _listing_max_images(category)
+        if retained_image_count > max_images:
+            raise ValidationError(
+                {"images": f"A listing can have at most {max_images} images."}
+            )
 
     normalized = validate_listing_payload(
         category=category,

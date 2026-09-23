@@ -1,10 +1,10 @@
 import io
 import json
 import struct
+from types import SimpleNamespace
 from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
-from django.utils import timezone
 
 from uploads.models import UploadAsset
 from uploads.services import (
@@ -13,6 +13,7 @@ from uploads.services import (
     delete_unattached_uploads,
     prepare_upload,
     store_proxy_upload,
+    can_access_upload,
 )
 
 User = get_user_model()
@@ -42,12 +43,24 @@ def mp4_bytes(duration_seconds: int):
     ftyp = box(b"ftyp", b"isom" + struct.pack(">I", 0) + b"isommp42")
     timescale = 1000
     mvhd_payload = (
-        b"\\x00\\x00\\x00\\x00"
+        b"\x00\x00\x00\x00"
         + struct.pack(">II", 0, 0)
         + struct.pack(">II", timescale, duration_seconds * timescale)
-        + b"\\x00" * 80
+        + b"\x00" * 80
     )
-    return ftyp + box(b"moov", box(b"mvhd", mvhd_payload))
+    hdlr_payload = b"\x00" * 8 + b"vide" + b"\x00" * 12
+    video_track = box(b"trak", box(b"mdia", box(b"hdlr", hdlr_payload)))
+    return (
+        ftyp
+        + box(b"moov", box(b"mvhd", mvhd_payload) + video_track)
+        + box(b"mdat", b"frame")
+    )
+
+
+def metadata_only_mp4_bytes(duration_seconds: int):
+    payload = mp4_bytes(duration_seconds)
+    moov_end = payload.find(b"mdat") - 4
+    return payload[:moov_end].replace(b"vide", b"meta")
 
 
 @override_settings(
@@ -85,6 +98,19 @@ class UploadServiceTests(TestCase):
         )
         asset.refresh_from_db()
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
+
+    def test_public_listing_video_is_accessible_anonymously(self):
+        asset = SimpleNamespace(
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+            visibility=UploadAsset.Visibility.PUBLIC,
+            status=UploadAsset.Status.ATTACHED,
+            owner_id=self.user.pk,
+            listing_media=None,
+            listing_video=SimpleNamespace(is_publicly_visible=True),
+            message_attachment=None,
+        )
+
+        self.assertTrue(can_access_upload(asset=asset))
 
     def test_listing_video_accepts_thirty_seconds(self):
         payload = mp4_bytes(30)
@@ -124,6 +150,25 @@ class UploadServiceTests(TestCase):
             content_length=len(payload),
         )
         with self.assertRaisesMessage(Exception, "30 seconds"):
+            complete_upload(asset=asset, user=self.user)
+
+    def test_listing_video_rejects_metadata_without_video_track(self):
+        payload = metadata_only_mp4_bytes(30)
+        asset, _ = prepare_upload(
+            user=self.user,
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+            original_name="metadata-only.mp4",
+            mime_type="video/mp4",
+            size=len(payload),
+        )
+        store_proxy_upload(
+            asset=asset,
+            user=self.user,
+            stream=io.BytesIO(payload),
+            content_type="video/mp4",
+            content_length=len(payload),
+        )
+        with self.assertRaisesMessage(Exception, "playable video track"):
             complete_upload(asset=asset, user=self.user)
 
     def test_rejects_mismatched_purpose(self):

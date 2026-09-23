@@ -11,9 +11,15 @@ from promotions.models import PromotionProduct
 from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan
 
-from .models import Listing
+from .models import Listing, ListingMedia
 from .search import apply_listing_filters
-from .services import _listing_max_images, _validate_scalar, create_listing, publish_listing, update_listing
+from .services import (
+    _listing_max_images,
+    _validate_scalar,
+    create_listing,
+    publish_listing,
+    update_listing,
+)
 
 
 class MarketplaceDomainTests(TestCase):
@@ -39,6 +45,43 @@ class MarketplaceDomainTests(TestCase):
         self.assertEqual(
             _listing_max_images(Category.objects.get(slug="apartments-houses")), 7
         )
+
+    def test_category_change_rechecks_retained_photo_cap(self):
+        vehicle_category = Category.objects.get(slug="cars")
+        listing = Listing.objects.create(
+            seller=self.seller,
+            category=vehicle_category,
+            title="Legacy vehicle",
+            description="Vehicle with the formerly valid photo count.",
+            price=Decimal("10000.00"),
+            condition=Listing.Condition.USED,
+            state="São Paulo",
+            state_code="SP",
+            city="São Paulo",
+            country_code="BR",
+            status=Listing.Status.PUBLISHED,
+        )
+        ListingMedia.objects.bulk_create(
+            [
+                ListingMedia(
+                    listing=listing,
+                    url=f"https://example.com/car-{index}.jpg",
+                    sort_order=index,
+                    is_primary=index == 0,
+                )
+                for index in range(7)
+            ]
+        )
+
+        payload = self.listing_payload()
+        payload.pop("seller")
+        payload.pop("image_urls")
+        payload["listing"] = listing
+        with self.assertRaisesMessage(ValidationError, "at most 6 images"):
+            update_listing(**payload)
+
+        listing.refresh_from_db()
+        self.assertEqual(listing.category, vehicle_category)
 
     def listing_payload(self, title="iPhone 15 Pro"):
         return {

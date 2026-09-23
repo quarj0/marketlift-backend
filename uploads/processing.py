@@ -182,13 +182,13 @@ def _mp4_boxes(data: bytes, start: int = 0, end: int | None = None):
     end = len(data) if end is None else min(end, len(data))
     offset = start
     while offset + 8 <= end:
-        size = int.from_bytes(data[offset:offset + 4], "big")
-        kind = data[offset + 4:offset + 8]
+        size = int.from_bytes(data[offset : offset + 4], "big")
+        kind = data[offset + 4 : offset + 8]
         header = 8
         if size == 1:
             if offset + 16 > end:
                 return
-            size = int.from_bytes(data[offset + 8:offset + 16], "big")
+            size = int.from_bytes(data[offset + 8 : offset + 16], "big")
             header = 16
         elif size == 0:
             size = end - offset
@@ -208,7 +208,7 @@ def _mp4_duration_seconds(data: bytes) -> float:
     )
     if mvhd is None:
         raise ValueError("Uploaded video is missing duration metadata.")
-    payload = data[mvhd[1]:mvhd[2]]
+    payload = data[mvhd[1] : mvhd[2]]
     if len(payload) < 20:
         raise ValueError("Uploaded video metadata is invalid.")
     version = payload[0]
@@ -229,6 +229,28 @@ def _mp4_duration_seconds(data: bytes) -> float:
     return duration / timescale
 
 
+def _mp4_has_video_track(data: bytes) -> bool:
+    moov = next((box for box in _mp4_boxes(data) if box[0] == b"moov"), None)
+    if moov is None:
+        return False
+    for trak in _mp4_boxes(data, moov[1], moov[2]):
+        if trak[0] != b"trak":
+            continue
+        mdia = next(
+            (box for box in _mp4_boxes(data, trak[1], trak[2]) if box[0] == b"mdia"),
+            None,
+        )
+        if mdia is None:
+            continue
+        hdlr = next(
+            (box for box in _mp4_boxes(data, mdia[1], mdia[2]) if box[0] == b"hdlr"),
+            None,
+        )
+        if hdlr is not None and data[hdlr[1] + 8 : hdlr[1] + 12] == b"vide":
+            return True
+    return False
+
+
 def validate_listing_video_asset(asset):
     backend = get_storage_backend(asset.storage_alias)
     try:
@@ -238,6 +260,10 @@ def validate_listing_video_asset(asset):
         raise ValueError("Uploaded video content is invalid.") from exc
     if len(data) < 12 or b"ftyp" not in data[:32]:
         raise ValueError("Uploaded video content is not a valid MP4 file.")
+    if not _mp4_has_video_track(data) or not any(
+        kind == b"mdat" and end > start for kind, start, end in _mp4_boxes(data)
+    ):
+        raise ValueError("Uploaded MP4 file does not contain a playable video track.")
     duration = _mp4_duration_seconds(data)
     if duration > 30.25:
         raise ValueError("Listing videos must be 30 seconds or shorter.")
