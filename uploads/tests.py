@@ -1,6 +1,7 @@
 import io
 import json
 import struct
+import uuid
 from unittest.mock import patch
 from PIL import Image
 from django.contrib.auth import get_user_model
@@ -9,6 +10,7 @@ from django.utils import timezone
 
 from uploads.models import UploadAsset
 from uploads.services import (
+    can_access_upload,
     claim_upload,
     complete_upload,
     delete_unattached_uploads,
@@ -209,6 +211,106 @@ class UploadServiceTests(TestCase):
     MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-listing-test-uploads",
 )
 class ListingUploadIntegrationTests(TestCase):
+    def test_create_and_publish_forwards_video_input(self):
+        from categories.models import Category
+        from django.core.exceptions import ValidationError
+        from sellers.models import SellerProfile
+
+        user = User.objects.create_user(
+            email="publish-video@example.com",
+            full_name="Publish Video",
+            password="secret123",
+        )
+        SellerProfile.objects.create(user=user)
+        Category.objects.create(
+            slug="publish-video-test",
+            name="Publish Video Test",
+            active=True,
+            pricing_mode="optional",
+            condition_enabled=False,
+            condition_required=False,
+        )
+        video_upload_id = uuid.uuid4()
+        self.client.force_login(user)
+
+        with patch(
+            "listings.graphql.mutations.create_listing",
+            side_effect=ValidationError("stop after argument capture"),
+        ) as create_listing_mock:
+            response = self.client.post(
+                "/graphql/",
+                data=json.dumps(
+                    {
+                        "query": """
+                            mutation PublishVideo($input: ListingInput!) {
+                              createAndPublishListing(input: $input) { id }
+                            }
+                        """,
+                        "variables": {
+                            "input": {
+                                "categoryId": "publish-video-test",
+                                "title": "Listing with video",
+                                "description": "A listing created and published with video.",
+                                "videoUploadId": str(video_upload_id),
+                            }
+                        },
+                    }
+                ),
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["errors"][0]["extensions"]["code"],
+            "LISTING_VALIDATION_ERROR",
+        )
+        self.assertEqual(
+            create_listing_mock.call_args.kwargs["video_upload_id"],
+            str(video_upload_id),
+        )
+        self.assertFalse(create_listing_mock.call_args.kwargs["remove_video"])
+
+    def test_published_listing_video_is_publicly_accessible(self):
+        from categories.models import Category
+        from listings.models import Listing
+        from sellers.models import SellerProfile
+
+        seller_user = User.objects.create_user(
+            email="video-seller@example.com",
+            full_name="Video Seller",
+            password="secret123",
+        )
+        seller = SellerProfile.objects.create(user=seller_user)
+        category = Category.objects.create(
+            slug="video-access-test",
+            name="Video Access Test",
+            active=True,
+        )
+        asset = UploadAsset.objects.create(
+            owner=seller_user,
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+            status=UploadAsset.Status.ATTACHED,
+            object_key="listing_video/video-seller/demo.mp4",
+            original_name="demo.mp4",
+            mime_type="video/mp4",
+            expected_size=100,
+            expires_at=timezone.now(),
+        )
+        listing = Listing.objects.create(
+            seller=seller,
+            category=category,
+            title="Listing with video",
+            description="Published listing video access test.",
+            city="Sao Paulo",
+            status=Listing.Status.PUBLISHED,
+            video_upload=asset,
+        )
+
+        self.assertTrue(can_access_upload(asset=asset))
+        listing.status = Listing.Status.DRAFT
+        listing.save(update_fields=("status", "updated_at"))
+        self.assertFalse(can_access_upload(asset=asset))
+
     def test_listing_can_claim_prepared_image_upload(self):
         from categories.models import Category
         from listings.services import create_listing
