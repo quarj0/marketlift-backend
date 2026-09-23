@@ -364,6 +364,27 @@ def _perceptual_hash_distance(left: str, right: str) -> int:
         return 999
 
 
+
+def _listing_max_images(category: Category) -> int:
+    """Return the photo cap for a listing category.
+
+    Vehicles need more angles/details, property needs room/area coverage, and
+    ordinary marketplace goods keep the tighter default cap.
+    """
+    from platform_settings.services import get_platform_configuration
+
+    root = category
+    seen = set()
+    while root.parent_id and root.parent_id not in seen:
+        seen.add(root.pk)
+        root = root.parent
+    if root.slug == "vehicles":
+        return 10
+    if root.slug == "property":
+        return 7
+    return get_platform_configuration().max_listing_images
+
+
 def _write_media(
     listing: Listing,
     *,
@@ -383,7 +404,7 @@ def _write_media(
     if image_upload_ids is not None:
         from platform_settings.services import get_platform_configuration
 
-        max_images = get_platform_configuration().max_listing_images
+        max_images = _listing_max_images(listing.category)
         ordered_ids = [str(value) for value in image_upload_ids]
         if len(ordered_ids) > max_images:
             raise ValidationError(
@@ -458,7 +479,7 @@ def _write_media(
     # prepared upload IDs. It is intentionally separate from object storage.
     from platform_settings.services import get_platform_configuration
 
-    max_images = get_platform_configuration().max_listing_images
+    max_images = _listing_max_images(listing.category)
     urls = [url for url in (image_urls or []) if url]
     if len(urls) > max_images:
         raise ValidationError(
@@ -692,11 +713,12 @@ def publish_listing(listing: Listing):
                 )
             }
         )
-    if image_count > config.max_listing_images:
+    max_images = _listing_max_images(listing.category)
+    if image_count > max_images:
         raise ValidationError(
             {
                 "images": (
-                    f"Use no more than {config.max_listing_images} photos before publishing. "
+                    f"Use no more than {max_images} photos before publishing. "
                     f"You currently have {image_count}."
                 )
             }
