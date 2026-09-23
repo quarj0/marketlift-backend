@@ -13,7 +13,7 @@ from subscriptions.models import SellerPlan
 
 from .models import Listing, ListingMedia
 from .search import apply_listing_filters
-from .services import _listing_max_images, _validate_scalar, create_listing, publish_listing, update_listing
+from .services import _listing_max_images, _validate_scalar, create_listing, publish_listing, record_listing_view, update_listing
 
 
 class MarketplaceDomainTests(TestCase):
@@ -39,6 +39,60 @@ class MarketplaceDomainTests(TestCase):
         self.assertEqual(
             _listing_max_images(Category.objects.get(slug="properties")), 7
         )
+
+    def test_listing_view_counts_unique_signed_in_viewer_once(self):
+        buyer = User.objects.create_user(
+            email="buyer-view@example.com",
+            password="password123",
+            full_name="Buyer Viewer",
+        )
+        listing = Listing.objects.create(
+            seller=self.seller,
+            category=self.category,
+            title="Viewed listing",
+            description="Listing used for view count tests.",
+            state="São Paulo",
+            state_code="SP",
+            city="São Paulo",
+            status=Listing.Status.PUBLISHED,
+        )
+
+        self.assertEqual(record_listing_view(listing=listing, user=buyer), 1)
+        self.assertEqual(record_listing_view(listing=listing, user=buyer), 1)
+        listing.refresh_from_db()
+        self.assertEqual(listing.views, 1)
+
+    def test_listing_view_does_not_count_seller_self_view(self):
+        listing = Listing.objects.create(
+            seller=self.seller,
+            category=self.category,
+            title="Seller view listing",
+            description="Self views should not affect public interest counts.",
+            state="São Paulo",
+            state_code="SP",
+            city="São Paulo",
+            status=Listing.Status.PUBLISHED,
+        )
+
+        self.assertEqual(record_listing_view(listing=listing, user=self.user), 0)
+        listing.refresh_from_db()
+        self.assertEqual(listing.views, 0)
+
+    def test_anonymous_listing_view_increments_when_recorded(self):
+        listing = Listing.objects.create(
+            seller=self.seller,
+            category=self.category,
+            title="Anonymous viewed listing",
+            description="Anonymous view counter test.",
+            state="São Paulo",
+            state_code="SP",
+            city="São Paulo",
+            status=Listing.Status.PUBLISHED,
+        )
+
+        self.assertEqual(record_listing_view(listing=listing), 1)
+        self.assertEqual(record_listing_view(listing=listing), 2)
+
 
     def test_category_change_rechecks_retained_photo_cap(self):
         vehicle_category = Category.objects.get(slug="vehicles")
