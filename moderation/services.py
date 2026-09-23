@@ -78,6 +78,16 @@ def approve_listing_case(*, listing, actor, reason: str = "", request=None):
         raise ValidationError(
             f"This moderation case is already final as '{case.status}'."
         )
+    from listings.services import _listing_max_images
+    from platform_settings.services import get_platform_configuration
+
+    image_count = listing.media.count()
+    config = get_platform_configuration()
+    max_images = _listing_max_images(listing.category)
+    if image_count < config.min_listing_images or image_count > max_images:
+        raise ValidationError(
+            f"Listing must have between {config.min_listing_images} and {max_images} photos before approval."
+        )
     case.status = ModerationCase.Status.APPROVED
     case.decision_reason = reason.strip()
     case.decided_by = actor
