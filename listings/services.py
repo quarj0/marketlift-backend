@@ -380,9 +380,36 @@ def _listing_max_images(category: Category) -> int:
         root = root.parent
     if root.slug == "vehicles":
         return 10
-    if root.slug == "property":
+    if root.slug in {"properties", "property"}:
         return 7
     return get_platform_configuration().max_listing_images
+
+
+def validate_listing_photo_count(listing: Listing) -> None:
+    """Validate persisted listing photos before the listing becomes public."""
+    from platform_settings.services import get_platform_configuration
+
+    config = get_platform_configuration()
+    image_count = listing.media.count()
+    max_images = _listing_max_images(listing.category)
+    if image_count < config.min_listing_images:
+        raise ValidationError(
+            {
+                "images": (
+                    f"Add at least {config.min_listing_images} photos before publishing. "
+                    f"You currently have {image_count}."
+                )
+            }
+        )
+    if image_count > max_images:
+        raise ValidationError(
+            {
+                "images": (
+                    f"Use no more than {max_images} photos before publishing. "
+                    f"You currently have {image_count}."
+                )
+            }
+        )
 
 
 def _write_media(
@@ -637,6 +664,13 @@ def update_listing(
         raise ValidationError("Selling access is suspended.")
     if not category.active:
         raise ValidationError("This category is not accepting listings.")
+    if image_urls is None and image_upload_ids is None:
+        retained_image_count = listing.media.count()
+        max_images = _listing_max_images(category)
+        if retained_image_count > max_images:
+            raise ValidationError(
+                {"images": f"A listing can have at most {max_images} images."}
+            )
 
     normalized = validate_listing_payload(
         category=category,
@@ -742,26 +776,7 @@ def publish_listing(listing: Listing):
     from platform_settings.models import PlatformConfiguration
 
     config = PlatformConfiguration.load()
-    image_count = listing.media.count()
-    if image_count < config.min_listing_images:
-        raise ValidationError(
-            {
-                "images": (
-                    f"Add at least {config.min_listing_images} photos before publishing. "
-                    f"You currently have {image_count}."
-                )
-            }
-        )
-    max_images = _listing_max_images(listing.category)
-    if image_count > max_images:
-        raise ValidationError(
-            {
-                "images": (
-                    f"Use no more than {max_images} photos before publishing. "
-                    f"You currently have {image_count}."
-                )
-            }
-        )
+    validate_listing_photo_count(listing)
 
     if (
         settings.MARKETLIFT_IDENTITY_VERIFICATION_ENABLED
