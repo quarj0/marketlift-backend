@@ -95,7 +95,13 @@ class SellerMutation:
             seller.seller_type = input.seller_type
             update_fields.append("seller_type")
         if input.store_address is not None:
-            seller.store_address = input.store_address.strip()[:255]
+            store_address = input.store_address.strip()
+            if len(store_address) > 255:
+                raise validation_error(
+                    ValidationError({"storeAddress": "Store address must be 255 characters or fewer."}),
+                    code="SELLER_VALIDATION_ERROR",
+                )
+            seller.store_address = store_address
             update_fields.append("store_address")
         if input.opens_at is not None or input.closes_at is not None:
             opens_at = input.opens_at.strip() if input.opens_at is not None else None
