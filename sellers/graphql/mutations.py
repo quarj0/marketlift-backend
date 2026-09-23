@@ -1,3 +1,5 @@
+from datetime import time
+
 import strawberry
 from django.core.exceptions import ValidationError
 from marketlift.graphql.auth import (
@@ -92,6 +94,26 @@ class SellerMutation:
                 )
             seller.seller_type = input.seller_type
             update_fields.append("seller_type")
+        if input.store_address is not None:
+            seller.store_address = input.store_address.strip()[:255]
+            update_fields.append("store_address")
+        if input.opens_at is not None or input.closes_at is not None:
+            opens_at = input.opens_at.strip() if input.opens_at is not None else None
+            closes_at = input.closes_at.strip() if input.closes_at is not None else None
+            if bool(opens_at) != bool(closes_at):
+                raise validation_error(
+                    ValidationError({"workingHours": "Opening and closing times must be provided together."}),
+                    code="SELLER_VALIDATION_ERROR",
+                )
+            try:
+                seller.opens_at = time.fromisoformat(opens_at) if opens_at else None
+                seller.closes_at = time.fromisoformat(closes_at) if closes_at else None
+            except ValueError as exc:
+                raise validation_error(
+                    ValidationError({"workingHours": "Use valid 24-hour times, for example 09:00 and 18:00."}),
+                    code="SELLER_VALIDATION_ERROR",
+                ) from exc
+            update_fields.extend(("opens_at", "closes_at"))
         if update_fields:
             update_fields.append("updated_at")
             seller.save(update_fields=tuple(update_fields))
