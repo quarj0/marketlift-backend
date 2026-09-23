@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunSQL(
             "UPDATE platform_settings_platformconfiguration SET min_listing_images = 3, max_listing_images = 6;",
-            migrations.RunSQL.noop,
+            "UPDATE platform_settings_platformconfiguration SET min_listing_images = 5, max_listing_images = 12;",
         ),
     ]
