@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from uploads.models import UploadAsset
 from uploads.services import (
+    can_access_upload,
     claim_upload,
     complete_upload,
     delete_unattached_uploads,
@@ -183,6 +184,48 @@ class UploadServiceTests(TestCase):
     MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-listing-test-uploads",
 )
 class ListingUploadIntegrationTests(TestCase):
+    def test_published_listing_video_is_publicly_accessible(self):
+        from categories.models import Category
+        from listings.models import Listing
+        from sellers.models import SellerProfile
+
+        seller_user = User.objects.create_user(
+            email="video-seller@example.com",
+            full_name="Video Seller",
+            password="secret123",
+        )
+        seller = SellerProfile.objects.create(user=seller_user)
+        category = Category.objects.create(
+            slug="video-access-test",
+            name="Video Access Test",
+            active=True,
+        )
+        asset = UploadAsset.objects.create(
+            owner=seller_user,
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+            status=UploadAsset.Status.ATTACHED,
+            object_key="listing_video/video-seller/demo.mp4",
+            original_name="demo.mp4",
+            mime_type="video/mp4",
+            expected_size=100,
+            expires_at=timezone.now(),
+        )
+        listing = Listing.objects.create(
+            seller=seller,
+            category=category,
+            title="Listing with video",
+            description="Published listing video access test.",
+            city="Sao Paulo",
+            status=Listing.Status.PUBLISHED,
+            video_upload=asset,
+        )
+
+        self.assertTrue(can_access_upload(asset=asset))
+
+        listing.status = Listing.Status.DRAFT
+        listing.save(update_fields=("status", "updated_at"))
+        self.assertFalse(can_access_upload(asset=asset))
+
     def test_listing_can_claim_prepared_image_upload(self):
         from categories.models import Category
         from listings.services import create_listing

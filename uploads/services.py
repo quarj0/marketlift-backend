@@ -394,6 +394,17 @@ def can_access_upload(*, asset, user=None) -> bool:
         except Exception:
             pass
 
+    listing_video = getattr(asset, "listing_video", None)
+    if listing_video is not None:
+        try:
+            listing = listing_video
+            if listing.is_publicly_visible:
+                return True
+            if user is not None and getattr(user, "is_authenticated", False):
+                return listing.seller.user_id == user.pk
+        except Exception:
+            pass
+
     message_attachment = getattr(asset, "message_attachment", None)
     if (
         message_attachment is not None
