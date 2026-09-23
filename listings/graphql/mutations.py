@@ -239,7 +239,7 @@ class ListingMutation:
     @strawberry.mutation
     def record_listing_view(
         self, info: strawberry.Info, listing_id: strawberry.ID
-    ) -> bool:
+    ) -> int:
         try:
             listing = Listing.objects.public().get(pk=str(listing_id))
         except (Listing.DoesNotExist, ValueError) as exc:
