@@ -1,3 +1,6 @@
+import json
+from datetime import time
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
@@ -80,6 +83,82 @@ class SellerCompletionTests(TestCase):
         delete_listing_by_seller(listing=listing)
         with self.assertRaisesMessage(ValidationError, "closed"):
             send_message(user=self.buyer, conversation=conversation, text="Hello")
+
+    def test_store_details_are_exposed_on_public_seller(self):
+        self.seller.seller_type = SellerProfile.SellerType.BUSINESS
+        self.seller.store_address = "Rua das Flores, 120"
+        self.seller.opens_at = time(9, 0)
+        self.seller.closes_at = time(18, 30)
+        self.seller.save(
+            update_fields=(
+                "seller_type",
+                "store_address",
+                "opens_at",
+                "closes_at",
+                "updated_at",
+            )
+        )
+
+        public = seller_to_type(self.seller)
+        self.assertEqual(public.store_address, "Rua das Flores, 120")
+        self.assertEqual(public.opens_at, "09:00")
+        self.assertEqual(public.closes_at, "18:30")
+
+    def test_graphql_updates_store_address_and_working_hours(self):
+        self.client.force_login(self.seller_user)
+        response = self.client.post(
+            "/graphql/",
+            data=json.dumps(
+                {
+                    "query": """
+                        mutation UpdateSeller($input: SellerProfileInput!) {
+                          updateMySellerProfile(input: $input) {
+                            storeAddress
+                            opensAt
+                            closesAt
+                          }
+                        }
+                    """,
+                    "variables": {
+                        "input": {
+                            "sellerType": "business",
+                            "storeAddress": "Av. Paulista, 1000",
+                            "opensAt": "08:30",
+                            "closesAt": "19:00",
+                        }
+                    },
+                }
+            ),
+            content_type="application/json",
+        )
+        payload = response.json()
+        self.assertNotIn("errors", payload)
+        result = payload["data"]["updateMySellerProfile"]
+        self.assertEqual(result["storeAddress"], "Av. Paulista, 1000")
+        self.assertEqual(result["opensAt"], "08:30")
+        self.assertEqual(result["closesAt"], "19:00")
+
+    def test_graphql_rejects_incomplete_working_hours(self):
+        self.client.force_login(self.seller_user)
+        response = self.client.post(
+            "/graphql/",
+            data=json.dumps(
+                {
+                    "query": """
+                        mutation UpdateSeller($input: SellerProfileInput!) {
+                          updateMySellerProfile(input: $input) { id }
+                        }
+                    """,
+                    "variables": {"input": {"opensAt": "09:00", "closesAt": ""}},
+                }
+            ),
+            content_type="application/json",
+        )
+        payload = response.json()
+        self.assertEqual(
+            payload["errors"][0]["extensions"]["code"],
+            "SELLER_VALIDATION_ERROR",
+        )
 
     def test_public_seller_phone_respects_seller_visibility_setting(self):
         self.seller_user.phone = "+5511999999999"
