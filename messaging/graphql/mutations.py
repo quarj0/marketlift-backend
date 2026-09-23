@@ -2,6 +2,7 @@ import strawberry
 from django.core.exceptions import PermissionDenied, ValidationError
 
 from listings.models import Listing
+from messaging.models import Message
 from marketlift.graphql.auth import require_user
 from marketlift.graphql.errors import (
     not_found_error,
