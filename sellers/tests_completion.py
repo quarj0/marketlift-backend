@@ -104,6 +104,17 @@ class SellerCompletionTests(TestCase):
         self.assertEqual(public.opens_at, "09:00")
         self.assertEqual(public.closes_at, "18:30")
 
+    def test_individual_seller_store_details_are_not_public(self):
+        self.seller.store_address = "Private address"
+        self.seller.opens_at = time(9, 0)
+        self.seller.closes_at = time(18, 0)
+        self.seller.save(update_fields=("store_address", "opens_at", "closes_at", "updated_at"))
+
+        public = seller_to_type(self.seller)
+        self.assertIsNone(public.store_address)
+        self.assertIsNone(public.opens_at)
+        self.assertIsNone(public.closes_at)
+
     def test_graphql_updates_store_address_and_working_hours(self):
         self.client.force_login(self.seller_user)
         response = self.client.post(
