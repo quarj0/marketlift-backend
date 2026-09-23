@@ -10,6 +10,7 @@ from marketlift.common.models import UUIDTimeStampedModel
 class UploadAsset(UUIDTimeStampedModel):
     class Purpose(models.TextChoices):
         LISTING_IMAGE = "listing_image", "Listing image"
+        LISTING_VIDEO = "listing_video", "Listing video"
         MESSAGE_IMAGE = "message_image", "Message image"
         VERIFICATION_DOCUMENT = "verification_document", "Verification document"
         VERIFICATION_SELFIE = "verification_selfie", "Verification selfie"
