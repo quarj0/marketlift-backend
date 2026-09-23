@@ -1,5 +1,6 @@
 import io
 import json
+import struct
 from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -32,6 +33,21 @@ def jpeg_bytes(*, width=4, height=4):
     buf = io.BytesIO()
     Image.new("RGB", (width, height), "white").save(buf, format="JPEG")
     return buf.getvalue()
+
+
+def mp4_bytes(duration_seconds: int):
+    def box(kind: bytes, payload: bytes):
+        return struct.pack(">I4s", 8 + len(payload), kind) + payload
+
+    ftyp = box(b"ftyp", b"isom" + struct.pack(">I", 0) + b"isommp42")
+    timescale = 1000
+    mvhd_payload = (
+        b"\\x00\\x00\\x00\\x00"
+        + struct.pack(">II", 0, 0)
+        + struct.pack(">II", timescale, duration_seconds * timescale)
+        + b"\\x00" * 80
+    )
+    return ftyp + box(b"moov", box(b"mvhd", mvhd_payload))
 
 
 @override_settings(
@@ -69,6 +85,46 @@ class UploadServiceTests(TestCase):
         )
         asset.refresh_from_db()
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
+
+    def test_listing_video_accepts_thirty_seconds(self):
+        payload = mp4_bytes(30)
+        asset, _ = prepare_upload(
+            user=self.user,
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+            original_name="demo.mp4",
+            mime_type="video/mp4",
+            size=len(payload),
+        )
+        store_proxy_upload(
+            asset=asset,
+            user=self.user,
+            stream=io.BytesIO(payload),
+            content_type="video/mp4",
+            content_length=len(payload),
+        )
+        complete_upload(asset=asset, user=self.user)
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, UploadAsset.Status.READY)
+        self.assertEqual(asset.metadata["video_duration_seconds"], 30.0)
+
+    def test_listing_video_rejects_more_than_thirty_seconds(self):
+        payload = mp4_bytes(31)
+        asset, _ = prepare_upload(
+            user=self.user,
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+            original_name="too-long.mp4",
+            mime_type="video/mp4",
+            size=len(payload),
+        )
+        store_proxy_upload(
+            asset=asset,
+            user=self.user,
+            stream=io.BytesIO(payload),
+            content_type="video/mp4",
+            content_length=len(payload),
+        )
+        with self.assertRaisesMessage(Exception, "30 seconds"):
+            complete_upload(asset=asset, user=self.user)
 
     def test_rejects_mismatched_purpose(self):
         payload = jpeg_bytes()
