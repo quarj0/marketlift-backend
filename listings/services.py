@@ -692,6 +692,15 @@ def publish_listing(listing: Listing):
                 )
             }
         )
+    if image_count > config.max_listing_images:
+        raise ValidationError(
+            {
+                "images": (
+                    f"Use no more than {config.max_listing_images} photos before publishing. "
+                    f"You currently have {image_count}."
+                )
+            }
+        )
 
     if (
         settings.MARKETLIFT_IDENTITY_VERIFICATION_ENABLED
