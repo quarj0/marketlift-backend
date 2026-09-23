@@ -1,6 +1,9 @@
 import io
 import json
 import struct
+import uuid
+from unittest.mock import patch
+
 from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -183,6 +186,65 @@ class UploadServiceTests(TestCase):
     MARKETLIFT_LOCAL_UPLOAD_ROOT="/tmp/marketlift-listing-test-uploads",
 )
 class ListingUploadIntegrationTests(TestCase):
+    def test_create_and_publish_forwards_video_input(self):
+        from categories.models import Category
+        from django.core.exceptions import ValidationError
+        from sellers.models import SellerProfile
+
+        user = User.objects.create_user(
+            email="publish-video@example.com",
+            full_name="Publish Video",
+            password="secret123",
+        )
+        SellerProfile.objects.create(user=user)
+        Category.objects.create(
+            slug="publish-video-test",
+            name="Publish Video Test",
+            active=True,
+            pricing_mode="optional",
+            condition_enabled=False,
+            condition_required=False,
+        )
+        video_upload_id = uuid.uuid4()
+        self.client.force_login(user)
+
+        with patch(
+            "listings.graphql.mutations.create_listing",
+            side_effect=ValidationError("stop after argument capture"),
+        ) as create_listing_mock:
+            response = self.client.post(
+                "/graphql/",
+                data=json.dumps(
+                    {
+                        "query": """
+                            mutation PublishVideo($input: ListingInput!) {
+                              createAndPublishListing(input: $input) { id }
+                            }
+                        """,
+                        "variables": {
+                            "input": {
+                                "categoryId": "publish-video-test",
+                                "title": "Listing with video",
+                                "description": "A listing created and published with video.",
+                                "videoUploadId": str(video_upload_id),
+                            }
+                        },
+                    }
+                ),
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["errors"][0]["extensions"]["code"],
+            "LISTING_VALIDATION_ERROR",
+        )
+        self.assertEqual(
+            create_listing_mock.call_args.kwargs["video_upload_id"],
+            str(video_upload_id),
+        )
+        self.assertFalse(create_listing_mock.call_args.kwargs["remove_video"])
+
     def test_listing_can_claim_prepared_image_upload(self):
         from categories.models import Category
         from listings.services import create_listing
