@@ -498,6 +498,29 @@ def _write_media(
         retire_upload(asset=old)
 
 
+def _write_video(listing: Listing, *, owner, video_upload_id=None, remove_video=False):
+    if video_upload_id is None and not remove_video:
+        return
+    previous = listing.video_upload
+    if remove_video:
+        listing.video_upload = None
+        listing.save(update_fields=("video_upload", "updated_at"))
+        if previous:
+            retire_upload(asset=previous)
+        return
+    try:
+        asset = UploadAsset.objects.get(pk=video_upload_id)
+    except (UploadAsset.DoesNotExist, ValueError) as exc:
+        raise ValidationError({"video": "Video upload was not found."}) from exc
+    asset = claim_upload(
+        asset=asset, user=owner, purpose=UploadAsset.Purpose.LISTING_VIDEO
+    )
+    listing.video_upload = asset
+    listing.save(update_fields=("video_upload", "updated_at"))
+    if previous and previous.pk != asset.pk:
+        retire_upload(asset=previous)
+
+
 @transaction.atomic
 def create_listing(
     *,
@@ -519,6 +542,8 @@ def create_listing(
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
+    video_upload_id=None,
+    remove_video: bool = False,
 ):
     condition = _normalize_listing_condition(condition)
     if seller.is_suspended:
@@ -570,6 +595,12 @@ def create_listing(
         image_urls=image_urls,
         image_upload_ids=image_upload_ids,
     )
+    _write_video(
+        listing,
+        owner=seller.user,
+        video_upload_id=video_upload_id,
+        remove_video=remove_video,
+    )
     return listing
 
 
@@ -594,6 +625,8 @@ def update_listing(
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
+    video_upload_id=None,
+    remove_video: bool = False,
 ):
     condition = _normalize_listing_condition(condition)
     if listing.seller_deleted_at is not None:
@@ -658,6 +691,12 @@ def update_listing(
         owner=listing.seller.user,
         image_urls=image_urls,
         image_upload_ids=image_upload_ids,
+    )
+    _write_video(
+        listing,
+        owner=listing.seller.user,
+        video_upload_id=video_upload_id,
+        remove_video=remove_video,
     )
     return listing
 
