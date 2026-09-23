@@ -23,6 +23,11 @@ PURPOSE_RULES = {
         10 * 1024 * 1024,
         UploadAsset.Visibility.PUBLIC,
     ),
+    UploadAsset.Purpose.LISTING_VIDEO: (
+        {"video/mp4"},
+        50 * 1024 * 1024,
+        UploadAsset.Visibility.PUBLIC,
+    ),
     UploadAsset.Purpose.MESSAGE_IMAGE: (
         IMAGE_TYPES,
         10 * 1024 * 1024,
@@ -137,6 +142,7 @@ MIME_EXTENSIONS = {
     "image/png": ".png",
     "image/webp": ".webp",
     "image/gif": ".gif",
+    "video/mp4": ".mp4",
     "application/pdf": ".pdf",
 }
 
@@ -262,6 +268,10 @@ def complete_upload(*, asset, user):
                 from .processing import validate_pdf_asset
 
                 validate_pdf_asset(asset)
+            elif asset.purpose == UploadAsset.Purpose.LISTING_VIDEO:
+                from .processing import validate_listing_video_asset
+
+                validate_listing_video_asset(asset)
         except ValueError as exc:
             _delete_stored_objects(asset)
             raise ValidationError(str(exc)) from exc
@@ -381,6 +391,16 @@ def can_access_upload(*, asset, user=None) -> bool:
                 return True
             if user is not None and getattr(user, "is_authenticated", False):
                 return listing.seller.user_id == user.pk
+        except Exception:
+            pass
+
+    listing_video = getattr(asset, "listing_video", None)
+    if listing_video is not None:
+        try:
+            if listing_video.is_publicly_visible:
+                return True
+            if user is not None and getattr(user, "is_authenticated", False):
+                return listing_video.seller.user_id == user.pk
         except Exception:
             pass
 

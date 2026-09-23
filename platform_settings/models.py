@@ -19,8 +19,8 @@ class PlatformConfiguration(UUIDTimeStampedModel):
     automated_listing_flagging = models.BooleanField(default=True)
     seller_verification_required = models.BooleanField(default=False)
     default_listing_duration_days = models.PositiveIntegerField(default=90)
-    min_listing_images = models.PositiveIntegerField(default=5)
-    max_listing_images = models.PositiveIntegerField(default=12)
+    min_listing_images = models.PositiveIntegerField(default=3)
+    max_listing_images = models.PositiveIntegerField(default=6)
     high_risk_threshold = models.PositiveSmallIntegerField(default=70)
 
     admin_email_operational_alerts = models.BooleanField(default=True)

@@ -11,9 +11,9 @@ from promotions.models import PromotionProduct
 from sellers.models import SellerProfile
 from subscriptions.models import SellerPlan
 
-from .models import Listing
+from .models import Listing, ListingMedia
 from .search import apply_listing_filters
-from .services import _validate_scalar, create_listing, publish_listing, update_listing
+from .services import _listing_max_images, _validate_scalar, create_listing, publish_listing, update_listing
 
 
 class MarketplaceDomainTests(TestCase):
@@ -32,6 +32,48 @@ class MarketplaceDomainTests(TestCase):
             user=cls.user, display_name="Seller Example"
         )
         cls.category = Category.objects.get(slug="phones")
+
+    def test_category_specific_photo_caps(self):
+        self.assertEqual(_listing_max_images(self.category), 6)
+        self.assertEqual(_listing_max_images(Category.objects.get(slug="vehicles")), 10)
+        self.assertEqual(
+            _listing_max_images(Category.objects.get(slug="properties")), 7
+        )
+
+    def test_category_change_rechecks_retained_photo_cap(self):
+        vehicle_category = Category.objects.get(slug="vehicles")
+        listing = Listing.objects.create(
+            seller=self.seller,
+            category=vehicle_category,
+            title="Vehicle with many photos",
+            description="Vehicle listing used to verify category changes.",
+            price=Decimal("10000.00"),
+            condition=Listing.Condition.USED,
+            state="São Paulo",
+            state_code="SP",
+            city="São Paulo",
+            country_code="BR",
+            status=Listing.Status.DRAFT,
+        )
+        ListingMedia.objects.bulk_create(
+            [
+                ListingMedia(
+                    listing=listing,
+                    url=f"https://example.com/car-{index}.jpg",
+                    sort_order=index,
+                    is_primary=index == 0,
+                )
+                for index in range(7)
+            ]
+        )
+        payload = self.listing_payload()
+        payload.pop("seller")
+        payload.pop("image_urls")
+        payload["listing"] = listing
+        with self.assertRaisesMessage(ValidationError, "at most 6 images"):
+            update_listing(**payload)
+        listing.refresh_from_db()
+        self.assertEqual(listing.category, vehicle_category)
 
     def listing_payload(self, title="iPhone 15 Pro"):
         return {
@@ -82,6 +124,25 @@ class MarketplaceDomainTests(TestCase):
         self.assertIsNone(listing.category_id)
         self.assertEqual(listing.category_slug_snapshot, "phones")
         self.assertFalse(Listing.objects.public().filter(pk=listing.pk).exists())
+
+    def test_legacy_draft_above_photo_cap_cannot_be_published(self):
+        listing = create_listing(**self.listing_payload())
+        ListingMedia.objects.bulk_create(
+            [
+                ListingMedia(
+                    listing=listing,
+                    url=f"https://example.com/legacy-{index}.jpg",
+                    sort_order=index + 5,
+                )
+                for index in range(2)
+            ]
+        )
+        with self.assertRaisesMessage(
+            ValidationError, "Use no more than 6 photos before publishing"
+        ):
+            publish_listing(listing)
+        listing.refresh_from_db()
+        self.assertEqual(listing.status, Listing.Status.DRAFT)
 
     def test_free_plan_listing_limit_is_enforced(self):
         for index in range(5):

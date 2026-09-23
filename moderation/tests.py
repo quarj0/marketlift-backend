@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from categories.models import Category
-from listings.models import Listing
+from listings.models import Listing, ListingMedia
 from listings.services import delete_listing_by_seller
 from moderation.models import ModerationCase
 from moderation.services import (
@@ -42,6 +42,40 @@ class ModerationDecisionTests(TestCase):
             city="Sao Paulo",
             status=Listing.Status.PUBLISHED,
         )
+        ListingMedia.objects.bulk_create(
+            [
+                ListingMedia(
+                    listing=self.listing,
+                    url=f"https://example.com/photo-{index}.jpg",
+                    sort_order=index,
+                    is_primary=index == 0,
+                )
+                for index in range(3)
+            ]
+        )
+
+    def test_approval_rejects_listing_above_photo_limit(self):
+        ListingMedia.objects.bulk_create(
+            [
+                ListingMedia(
+                    listing=self.listing,
+                    url=f"https://example.com/extra-{index}.jpg",
+                    sort_order=index + 3,
+                )
+                for index in range(4)
+            ]
+        )
+        case = move_listing_to_review(
+            listing=self.listing, actor=self.admin, reason="check"
+        )
+        with self.assertRaisesMessage(
+            ValidationError, "Use no more than 6 photos before publishing"
+        ):
+            approve_listing_case(listing=self.listing, actor=self.admin)
+        self.listing.refresh_from_db()
+        case.refresh_from_db()
+        self.assertEqual(self.listing.status, Listing.Status.UNDER_REVIEW)
+        self.assertFalse(case.final)
 
     def test_approve_is_final_against_reject(self):
         move_listing_to_review(listing=self.listing, actor=self.admin, reason="check")

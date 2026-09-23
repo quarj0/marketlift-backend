@@ -52,6 +52,7 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
         ca-certificates \
+        ffmpeg \
         libpq5 \
         libgdal32 \
         libgeos-c1v5 \

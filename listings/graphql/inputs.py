@@ -44,3 +44,5 @@ class ListingInput:
     attributes: JSON | None = None
     image_urls: list[str] | None = None
     image_upload_ids: list[strawberry.ID] | None = None
+    video_upload_id: strawberry.ID | None = None
+    remove_video: bool = False

@@ -78,6 +78,9 @@ def approve_listing_case(*, listing, actor, reason: str = "", request=None):
         raise ValidationError(
             f"This moderation case is already final as '{case.status}'."
         )
+    from listings.services import validate_listing_photo_count
+
+    validate_listing_photo_count(listing)
     case.status = ModerationCase.Status.APPROVED
     case.decision_reason = reason.strip()
     case.decided_by = actor

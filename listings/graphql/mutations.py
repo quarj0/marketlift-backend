@@ -46,6 +46,12 @@ def _discard_unattached_listing_images(*, user, input):
         user=user,
         purpose=UploadAsset.Purpose.LISTING_IMAGE,
     )
+    if input.video_upload_id:
+        delete_unattached_uploads(
+            upload_ids=[input.video_upload_id],
+            user=user,
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+        )
 
 
 @strawberry.type
@@ -76,6 +82,8 @@ class ListingMutation:
                 attributes=dict(input.attributes or {}),
                 image_urls=input.image_urls,
                 image_upload_ids=input.image_upload_ids,
+                video_upload_id=input.video_upload_id,
+                remove_video=input.remove_video,
             )
         except Category.DoesNotExist as exc:
             _discard_unattached_listing_images(user=seller.user, input=input)
@@ -114,6 +122,8 @@ class ListingMutation:
                     attributes=dict(input.attributes or {}),
                     image_urls=input.image_urls,
                     image_upload_ids=input.image_upload_ids,
+                    video_upload_id=input.video_upload_id,
+                    remove_video=input.remove_video,
                 )
                 listing = publish_listing(listing)
         except Category.DoesNotExist as exc:
@@ -153,6 +163,8 @@ class ListingMutation:
                 attributes=dict(input.attributes or {}),
                 image_urls=input.image_urls,
                 image_upload_ids=input.image_upload_ids,
+                video_upload_id=input.video_upload_id,
+                remove_video=input.remove_video,
             )
         except Category.DoesNotExist as exc:
             _discard_unattached_listing_images(

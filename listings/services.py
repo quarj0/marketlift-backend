@@ -364,6 +364,54 @@ def _perceptual_hash_distance(left: str, right: str) -> int:
         return 999
 
 
+
+def _listing_max_images(category: Category) -> int:
+    """Return the photo cap for a listing category.
+
+    Vehicles need more angles/details, property needs room/area coverage, and
+    ordinary marketplace goods keep the tighter default cap.
+    """
+    from platform_settings.services import get_platform_configuration
+
+    root = category
+    seen = set()
+    while root.parent_id and root.parent_id not in seen:
+        seen.add(root.pk)
+        root = root.parent
+    if root.slug == "vehicles":
+        return 10
+    if root.slug in {"properties", "property"}:
+        return 7
+    return get_platform_configuration().max_listing_images
+
+
+def validate_listing_photo_count(listing: Listing) -> None:
+    """Validate persisted listing photos before the listing becomes public."""
+    from platform_settings.services import get_platform_configuration
+
+    config = get_platform_configuration()
+    image_count = listing.media.count()
+    max_images = _listing_max_images(listing.category)
+    if image_count < config.min_listing_images:
+        raise ValidationError(
+            {
+                "images": (
+                    f"Add at least {config.min_listing_images} photos before publishing. "
+                    f"You currently have {image_count}."
+                )
+            }
+        )
+    if image_count > max_images:
+        raise ValidationError(
+            {
+                "images": (
+                    f"Use no more than {max_images} photos before publishing. "
+                    f"You currently have {image_count}."
+                )
+            }
+        )
+
+
 def _write_media(
     listing: Listing,
     *,
@@ -383,7 +431,7 @@ def _write_media(
     if image_upload_ids is not None:
         from platform_settings.services import get_platform_configuration
 
-        max_images = get_platform_configuration().max_listing_images
+        max_images = _listing_max_images(listing.category)
         ordered_ids = [str(value) for value in image_upload_ids]
         if len(ordered_ids) > max_images:
             raise ValidationError(
@@ -458,7 +506,7 @@ def _write_media(
     # prepared upload IDs. It is intentionally separate from object storage.
     from platform_settings.services import get_platform_configuration
 
-    max_images = get_platform_configuration().max_listing_images
+    max_images = _listing_max_images(listing.category)
     urls = [url for url in (image_urls or []) if url]
     if len(urls) > max_images:
         raise ValidationError(
@@ -475,6 +523,29 @@ def _write_media(
     )
     for old in current_uploads:
         retire_upload(asset=old)
+
+
+def _write_video(listing: Listing, *, owner, video_upload_id=None, remove_video=False):
+    if video_upload_id is None and not remove_video:
+        return
+    previous = listing.video_upload
+    if remove_video:
+        listing.video_upload = None
+        listing.save(update_fields=("video_upload", "updated_at"))
+        if previous:
+            retire_upload(asset=previous)
+        return
+    try:
+        asset = UploadAsset.objects.get(pk=video_upload_id)
+    except (UploadAsset.DoesNotExist, ValueError) as exc:
+        raise ValidationError({"video": "Video upload was not found."}) from exc
+    asset = claim_upload(
+        asset=asset, user=owner, purpose=UploadAsset.Purpose.LISTING_VIDEO
+    )
+    listing.video_upload = asset
+    listing.save(update_fields=("video_upload", "updated_at"))
+    if previous and previous.pk != asset.pk:
+        retire_upload(asset=previous)
 
 
 @transaction.atomic
@@ -498,6 +569,8 @@ def create_listing(
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
+    video_upload_id=None,
+    remove_video: bool = False,
 ):
     condition = _normalize_listing_condition(condition)
     if seller.is_suspended:
@@ -549,6 +622,12 @@ def create_listing(
         image_urls=image_urls,
         image_upload_ids=image_upload_ids,
     )
+    _write_video(
+        listing,
+        owner=seller.user,
+        video_upload_id=video_upload_id,
+        remove_video=remove_video,
+    )
     return listing
 
 
@@ -573,6 +652,8 @@ def update_listing(
     attributes: dict | None = None,
     image_urls: list[str] | None = None,
     image_upload_ids: list | None = None,
+    video_upload_id=None,
+    remove_video: bool = False,
 ):
     condition = _normalize_listing_condition(condition)
     if listing.seller_deleted_at is not None:
@@ -583,6 +664,13 @@ def update_listing(
         raise ValidationError("Selling access is suspended.")
     if not category.active:
         raise ValidationError("This category is not accepting listings.")
+    if image_urls is None and image_upload_ids is None:
+        retained_image_count = listing.media.count()
+        max_images = _listing_max_images(category)
+        if retained_image_count > max_images:
+            raise ValidationError(
+                {"images": f"A listing can have at most {max_images} images."}
+            )
 
     normalized = validate_listing_payload(
         category=category,
@@ -638,6 +726,12 @@ def update_listing(
         image_urls=image_urls,
         image_upload_ids=image_upload_ids,
     )
+    _write_video(
+        listing,
+        owner=listing.seller.user,
+        video_upload_id=video_upload_id,
+        remove_video=remove_video,
+    )
     return listing
 
 
@@ -682,16 +776,7 @@ def publish_listing(listing: Listing):
     from platform_settings.models import PlatformConfiguration
 
     config = PlatformConfiguration.load()
-    image_count = listing.media.count()
-    if image_count < config.min_listing_images:
-        raise ValidationError(
-            {
-                "images": (
-                    f"Add at least {config.min_listing_images} photos before publishing. "
-                    f"You currently have {image_count}."
-                )
-            }
-        )
+    validate_listing_photo_count(listing)
 
     if (
         settings.MARKETLIFT_IDENTITY_VERIFICATION_ENABLED

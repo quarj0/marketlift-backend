@@ -70,6 +70,13 @@ class Listing(UUIDTimeStampedModel):
     price = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     condition = models.CharField(max_length=32, choices=Condition.choices, blank=True)
     negotiable = models.BooleanField(default=False)
+    video_upload = models.OneToOneField(
+        "uploads.UploadAsset",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="listing_video",
+    )
 
     # Human-readable location snapshots remain on the listing for display, SEO,
     # and lexical marketplace search. `location_point` is private/internal and

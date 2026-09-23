@@ -56,6 +56,7 @@ def listing_to_type(listing) -> ListingType:
             district=listing.district or None,
         ),
         images=[m.content_url for m in listing.media.all()],
+        video_url=listing.video_upload.content_url if listing.video_upload_id else None,
         seller=seller_to_type(listing.seller),
         created_at=listing.created_at,
         expires_at=listing.expires_at,
