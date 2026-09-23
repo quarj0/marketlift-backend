@@ -98,6 +98,41 @@ class MessagingServiceTests(TestCase):
         self.assertTrue(hasattr(message, "attachment"))
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
 
+    def test_graphql_send_message_returns_created_message(self):
+        conversation = start_conversation(buyer=self.buyer, listing=self.listing)
+        self.client.force_login(self.buyer)
+        response = self.client.post(
+            "/graphql/",
+            data={
+                "query": """
+                    mutation SendMessage($input: SendMessageInput!) {
+                      sendMessage(input: $input) {
+                        id
+                        conversationId
+                        text
+                      }
+                    }
+                """,
+                "variables": {
+                    "input": {
+                        "conversationId": str(conversation.id),
+                        "text": "Would you consider R$ 300?",
+                    }
+                },
+            },
+            content_type="application/json",
+        )
+        payload = response.json()
+        self.assertNotIn("errors", payload)
+        self.assertEqual(
+            payload["data"]["sendMessage"]["conversationId"],
+            str(conversation.id),
+        )
+        self.assertEqual(
+            payload["data"]["sendMessage"]["text"],
+            "Would you consider R$ 300?",
+        )
+
     def test_block_prevents_messages(self):
         conversation = start_conversation(buyer=self.buyer, listing=self.listing)
         block_conversation_user(user=self.buyer, conversation=conversation)
