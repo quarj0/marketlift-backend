@@ -13,7 +13,7 @@ from subscriptions.models import SellerPlan
 
 from .models import Listing
 from .search import apply_listing_filters
-from .services import _validate_scalar, create_listing, publish_listing, update_listing
+from .services import _listing_max_images, _validate_scalar, create_listing, publish_listing, update_listing
 
 
 class MarketplaceDomainTests(TestCase):
@@ -32,6 +32,13 @@ class MarketplaceDomainTests(TestCase):
             user=cls.user, display_name="Seller Example"
         )
         cls.category = Category.objects.get(slug="phones")
+
+    def test_category_specific_photo_caps(self):
+        self.assertEqual(_listing_max_images(self.category), 6)
+        self.assertEqual(_listing_max_images(Category.objects.get(slug="cars")), 10)
+        self.assertEqual(
+            _listing_max_images(Category.objects.get(slug="apartments-houses")), 7
+        )
 
     def listing_payload(self, title="iPhone 15 Pro"):
         return {
