@@ -149,6 +149,52 @@ class SellerCompletionTests(TestCase):
         self.assertEqual(result["opensAt"], "08:30")
         self.assertEqual(result["closesAt"], "19:00")
 
+    def test_switching_to_individual_clears_store_details(self):
+        self.seller.seller_type = SellerProfile.SellerType.BUSINESS
+        self.seller.store_address = "Rua Comercial, 10"
+        self.seller.opens_at = time(8, 0)
+        self.seller.closes_at = time(18, 0)
+        self.seller.save(
+            update_fields=(
+                "seller_type",
+                "store_address",
+                "opens_at",
+                "closes_at",
+                "updated_at",
+            )
+        )
+        self.client.force_login(self.seller_user)
+        response = self.client.post(
+            "/graphql/",
+            data=json.dumps(
+                {
+                    "query": """
+                        mutation UpdateSeller($input: SellerProfileInput!) {
+                          updateMySellerProfile(input: $input) {
+                            sellerType
+                            storeAddress
+                            opensAt
+                            closesAt
+                          }
+                        }
+                    """,
+                    "variables": {"input": {"sellerType": "individual"}},
+                }
+            ),
+            content_type="application/json",
+        )
+        payload = response.json()
+        self.assertNotIn("errors", payload)
+        result = payload["data"]["updateMySellerProfile"]
+        self.assertEqual(result["sellerType"], "individual")
+        self.assertIsNone(result["storeAddress"])
+        self.assertIsNone(result["opensAt"])
+        self.assertIsNone(result["closesAt"])
+        self.seller.refresh_from_db()
+        self.assertEqual(self.seller.store_address, "")
+        self.assertIsNone(self.seller.opens_at)
+        self.assertIsNone(self.seller.closes_at)
+
     def test_graphql_rejects_incomplete_working_hours(self):
         self.client.force_login(self.seller_user)
         response = self.client.post(
