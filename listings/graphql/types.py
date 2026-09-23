@@ -18,6 +18,7 @@ class ListingType:
     condition: str | None
     location: LocationType
     images: list[str]
+    video_url: str | None
     seller: SellerType
     created_at: datetime
     expires_at: datetime | None
