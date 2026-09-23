@@ -94,6 +94,11 @@ class SellerMutation:
                 )
             seller.seller_type = input.seller_type
             update_fields.append("seller_type")
+            if input.seller_type == SellerProfile.SellerType.INDIVIDUAL:
+                seller.store_address = ""
+                seller.opens_at = None
+                seller.closes_at = None
+                update_fields.extend(("store_address", "opens_at", "closes_at"))
         if input.store_address is not None:
             store_address = input.store_address.strip()
             if len(store_address) > 255:
