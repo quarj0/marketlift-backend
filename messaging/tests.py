@@ -1,3 +1,4 @@
+import json
 import io
 
 from PIL import Image
@@ -11,7 +12,7 @@ from accounts.models import AccountSettings
 from categories.models import Category
 from listings.models import Listing
 from messaging.graphql.mappers import conversation_to_type
-from messaging.models import Conversation, UserBlock
+from messaging.models import Conversation, Message, UserBlock
 from messaging.services import (
     block_conversation_user,
     mark_conversation_read,
@@ -97,6 +98,66 @@ class MessagingServiceTests(TestCase):
         asset.refresh_from_db()
         self.assertTrue(hasattr(message, "attachment"))
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
+
+    def test_rest_messaging_flow(self):
+        self.client.force_login(self.buyer)
+
+        start = self.client.post(
+            "/api/v1/messaging/conversations/",
+            data=json.dumps({"listingId": str(self.listing.id)}),
+            content_type="application/json",
+        )
+        self.assertEqual(start.status_code, 201)
+        conversation_id = start.json()["id"]
+        self.assertEqual(start.json()["listing"]["id"], str(self.listing.id))
+
+        send = self.client.post(
+            f"/api/v1/messaging/conversations/{conversation_id}/messages/",
+            data=json.dumps({"text": "Which models are available?"}),
+            content_type="application/json",
+        )
+        self.assertEqual(send.status_code, 201)
+        self.assertEqual(send.json()["text"], "Which models are available?")
+        self.assertTrue(
+            Message.objects.filter(
+                conversation_id=conversation_id,
+                sender=self.buyer,
+                text="Which models are available?",
+            ).exists()
+        )
+
+        history = self.client.get(
+            f"/api/v1/messaging/conversations/{conversation_id}/messages/"
+        )
+        self.assertEqual(history.status_code, 200)
+        self.assertEqual(len(history.json()["results"]), 1)
+        self.assertEqual(
+            history.json()["results"][0]["text"],
+            "Which models are available?",
+        )
+
+        detail = self.client.get(
+            f"/api/v1/messaging/conversations/{conversation_id}/"
+        )
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()["lastMessage"], "Which models are available?")
+
+        inbox = self.client.get("/api/v1/messaging/conversations/")
+        self.assertEqual(inbox.status_code, 200)
+        self.assertEqual(inbox.json()["results"][0]["id"], conversation_id)
+
+        read = self.client.post(
+            f"/api/v1/messaging/conversations/{conversation_id}/read/",
+            data=json.dumps({}),
+            content_type="application/json",
+        )
+        self.assertEqual(read.status_code, 200)
+        self.assertTrue(read.json()["read"])
+
+        counts = self.client.get("/api/v1/messaging/counts/")
+        self.assertEqual(counts.status_code, 200)
+        self.assertIn("unreadMessageCount", counts.json())
+        self.assertIn("unreadNotificationCount", counts.json())
 
     def test_graphql_start_conversation_returns_empty_thread(self):
         self.client.force_login(self.buyer)
