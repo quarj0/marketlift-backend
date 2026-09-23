@@ -122,6 +122,8 @@ class ListingMutation:
                     attributes=dict(input.attributes or {}),
                     image_urls=input.image_urls,
                     image_upload_ids=input.image_upload_ids,
+                    video_upload_id=input.video_upload_id,
+                    remove_video=input.remove_video,
                 )
                 listing = publish_listing(listing)
         except Category.DoesNotExist as exc:
