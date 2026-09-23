@@ -1,6 +1,7 @@
 import io
 import json
 import struct
+from unittest.mock import patch
 from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -42,10 +43,10 @@ def mp4_bytes(duration_seconds: int):
     ftyp = box(b"ftyp", b"isom" + struct.pack(">I", 0) + b"isommp42")
     timescale = 1000
     mvhd_payload = (
-        b"\\x00\\x00\\x00\\x00"
+        b"\x00\x00\x00\x00"
         + struct.pack(">II", 0, 0)
         + struct.pack(">II", timescale, duration_seconds * timescale)
-        + b"\\x00" * 80
+        + b"\x00" * 80
     )
     return ftyp + box(b"moov", box(b"mvhd", mvhd_payload))
 
@@ -86,7 +87,8 @@ class UploadServiceTests(TestCase):
         asset.refresh_from_db()
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
 
-    def test_listing_video_accepts_thirty_seconds(self):
+    @patch("uploads.processing._validate_decodable_video_track")
+    def test_listing_video_accepts_thirty_seconds(self, validate_video_track):
         payload = mp4_bytes(30)
         asset, _ = prepare_upload(
             user=self.user,
@@ -106,8 +108,10 @@ class UploadServiceTests(TestCase):
         asset.refresh_from_db()
         self.assertEqual(asset.status, UploadAsset.Status.READY)
         self.assertEqual(asset.metadata["video_duration_seconds"], 30.0)
+        validate_video_track.assert_called_once_with(payload)
 
-    def test_listing_video_rejects_more_than_thirty_seconds(self):
+    @patch("uploads.processing._validate_decodable_video_track")
+    def test_listing_video_rejects_more_than_thirty_seconds(self, validate_video_track):
         payload = mp4_bytes(31)
         asset, _ = prepare_upload(
             user=self.user,
@@ -124,6 +128,28 @@ class UploadServiceTests(TestCase):
             content_length=len(payload),
         )
         with self.assertRaisesMessage(Exception, "30 seconds"):
+            complete_upload(asset=asset, user=self.user)
+
+    @patch("uploads.processing.subprocess.run")
+    def test_listing_video_rejects_metadata_without_video_track(self, run_probe):
+        run_probe.return_value.returncode = 0
+        run_probe.return_value.stdout = '{"streams": []}'
+        payload = mp4_bytes(10)
+        asset, _ = prepare_upload(
+            user=self.user,
+            purpose=UploadAsset.Purpose.LISTING_VIDEO,
+            original_name="metadata-only.mp4",
+            mime_type="video/mp4",
+            size=len(payload),
+        )
+        store_proxy_upload(
+            asset=asset,
+            user=self.user,
+            stream=io.BytesIO(payload),
+            content_type="video/mp4",
+            content_length=len(payload),
+        )
+        with self.assertRaisesMessage(Exception, "decodable video track"):
             complete_upload(asset=asset, user=self.user)
 
     def test_rejects_mismatched_purpose(self):
