@@ -21,6 +21,9 @@ class SellerProfile(UUIDTimeStampedModel):
         default=SellerType.INDIVIDUAL,
     )
     display_name = models.CharField(max_length=160, blank=True)
+    store_address = models.CharField(max_length=255, blank=True)
+    opens_at = models.TimeField(null=True, blank=True)
+    closes_at = models.TimeField(null=True, blank=True)
     country_code = models.CharField(
         max_length=2, default=default_market_country_code, db_index=True
     )

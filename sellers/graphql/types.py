@@ -14,6 +14,9 @@ class SellerType:
     verified: bool
     seller_type: str
     country_code: str
+    store_address: str | None
+    opens_at: str | None
+    closes_at: str | None
     is_suspended: bool
     rating: float
     reviews: int
@@ -49,6 +52,9 @@ class AdminSellerType:
 class SellerProfileInput:
     display_name: str | None = None
     seller_type: str | None = None
+    store_address: str | None = None
+    opens_at: str | None = None
+    closes_at: str | None = None
 
 
 @strawberry.type

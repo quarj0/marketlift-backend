@@ -828,14 +828,37 @@ def mark_listing_sold(listing: Listing):
     return listing
 
 
+@transaction.atomic
 def record_listing_view(*, listing, user=None):
-    Listing.objects.filter(pk=listing.pk).update(views=models.F("views") + 1)
-    if user is not None and getattr(user, "is_authenticated", False):
+    """Record a meaningful listing view and return the current public view count.
+
+    Signed-in viewers count once per listing, seller self-views do not count,
+    and anonymous callers are counted per explicit client-side view event.
+    """
+    authenticated = user is not None and getattr(user, "is_authenticated", False)
+
+    if authenticated and listing.seller.user_id == user.pk:
+        return int(listing.views)
+
+    should_increment = True
+    if authenticated:
         from .models import RecentlyViewedListing
 
-        row, _ = RecentlyViewedListing.objects.get_or_create(user=user, listing=listing)
-        row.save(update_fields=("updated_at",))
-    return True
+        row, created = RecentlyViewedListing.objects.get_or_create(
+            user=user,
+            listing=listing,
+        )
+        if created:
+            should_increment = True
+        else:
+            should_increment = False
+            row.save(update_fields=("updated_at",))
+
+    if should_increment:
+        Listing.objects.filter(pk=listing.pk).update(views=models.F("views") + 1)
+        listing.refresh_from_db(fields=("views",))
+
+    return int(listing.views)
 
 
 @transaction.atomic
