@@ -98,6 +98,58 @@ class MessagingServiceTests(TestCase):
         self.assertTrue(hasattr(message, "attachment"))
         self.assertEqual(asset.status, UploadAsset.Status.ATTACHED)
 
+    def test_graphql_start_conversation_returns_empty_thread(self):
+        self.client.force_login(self.buyer)
+        response = self.client.post(
+            "/graphql/",
+            data={
+                "query": """
+                    mutation StartConversation($listingId: ID!) {
+                      startConversation(listingId: $listingId) {
+                        id
+                        participant { id name verifiedSeller isSeller phone online }
+                        listing { id slug title price primaryImage status deleted countryCode state stateCode city district }
+                        lastMessage
+                        lastMessageAt
+                        unread
+                        archived
+                        blocked
+                      }
+                    }
+                """,
+                "variables": {"listingId": str(self.listing.id)},
+            },
+            content_type="application/json",
+        )
+        payload = response.json()
+        self.assertNotIn("errors", payload)
+        conversation = payload["data"]["startConversation"]
+        self.assertEqual(conversation["listing"]["id"], str(self.listing.id))
+        self.assertEqual(conversation["lastMessage"], "")
+        self.assertIsNone(conversation["lastMessageAt"])
+
+        inbox = self.client.post(
+            "/graphql/",
+            data={
+                "query": """
+                    query Inbox {
+                      myConversations {
+                        id
+                        lastMessage
+                        lastMessageAt
+                      }
+                    }
+                """
+            },
+            content_type="application/json",
+        ).json()
+        self.assertNotIn("errors", inbox)
+        self.assertEqual(len(inbox["data"]["myConversations"]), 1)
+        self.assertEqual(
+            inbox["data"]["myConversations"][0]["id"],
+            conversation["id"],
+        )
+
     def test_graphql_send_message_returns_created_message(self):
         conversation = start_conversation(buyer=self.buyer, listing=self.listing)
         self.client.force_login(self.buyer)
