@@ -30,7 +30,12 @@ worker and Celery Beat process. Then run:
 ```bash
 uv run python manage.py sendtestemail recipient@example.com
 uv run python manage.py deployment_diagnostics
+uv run python manage.py test_notification_delivery recipient@example.com
 ```
+
+The test-notification command prints only channel readiness booleans/counts and
+creates a normal notification for that account; it never prints provider keys or
+push endpoints.
 
 Then verify a real marketplace flow with two accounts:
 
