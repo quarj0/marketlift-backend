@@ -309,15 +309,23 @@ CACHES = {
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
-SESSION_COOKIE_NAME = os.getenv("SESSION_COOKIE_NAME", "marketlift_sessionid")
+
+# Keep browser cookie identifiers implementation-neutral. In production the
+# __Host- prefix also prevents Domain scoping and requires HTTPS + Path=/.
+_COOKIE_PREFIX = "__Host-" if IS_PRODUCTION else ""
+SESSION_COOKIE_NAME = os.getenv("SESSION_COOKIE_NAME", f"{_COOKIE_PREFIX}s1")
 MARKETLIFT_ADMIN_SESSION_COOKIE_NAME = os.getenv(
-    "MARKETLIFT_ADMIN_SESSION_COOKIE_NAME", "marketlift_admin_sessionid"
+    "MARKETLIFT_ADMIN_SESSION_COOKIE_NAME", f"{_COOKIE_PREFIX}s2"
 )
+CSRF_COOKIE_NAME = os.getenv("CSRF_COOKIE_NAME", f"{_COOKIE_PREFIX}c1")
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_PATH = "/"
+CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = IS_PRODUCTION
 CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_PATH = "/"
 
 CELERY_BROKER_URL = redis_database_url(1)
 CELERY_RESULT_BACKEND = redis_database_url(2)
