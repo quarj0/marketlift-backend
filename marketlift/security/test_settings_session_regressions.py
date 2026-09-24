@@ -21,8 +21,8 @@ TEST_CACHES = {
 @override_settings(
     CACHES=TEST_CACHES,
     SESSION_ENGINE="django.contrib.sessions.backends.cached_db",
-    SESSION_COOKIE_NAME="marketlift_sessionid",
-    MARKETLIFT_ADMIN_SESSION_COOKIE_NAME="marketlift_admin_sessionid",
+    SESSION_COOKIE_NAME="s1",
+    MARKETLIFT_ADMIN_SESSION_COOKIE_NAME="s2",
     MARKETLIFT_ADMIN_SESSION_ORIGINS=["https://dash.marketlift.com.br"],
     SESSION_COOKIE_SECURE=False,
     SESSION_COOKIE_SAMESITE="Lax",
@@ -31,6 +31,14 @@ class SessionInvalidationRegressionTests(TestCase):
     def setUp(self):
         cache.clear()
         self.addCleanup(cache.clear)
+
+    def test_csrf_cookie_is_http_only_and_uses_configured_name(self):
+        from django.conf import settings
+
+        response = self.client.get("/api/v1/auth/csrf/")
+        self.assertEqual(response.status_code, 200)
+        cookie = response.cookies[settings.CSRF_COOKIE_NAME]
+        self.assertTrue(cookie["httponly"])
 
     def test_global_invalidation_removes_database_and_cached_session(self):
         from importlib import import_module
