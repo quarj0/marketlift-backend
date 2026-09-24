@@ -40,7 +40,8 @@ class Command(BaseCommand):
             raise CommandError(
                 "Deployment checks failed. Review the reported checks and service logs."
             )
-        from notifications.models import Notification
+        from notifications.models import Notification, WebPushDelivery, WebPushSubscription
+        from notifications.web_push import web_push_configured
         from uploads.models import UploadAsset
 
         notifications = Notification.objects.filter(
@@ -61,8 +62,33 @@ class Command(BaseCommand):
             pending=Count("pk", filter=Q(processing_error="")),
             failed=Count("pk", filter=~Q(processing_error="")),
         )
+        push = {
+            "configured": web_push_configured(),
+            "activeSubscriptions": WebPushSubscription.objects.filter(
+                disabled_at__isnull=True
+            ).count(),
+            "subscriptionsWithErrors": WebPushSubscription.objects.filter(
+                disabled_at__isnull=True
+            ).exclude(last_error="").count(),
+            "pendingDeliveries": WebPushDelivery.objects.filter(
+                sent_at__isnull=True,
+                subscription__disabled_at__isnull=True,
+            ).count(),
+        }
+        email = {
+            "backend": settings.EMAIL_BACKEND,
+            "configured": bool(settings.ANYMAIL.get("RESEND_API_KEY")),
+            "from": settings.DEFAULT_FROM_EMAIL,
+        }
         self.stdout.write(
             json.dumps(
-                {"notificationDelivery": notifications, "uploadProcessing": uploads}
+                {
+                    "notificationDelivery": notifications,
+                    "notificationChannels": {
+                        "email": email,
+                        "webPush": push,
+                    },
+                    "uploadProcessing": uploads,
+                }
             )
         )
