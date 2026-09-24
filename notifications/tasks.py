@@ -52,13 +52,25 @@ def _record_subscription_failure(
     WebPushSubscription.objects.filter(pk=subscription.pk).update(**updates)
 
 
-def _deliver_notification_email_once(notification_id: str) -> str:
+def _deliver_notification_email_once(
+    notification_id: str, *, skip_locked: bool = False
+) -> str:
     """Attempt one idempotent email delivery for a notification."""
     with transaction.atomic():
-        item = (
-            Notification.objects.select_for_update()
-            .select_related("user", "user__settings")
+        # Lock only the notification row. AccountSettings is a reverse one-to-one
+        # relation and therefore becomes a nullable OUTER JOIN; PostgreSQL rejects
+        # FOR UPDATE when that nullable join is part of the locked query.
+        locked = (
+            Notification.objects.select_for_update(skip_locked=skip_locked)
+            .only("pk")
             .filter(pk=notification_id)
+            .first()
+        )
+        if locked is None:
+            return "busy" if skip_locked else "missing"
+        item = (
+            Notification.objects.select_related("user", "user__settings")
+            .filter(pk=locked.pk)
             .first()
         )
         if item is None:
@@ -151,7 +163,7 @@ def deliver_pending_notification_emails():
     )
     for candidate in candidates:
         try:
-            if _deliver_notification_email_once(str(candidate)) == "sent":
+            if _deliver_notification_email_once(str(candidate), skip_locked=True) == "sent":
                 sent += 1
         except Exception:
             # The notification remains pending with its failure recorded and can
