@@ -1,41 +1,44 @@
-# Transactional email
+# Transactional and notification email
 
-Marketlift uses Django's SMTP backend for password resets, email verification,
-administrator invitations, and sign-in challenges.
+Marketlift uses **Resend through django-anymail** for account email and notification
+delivery. This includes password resets, email verification, administrator
+invitations, sign-in challenges, marketplace message alerts, listing updates,
+recommendations and other notification types enabled by the user's preferences.
 
-## Configure SMTP
+## Production configuration
 
-Set these values in the deployment environment or the local `.env` file. Do
-not commit real credentials.
+Set these values in the backend deployment environment. Never commit the real API key.
 
 ```dotenv
-EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=smtp.provider.example
-EMAIL_PORT=587
-EMAIL_HOST_USER=provider-account
-EMAIL_HOST_PASSWORD=provider-secret
-EMAIL_USE_TLS=true
-EMAIL_USE_SSL=false
-EMAIL_TIMEOUT=15
-DEFAULT_FROM_EMAIL=Marketlift <noreply@your-verified-domain.example>
-MARKETLIFT_FRONTEND_URL=https://your-marketplace.example
+RESEND_API_KEY=re_...
+DEFAULT_FROM_EMAIL=Marketlift <noreply@marketlift.com.br>
+MARKETLIFT_FRONTEND_URL=https://marketlift.com.br
 ```
 
-For implicit TLS on port 465, set `EMAIL_USE_TLS=false` and
-`EMAIL_USE_SSL=true`. Never enable both.
+The sender address or domain must be verified in Resend. Configure SPF, DKIM and
+DMARC for the sending domain before production use.
 
-The sender address or domain must be verified with the selected email provider.
-SPF, DKIM, and DMARC records should be configured in DNS before production
-launch.
+Notification emails are queued immediately after the related database transaction
+commits. Celery Beat also runs a recovery sweep every minute for pending emails,
+so a temporary broker/provider failure can be retried.
 
 ## Verify delivery
 
-Restart the Django web process after changing environment variables, then run:
+After changing environment variables, restart the Django web process, Celery
+worker and Celery Beat process. Then run:
 
 ```bash
-.venv/bin/python manage.py sendtestemail recipient@example.com
+uv run python manage.py sendtestemail recipient@example.com
+uv run python manage.py deployment_diagnostics
 ```
 
-After that succeeds, request a password reset through `/forgot-password` and
-confirm the delivered button opens `/reset-password?token=...` on the public
-frontend URL.
+Then verify a real marketplace flow with two accounts:
+
+1. Enable **Email me when I receive a message** for the receiving account.
+2. Send a message from the other account.
+3. Confirm the in-app notification appears and the email is delivered.
+4. Inspect backend/Celery logs if delivery remains pending or records a provider error.
+
+For browser/PWA push, also set `MARKETLIFT_VAPID_PRIVATE_KEY` and
+`MARKETLIFT_VAPID_SUBJECT`, then enable browser notifications on the receiving
+device from Account Settings.
