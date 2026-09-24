@@ -52,6 +52,92 @@ def _record_subscription_failure(
     WebPushSubscription.objects.filter(pk=subscription.pk).update(**updates)
 
 
+def _deliver_notification_email_once(
+    notification_id: str, *, skip_locked: bool = False
+) -> str:
+    """Attempt one idempotent email delivery for a notification."""
+    with transaction.atomic():
+        # Lock only the notification row. AccountSettings is a reverse one-to-one
+        # relation and therefore becomes a nullable OUTER JOIN; PostgreSQL rejects
+        # FOR UPDATE when that nullable join is part of the locked query.
+        locked = (
+            Notification.objects.select_for_update(skip_locked=skip_locked)
+            .only("pk")
+            .filter(pk=notification_id)
+            .first()
+        )
+        if locked is None:
+            return "busy" if skip_locked else "missing"
+        item = (
+            Notification.objects.select_related("user", "user__settings")
+            .filter(pk=locked.pk)
+            .first()
+        )
+        if item is None:
+            return "missing"
+        if item.email_sent_at is not None:
+            return "sent"
+        if item.delivery_attempts >= 5:
+            return "exhausted"
+        if not _email_enabled(item):
+            item.email_sent_at = timezone.now()
+            item.last_delivery_error = ""
+            item.save(
+                update_fields=("email_sent_at", "last_delivery_error", "updated_at")
+            )
+            return "preference-disabled"
+
+        item.delivery_attempts += 1
+        try:
+            send_mail(
+                item.title,
+                item.body,
+                settings.DEFAULT_FROM_EMAIL,
+                [item.user.email],
+                fail_silently=False,
+            )
+        except Exception as exc:
+            item.last_delivery_error = str(exc)[:1000]
+            item.save(
+                update_fields=(
+                    "delivery_attempts",
+                    "last_delivery_error",
+                    "updated_at",
+                )
+            )
+            raise
+
+        item.email_sent_at = timezone.now()
+        item.last_delivery_error = ""
+        item.save(
+            update_fields=(
+                "delivery_attempts",
+                "email_sent_at",
+                "last_delivery_error",
+                "updated_at",
+            )
+        )
+        return "sent"
+
+
+@shared_task(bind=True, max_retries=4)
+def deliver_notification_email(self, notification_id: str):
+    """Deliver one notification email immediately, with bounded retries."""
+    try:
+        return _deliver_notification_email_once(str(notification_id))
+    except Exception as exc:
+        countdown = min(300, 10 * (2**self.request.retries))
+        raise self.retry(exc=exc, countdown=countdown)
+
+
+def enqueue_notification_email(notification_id: str) -> bool:
+    try:
+        deliver_notification_email.delay(str(notification_id))
+    except Exception:
+        return False
+    return True
+
+
 def enqueue_web_push_delivery(delivery_id: str) -> bool:
     """Publish a durable delivery and record successful broker handoff."""
     try:
@@ -76,44 +162,13 @@ def deliver_pending_notification_emails():
         .values_list("id", flat=True)[:200]
     )
     for candidate in candidates:
-        with transaction.atomic():
-            # Concurrent workers skip a notification while its bounded send is in progress.
-            item = (
-                Notification.objects.select_for_update(skip_locked=True, of=("self",))
-                .select_related("user", "user__settings")
-                .filter(
-                    pk=candidate, email_sent_at__isnull=True, delivery_attempts__lt=5
-                )
-                .first()
-            )
-            if item is None:
-                continue
-            if not _email_enabled(item):
-                item.email_sent_at = timezone.now()
-                item.save(update_fields=("email_sent_at", "updated_at"))
-                continue
-            item.delivery_attempts += 1
-            try:
-                send_mail(
-                    item.title,
-                    item.body,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [item.user.email],
-                    fail_silently=False,
-                )
-                item.email_sent_at = timezone.now()
-                item.last_delivery_error = ""
+        try:
+            if _deliver_notification_email_once(str(candidate), skip_locked=True) == "sent":
                 sent += 1
-            except Exception as exc:
-                item.last_delivery_error = str(exc)[:1000]
-            item.save(
-                update_fields=(
-                    "delivery_attempts",
-                    "email_sent_at",
-                    "last_delivery_error",
-                    "updated_at",
-                )
-            )
+        except Exception:
+            # The notification remains pending with its failure recorded and can
+            # be retried by the next sweep or its immediate retry task.
+            continue
 
     # This task already runs every minute from Celery Beat. Reuse that sweep to
     # recover push rows whose initial broker handoff failed, without requiring a

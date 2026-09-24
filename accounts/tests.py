@@ -44,6 +44,55 @@ class UserModelTests(TestCase):
         self.assertEqual(settings.currency, "BRL")
 
 
+class AccountSettingsMutationTests(TestCase):
+    def test_partial_notification_setting_update_preserves_other_preferences(self):
+        user = User.objects.create_user(
+            email="notifications-settings@example.com",
+            full_name="Notification Settings",
+            password="StrongPassword123!",
+        )
+        settings = AccountSettings.objects.create(
+            user=user,
+            email_messages=False,
+            email_listing_updates=True,
+            push_messages=False,
+            push_listing_updates=True,
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            "/graphql/",
+            data={
+                "query": """
+                    mutation UpdateSettings($input: AccountSettingsInput!) {
+                      updateMyAccountSettings(input: $input) {
+                        emailMessages
+                        emailListingUpdates
+                        pushMessages
+                        pushListingUpdates
+                      }
+                    }
+                """,
+                "variables": {"input": {"emailMessages": True}},
+            },
+            content_type="application/json",
+        )
+
+        payload = response.json()
+        self.assertNotIn("errors", payload)
+        result = payload["data"]["updateMyAccountSettings"]
+        self.assertTrue(result["emailMessages"])
+        self.assertTrue(result["emailListingUpdates"])
+        self.assertFalse(result["pushMessages"])
+        self.assertTrue(result["pushListingUpdates"])
+
+        settings.refresh_from_db()
+        self.assertTrue(settings.email_messages)
+        self.assertTrue(settings.email_listing_updates)
+        self.assertFalse(settings.push_messages)
+        self.assertTrue(settings.push_listing_updates)
+
+
 class AccountProfileLocationTests(TestCase):
     def test_profile_rejects_non_brazilian_state_code(self):
         user = User.objects.create_user(

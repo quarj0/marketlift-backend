@@ -86,6 +86,7 @@ class AccountMutation:
         input: AccountSettingsInput,
     ) -> AccountSettingsType:
         settings_obj = get_account_settings(require_user(info))
+        update_fields = []
         for key in (
             "language",
             "email_messages",
@@ -100,9 +101,11 @@ class AccountMutation:
             value = getattr(input, key)
             if value is not None:
                 setattr(settings_obj, key, value)
+                update_fields.append(key)
         try:
             settings_obj.full_clean()
-            settings_obj.save()
+            if update_fields:
+                settings_obj.save(update_fields=(*update_fields, "updated_at"))
         except ValidationError as exc:
             raise validation_error(exc, code="ACCOUNT_VALIDATION_ERROR")
         return settings_to_type(settings_obj)
