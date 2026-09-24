@@ -86,8 +86,14 @@ def create_notification(
         for delivery_id in delivery_ids:
             enqueue_web_push_delivery(delivery_id)
 
+    def _enqueue_email():
+        from notifications.tasks import enqueue_notification_email
+
+        enqueue_notification_email(str(notification_id))
+
     transaction.on_commit(_publish_realtime, robust=True)
     transaction.on_commit(_enqueue_web_push, robust=True)
+    transaction.on_commit(_enqueue_email, robust=True)
     return item
 
 
